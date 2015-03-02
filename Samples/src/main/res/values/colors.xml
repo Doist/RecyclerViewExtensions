@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="section">#eee</color>
+    <color name="section_pressed">#ccc</color>
+
+    <color name="item_activated">#eee</color>
+</resources>

@@ -1,0 +1,25 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".DemoActivity">
+    <item
+        android:id="@+id/action_load"
+        android:title="Load"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_items"
+        android:title="Items"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_decorator"
+        android:title="Decorator"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_selector"
+        android:title="Selector"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_layout"
+        android:title="Layout"
+        app:showAsAction="always" />
+</menu>

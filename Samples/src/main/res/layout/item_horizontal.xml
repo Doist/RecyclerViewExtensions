@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/item_background"
+    android:minWidth="48dip">
+
+    <TextView
+        android:id="@android:id/text1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="20sp"/>
+
+    <View
+        android:layout_width="1dip"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        android:background="@drawable/divider_light" />
+
+</FrameLayout>
