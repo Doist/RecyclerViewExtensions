@@ -31,11 +31,6 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
         registerAdapterDataObserver(new LocalStateObserver());
     }
 
-    @Override
-    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
-        super.onAttachedToRecyclerView(recyclerView);
-    }
-
     /**
      * Return the animation id for item at {@code position}. Used to animate items appearing, moving and disappearing.
      *
