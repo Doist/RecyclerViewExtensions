@@ -15,7 +15,7 @@ import goncalossilva.com.recyclerviewextensions.R;
 import io.doist.recyclerviewext.choice_modes.MultiSelector;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.choice_modes.SingleSelector;
-import io.doist.recyclerviewext.flippers.LoadingEmptyRecyclerFlipper;
+import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderCanvasItemDecoration;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderViewItemDecoration;
 
@@ -24,7 +24,7 @@ public class DemoActivity extends ActionBarActivity {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
     private DemoAdapter mAdapter;
-    private LoadingEmptyRecyclerFlipper mLoadingEmptyRecyclerFlipper;
+    private ProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
 
     private RecyclerView.ItemDecoration mDecorator;
 
@@ -45,8 +45,9 @@ public class DemoActivity extends ActionBarActivity {
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new DemoAdapter(false);
-        mLoadingEmptyRecyclerFlipper =
-                new LoadingEmptyRecyclerFlipper(mContainer, mAdapter, R.id.recycler_view, R.id.empty, R.id.loading);
+        mProgressEmptyRecyclerFlipper =
+                new ProgressEmptyRecyclerFlipper(mContainer, R.id.recycler_view, R.id.empty, R.id.loading);
+        mProgressEmptyRecyclerFlipper.monitor(mAdapter);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.getItemAnimator().setSupportsChangeAnimations(true);
     }
@@ -63,11 +64,11 @@ public class DemoActivity extends ActionBarActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_load:
-                mLoadingEmptyRecyclerFlipper.setLoading(true);
+                mProgressEmptyRecyclerFlipper.setLoading(true);
                 mContainer.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        mLoadingEmptyRecyclerFlipper.setLoading(false);
+                        mProgressEmptyRecyclerFlipper.setLoading(false);
                     }
                 }, 2000);
                 return true;
@@ -149,14 +150,12 @@ public class DemoActivity extends ActionBarActivity {
         boolean reverse = mLayoutCount % 3 == 0;
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, orientation, reverse));
         mAdapter = new DemoAdapter(orientation == LinearLayoutManager.HORIZONTAL);
-        mLoadingEmptyRecyclerFlipper =
-                new LoadingEmptyRecyclerFlipper(mContainer, mAdapter, R.id.recycler_view, R.id.empty, R.id.loading);
         mAdapter.setDataset(getAdapterItems());
         if (mSelector != null) {
             mAdapter.setSelector(mSelector);
         }
+        mProgressEmptyRecyclerFlipper.monitor(mAdapter);
         mRecyclerView.setAdapter(mAdapter);
-        mAdapter.notifyDataSetChanged();
         mLayoutCount++;
     }
 }
