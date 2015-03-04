@@ -10,7 +10,7 @@ import android.widget.ListView;
  * Handles a {@link RecyclerView}'s empty view, similar to the automatic control provided by {@link ListActivity} for
  * {@link ListView}.
  */
-public class EmptyRecyclerFlipper extends SiblingFlipper {
+public class EmptyRecyclerFlipper extends Flipper {
     protected int mRecyclerViewId;
     protected int mEmptyViewId;
 

@@ -115,7 +115,7 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
     /**
      * Wrapper around the sticky header. Exists for two reasons:
      * - The sticky header can be fetched from the {@link RecyclerView.RecycledViewPool}, which is used to share views
-     * between {@link RecyclerView}. This means changing its layout params is dangerous and will lead to crashes, but
+     * between {@link RecyclerView}s. This means changing its layout params is dangerous and will lead to crashes, but
      * by using a wrapper view we don't need to;
      * - Easy clipping of the sticky header when above the parent's padding / margin.
      */
@@ -139,6 +139,8 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
                 child.measure(widthMeasureSpec, heightMeasureSpec);
 
                 setMeasuredDimension(child.getMeasuredWidth(), child.getMeasuredHeight());
+            } else {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             }
         }
 

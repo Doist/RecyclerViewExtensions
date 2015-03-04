@@ -20,16 +20,22 @@ public class SingleSelector extends Selector {
     }
 
     public void setSelected(long id, boolean selected) {
-        if (mSelected && selected && mSelectedId != id) {
-            notifyItemChangedIfVisible(mSelectedId);
-        }
+        boolean oldSelected = mSelected;
+        long oldSelectedId = mSelectedId;
 
         mSelected = selected;
         if (mSelected) {
             mSelectedId = id;
         }
 
-        notifyItemChangedIfVisible(mSelectedId);
+        if(mSelected != oldSelected || oldSelectedId != mSelectedId) {
+            if (oldSelected) {
+                notifyItemChangedIfVisible(oldSelectedId);
+            }
+            if (mSelected) {
+                notifyItemChangedIfVisible(mSelectedId);
+            }
+        }
     }
 
     public boolean isSelected(long id) {

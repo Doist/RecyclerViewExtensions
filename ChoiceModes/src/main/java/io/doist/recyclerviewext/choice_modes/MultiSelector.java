@@ -22,13 +22,16 @@ public class MultiSelector extends Selector {
     }
 
     public void setSelected(long id, boolean selected) {
+        boolean changed;
         if (selected) {
-            mSelectedIds.add(id);
+            changed = mSelectedIds.add(id);
         } else {
-            mSelectedIds.remove(id);
+            changed = mSelectedIds.remove(id);
         }
 
-        notifyItemChangedIfVisible(id);
+        if (changed) {
+            notifyItemChangedIfVisible(id);
+        }
     }
 
     public boolean isSelected(long id) {

@@ -20,14 +20,14 @@ class Utils {
      */
     public static int indexOf(List<Object> list, Object object, int startPosition) {
         int size = list.size();
-        for (int j = startPosition; j < size; j++) {
-            if (object.equals(list.get(j))) {
-                return j;
+        for (int i = startPosition; i < size; i++) {
+            if (object.equals(list.get(i))) {
+                return i;
             }
         }
-        for (int j = Math.min(startPosition, list.size()) - 1; j >= 0; j--) {
-            if (object.equals(list.get(j))) {
-                return j;
+        for (int i = Math.min(startPosition, size) - 1; i >= 0; i--) {
+            if (object.equals(list.get(i))) {
+                return i;
             }
         }
         return -1;

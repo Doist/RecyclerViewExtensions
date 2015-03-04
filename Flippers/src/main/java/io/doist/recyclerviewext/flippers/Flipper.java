@@ -5,22 +5,22 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Flips between views with the same parent using a {@link SiblingAnimator}.
+ * Flips between views with a common ancestor using a {@link FlipperAnimator}.
  */
-public class SiblingFlipper {
+public class Flipper {
     protected ViewGroup mContainer;
-    private SiblingAnimator mSiblingAnimator = new DefaultSiblingAnimator();
+    private FlipperAnimator mFlipperAnimator = new DefaultFlipperAnimator();
 
-    public SiblingFlipper(ViewGroup container) {
+    public Flipper(ViewGroup container) {
         mContainer = container;
     }
 
-    public SiblingAnimator getSiblingAnimator() {
-        return mSiblingAnimator;
+    public FlipperAnimator getFlipperAnimator() {
+        return mFlipperAnimator;
     }
 
-    public void setSiblingAnimator(SiblingAnimator siblingAnimator) {
-        mSiblingAnimator = siblingAnimator;
+    public void setFlipperAnimator(FlipperAnimator flipperAnimator) {
+        mFlipperAnimator = flipperAnimator;
     }
 
     public void replace(@IdRes int outId, @IdRes int inId) {
@@ -37,9 +37,9 @@ public class SiblingFlipper {
 
         if (outView.getVisibility() != View.GONE || inView.getVisibility() != View.VISIBLE) {
             if (animate
-                    && mSiblingAnimator != null
+                    && mFlipperAnimator != null
                     && outView.getWindowVisibility() == View.VISIBLE) {
-                mSiblingAnimator.animateReplace(outView, inView);
+                mFlipperAnimator.animateFlip(outView, inView);
             } else {
                 outView.setVisibility(View.GONE);
                 inView.setVisibility(View.VISIBLE);

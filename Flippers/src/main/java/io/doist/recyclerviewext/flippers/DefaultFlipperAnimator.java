@@ -1,15 +1,16 @@
 package io.doist.recyclerviewext.flippers;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.view.View;
 
-class DefaultSiblingAnimator extends SiblingAnimator {
+class DefaultFlipperAnimator extends FlipperAnimator {
     private AnimatorSet mAnimatorSet;
 
     @Override
-    public void animateReplace(final View outView, final View inView) {
+    public void animateFlip(final View outView, final View inView) {
         // Ensure there's no animation running.
         endAnimation();
 
@@ -21,12 +22,8 @@ class DefaultSiblingAnimator extends SiblingAnimator {
         ObjectAnimator outAnimation = ObjectAnimator.ofFloat(outView, "alpha", 1f, 0f);
         ObjectAnimator inAnimation = ObjectAnimator.ofFloat(inView, "alpha", 0f, 1f);
         mAnimatorSet = new AnimatorSet();
-        mAnimatorSet.setDuration(getReplaceDuration()).playTogether(outAnimation, inAnimation);
-        mAnimatorSet.addListener(new Animator.AnimatorListener() {
-            @Override public void onAnimationStart(Animator animation) { }
-            @Override public void onAnimationCancel(Animator animation) { }
-            @Override public void onAnimationRepeat(Animator animation) { }
-
+        mAnimatorSet.setDuration(getFlipDuration()).playTogether(outAnimation, inAnimation);
+        mAnimatorSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mAnimatorSet = null;
