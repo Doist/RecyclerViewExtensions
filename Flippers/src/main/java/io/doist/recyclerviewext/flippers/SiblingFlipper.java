@@ -35,14 +35,15 @@ public class SiblingFlipper {
         View inView = mContainer.findViewById(inId);
         View outView = mContainer.findViewById(outId);
 
-        if (animate
-                && mSiblingAnimator != null
-                && (outView.getVisibility() != View.GONE || inView.getVisibility() != View.VISIBLE)
-                && outView.getWindowVisibility() == View.VISIBLE) {
-            mSiblingAnimator.animateReplace(outView, inView);
-        } else {
-            outView.setVisibility(View.GONE);
-            inView.setVisibility(View.VISIBLE);
+        if (outView.getVisibility() != View.GONE || inView.getVisibility() != View.VISIBLE) {
+            if (animate
+                    && mSiblingAnimator != null
+                    && outView.getWindowVisibility() == View.VISIBLE) {
+                mSiblingAnimator.animateReplace(outView, inView);
+            } else {
+                outView.setVisibility(View.GONE);
+                inView.setVisibility(View.VISIBLE);
+            }
         }
     }
 }
