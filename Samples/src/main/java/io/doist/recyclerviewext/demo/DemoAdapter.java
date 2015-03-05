@@ -69,8 +69,8 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
     }
 
     @Override
-    protected Object getItemChangeId(int position) {
-        return mDataset.get(position);
+    protected Integer getItemChangeHash(int position) {
+        return mDataset.get(position).hashCode();
     }
 
     @Override

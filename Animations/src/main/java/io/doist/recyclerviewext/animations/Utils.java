@@ -21,12 +21,12 @@ class Utils {
     public static int indexOf(List<Object> list, Object object, int startPosition) {
         int size = list.size();
         for (int i = startPosition; i < size; i++) {
-            if (object.equals(list.get(i))) {
+            if (equals(object, list.get(i))) {
                 return i;
             }
         }
         for (int i = Math.min(startPosition, size) - 1; i >= 0; i--) {
-            if (object.equals(list.get(i))) {
+            if (equals(object, list.get(i))) {
                 return i;
             }
         }
