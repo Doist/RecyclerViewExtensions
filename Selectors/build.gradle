@@ -15,5 +15,5 @@ android {
 dependencies {
     compile 'com.android.support:recyclerview-v7:21.0.3'
 
-    compile project(':libs:projects:RecyclerViewExtensions:ClickListeners')
+    compile project(':ClickListeners')
 }

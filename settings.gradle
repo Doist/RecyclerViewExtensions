@@ -1,2 +1,2 @@
-include ':Animations', ':ChoiceModes', ':ClickListeners', ':Flippers', ':StickyHeaders'
+include ':Animations', ':Selectors', ':ClickListeners', ':Flippers', ':StickyHeaders', ':DragDrop'
 include ':Samples'

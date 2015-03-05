@@ -23,8 +23,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
 
     compile project(':Animations')
-    compile project(':ChoiceModes')
     compile project(':ClickListeners')
     compile project(':Flippers')
+    compile project(':Selectors')
     compile project(':StickyHeaders')
 }
