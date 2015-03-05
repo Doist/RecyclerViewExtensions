@@ -1,19 +1,12 @@
 package io.doist.recyclerviewext.flippers;
 
-import android.support.annotation.IdRes;
 import android.view.View;
-import android.view.ViewGroup;
 
 /**
  * Flips between views with a common ancestor using a {@link FlipperAnimator}.
  */
 public class Flipper {
-    protected ViewGroup mContainer;
     private FlipperAnimator mFlipperAnimator = new DefaultFlipperAnimator();
-
-    public Flipper(ViewGroup container) {
-        mContainer = container;
-    }
 
     public FlipperAnimator getFlipperAnimator() {
         return mFlipperAnimator;
@@ -23,18 +16,15 @@ public class Flipper {
         mFlipperAnimator = flipperAnimator;
     }
 
-    public void replace(@IdRes int outId, @IdRes int inId) {
-        replaceInternal(outId, inId, true);
+    public void replace(View outView, View inView) {
+        replaceInternal(outView, inView, true);
     }
 
-    public void replaceNoAnimation(@IdRes int outId, @IdRes int inId) {
-        replaceInternal(outId, inId, false);
+    public void replaceNoAnimation(View outView, View inView) {
+        replaceInternal(outView, inView, false);
     }
 
-    protected void replaceInternal(@IdRes int outId, @IdRes int inId, boolean animate) {
-        View inView = mContainer.findViewById(inId);
-        View outView = mContainer.findViewById(outId);
-
+    protected void replaceInternal(View outView, View inView, boolean animate) {
         if (outView.getVisibility() != View.GONE || inView.getVisibility() != View.VISIBLE) {
             if (animate
                     && mFlipperAnimator != null

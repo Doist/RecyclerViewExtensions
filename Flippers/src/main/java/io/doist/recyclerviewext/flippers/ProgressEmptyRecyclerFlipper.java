@@ -9,8 +9,8 @@ import android.view.ViewGroup;
  * Similar to {@link EmptyRecyclerFlipper}, but also handles a progress view through {@link #setLoading(boolean)}.
  */
 public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
-    private int mProgressViewId;
-    private int mCurrentViewId;
+    private View mProgressView;
+    private View mCurrentView;
     private boolean mLoading;
 
     public ProgressEmptyRecyclerFlipper(ViewGroup container) {
@@ -23,24 +23,25 @@ public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
 
     public ProgressEmptyRecyclerFlipper(ViewGroup container, @IdRes int recyclerViewId, @IdRes int emptyViewId,
                                         @IdRes int progressViewId) {
-        super(container, recyclerViewId, emptyViewId);
-        init(container, recyclerViewId, emptyViewId, progressViewId);
+        this((RecyclerView) container.findViewById(recyclerViewId),
+             container.findViewById(emptyViewId),
+             container.findViewById(progressViewId));
+    }
+
+    public ProgressEmptyRecyclerFlipper(RecyclerView recyclerView, View emptyView, View progressView) {
+        super(recyclerView, emptyView);
+        mProgressView = progressView;
+        mCurrentView = recyclerView.getVisibility() == View.VISIBLE ? recyclerView : emptyView;
     }
 
     @Override
     public boolean monitor(RecyclerView.Adapter adapter) {
         boolean monitored = super.monitor(adapter);
         if (monitored) {
-            mContainer.findViewById(mProgressViewId).setVisibility(View.GONE);
+            mProgressView.setVisibility(View.GONE);
+            mLoading = false;
         }
         return monitored;
-    }
-
-    private void init(ViewGroup container, int recyclerViewId, int emptyViewId, int loadingViewId) {
-        mProgressViewId = loadingViewId;
-        container.findViewById(mProgressViewId).setVisibility(View.GONE);
-        mCurrentViewId =
-                container.findViewById(recyclerViewId).getVisibility() == View.VISIBLE ? recyclerViewId : emptyViewId;
     }
 
     public void setLoading(boolean loading) {
@@ -55,18 +56,18 @@ public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
         if (mLoading != loading) {
             mLoading = loading;
             if (mLoading) {
-                super.replaceInternal(mCurrentViewId, mProgressViewId, animate);
+                super.replaceInternal(mCurrentView, mProgressView, animate);
             } else {
-                super.replaceInternal(mProgressViewId, mCurrentViewId, animate);
+                super.replaceInternal(mProgressView, mCurrentView, animate);
             }
         }
     }
 
     @Override
-    protected void replaceInternal(@IdRes int outId, @IdRes int inId, boolean animate) {
+    protected void replaceInternal(View outView, View inView, boolean animate) {
         if (!mLoading) {
-            super.replaceInternal(outId, inId, animate);
+            super.replaceInternal(outView, inView, animate);
         }
-        mCurrentViewId = inId;
+        mCurrentView = inView;
     }
 }

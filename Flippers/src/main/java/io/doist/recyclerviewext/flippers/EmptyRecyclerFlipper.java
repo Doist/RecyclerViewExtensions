@@ -3,6 +3,7 @@ package io.doist.recyclerviewext.flippers;
 import android.app.ListActivity;
 import android.support.annotation.IdRes;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
@@ -11,8 +12,8 @@ import android.widget.ListView;
  * {@link ListView}.
  */
 public class EmptyRecyclerFlipper extends Flipper {
-    protected int mRecyclerViewId;
-    protected int mEmptyViewId;
+    protected View mRecyclerView;
+    protected View mEmptyView;
 
     private RecyclerView.Adapter mAdapter;
     private int mCount;
@@ -24,12 +25,25 @@ public class EmptyRecyclerFlipper extends Flipper {
     }
 
     public EmptyRecyclerFlipper(ViewGroup container, @IdRes int recyclerViewId, @IdRes int emptyViewId) {
-        super(container);
-        mRecyclerViewId = recyclerViewId;
-        mEmptyViewId = emptyViewId;
+        this((RecyclerView) container.findViewById(recyclerViewId), container.findViewById(emptyViewId));
+    }
+
+    public EmptyRecyclerFlipper(RecyclerView recyclerView, View emptyView) {
+        mRecyclerView = recyclerView;
+        mEmptyView = emptyView;
+
+        // Grab add / remove ItemAnimator duration (equal in DefaultItemAnimator) as our animator's time.
+        RecyclerView.ItemAnimator itemAnimator = recyclerView.getItemAnimator();
+        if (itemAnimator != null) {
+            long duration = Math.max(itemAnimator.getAddDuration(), itemAnimator.getRemoveDuration());
+            if (duration > 0) {
+                getFlipperAnimator().setFlipDuration(duration);
+            }
+        }
     }
 
     public boolean monitor(RecyclerView.Adapter adapter) {
+        // Start monitoring this adapter by registering an observer and ensuring the current visibility state is valid.
         if (adapter != mAdapter) {
             if (mAdapter != null) {
                 mAdapter.unregisterAdapterDataObserver(mObserver);
@@ -39,9 +53,9 @@ public class EmptyRecyclerFlipper extends Flipper {
                 mAdapter.registerAdapterDataObserver(mObserver);
                 mCount = mAdapter.getItemCount();
                 if (mCount > 0) {
-                    replaceInternal(mEmptyViewId, mRecyclerViewId, false);
+                    replaceNoAnimation(mEmptyView, mRecyclerView);
                 } else {
-                    replaceInternal(mRecyclerViewId, mEmptyViewId, false);
+                    replaceNoAnimation(mRecyclerView, mEmptyView);
                 }
             }
             return true;
@@ -49,35 +63,44 @@ public class EmptyRecyclerFlipper extends Flipper {
         return false;
     }
 
-    private class EmptyAdapterDataObserver extends RecyclerView.AdapterDataObserver {
+    private class EmptyAdapterDataObserver extends RecyclerView.AdapterDataObserver implements Runnable {
+        private boolean mScheduledCheck = false;
+
         @Override
         public void onChanged() {
-            mCount = mAdapter.getItemCount();
             checkForEmpty();
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            mCount += itemCount;
-            if (mCount == itemCount) {
-                checkForEmpty();
-            }
+            checkForEmpty();
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            mCount -= itemCount;
-            if (mCount == 0) {
-                checkForEmpty();
-            }
+            checkForEmpty();
         }
 
         private void checkForEmpty() {
-            if (mCount == 0) {
-                replace(mRecyclerViewId, mEmptyViewId);
-            } else {
-                replace(mEmptyViewId, mRecyclerViewId);
+            // Check adapter count in a post to let all changes go through.
+            if (!mScheduledCheck) {
+                mRecyclerView.post(this);
+                mScheduledCheck = true;
             }
+        }
+
+        @Override
+        public void run() {
+            int count = mAdapter.getItemCount();
+            if (count != mCount) {
+                if (count == 0) {
+                    replace(mRecyclerView, mEmptyView);
+                } else {
+                    replace(mEmptyView, mRecyclerView);
+                }
+                mCount = count;
+            }
+            mScheduledCheck = false;
         }
     }
 }
