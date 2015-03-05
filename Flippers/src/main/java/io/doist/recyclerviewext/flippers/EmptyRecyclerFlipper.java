@@ -68,24 +68,29 @@ public class EmptyRecyclerFlipper extends Flipper {
 
         @Override
         public void onChanged() {
-            checkForEmpty();
+            postRunIfWindowVisible();
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            checkForEmpty();
+            postRunIfWindowVisible();
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            checkForEmpty();
+            postRunIfWindowVisible();
         }
 
-        private void checkForEmpty() {
-            // Check adapter count in a post to let all changes go through.
-            if (!mScheduledCheck) {
-                mRecyclerView.post(this);
-                mScheduledCheck = true;
+        private void postRunIfWindowVisible() {
+            if (mRecyclerView.getWindowVisibility() == View.VISIBLE) {
+                // Adjust visibility in a post to let all notify* calls go through.
+                if (!mScheduledCheck) {
+                    mRecyclerView.post(this);
+                    mScheduledCheck = true;
+                }
+            } else {
+                // Window is not visible yet, so animations won't run. Adjust visibility now.
+                run();
             }
         }
 
