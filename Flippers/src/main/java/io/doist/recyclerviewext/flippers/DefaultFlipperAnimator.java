@@ -5,25 +5,51 @@ import android.animation.AnimatorListenerAdapter;
 import android.view.View;
 
 class DefaultFlipperAnimator extends FlipperAnimator {
+    private boolean mAnimating = false;
+
     @Override
     public void animateFlip(final View outView, final View inView) {
-        final float prevOutAlpha = outView.getAlpha();
-        outView.animate().alpha(0).setDuration(getFlipDuration()).setListener(new AnimatorListenerAdapter() {
+        float initialOutAlpha;
+        float initialInAlpha;
+        if (mAnimating) {
+            initialOutAlpha = outView.getAlpha();
+            initialInAlpha = inView.getAlpha();
+            outView.animate().cancel();
+            inView.animate().cancel();
+        } else {
+            initialInAlpha = 0f;
+            initialOutAlpha = 1f;
+        }
+
+        mAnimating = true;
+
+        outView.setVisibility(View.VISIBLE);
+        outView.setAlpha(initialOutAlpha);
+        outView.animate().alpha(0f).setDuration(getFlipDuration()).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                outView.setAlpha(prevOutAlpha);
                 outView.setVisibility(View.GONE);
+                outView.setAlpha(1f);
             }
         }).start();
 
-        final float prevInAlpha = inView.getAlpha();
         inView.setVisibility(View.VISIBLE);
-        inView.setAlpha(0);
-        inView.animate().alpha(prevInAlpha).setDuration(getFlipDuration()).setListener(new AnimatorListenerAdapter() {
+        inView.setAlpha(initialInAlpha);
+        inView.animate().alpha(1f).setDuration(getFlipDuration()).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mAnimating = false;
+            }
+
             @Override
             public void onAnimationCancel(Animator animation) {
-                inView.setAlpha(prevInAlpha);
+                inView.setAlpha(1f);
             }
         }).start();
+    }
+
+    @Override
+    public boolean isAnimating() {
+        return mAnimating;
     }
 }

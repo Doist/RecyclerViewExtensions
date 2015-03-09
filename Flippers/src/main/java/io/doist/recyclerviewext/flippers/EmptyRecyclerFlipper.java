@@ -97,14 +97,12 @@ public class EmptyRecyclerFlipper extends Flipper {
         @Override
         public void run() {
             int count = mAdapter.getItemCount();
-            if (count != mCount) {
-                if (count == 0) {
-                    replace(mRecyclerView, mEmptyView);
-                } else {
-                    replace(mEmptyView, mRecyclerView);
-                }
-                mCount = count;
+            if (count == 0 && mCount > 0) {
+                replace(mRecyclerView, mEmptyView);
+            } else if(count > 0 && mCount == 0) {
+                replace(mEmptyView, mRecyclerView);
             }
+            mCount = count;
             mScheduledCheck = false;
         }
     }

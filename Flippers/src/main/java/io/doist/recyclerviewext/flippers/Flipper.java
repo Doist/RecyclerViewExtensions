@@ -25,15 +25,15 @@ public class Flipper {
     }
 
     protected void replaceInternal(View outView, View inView, boolean animate) {
-        if (outView.getVisibility() != View.GONE || inView.getVisibility() != View.VISIBLE) {
-            if (animate
-                    && mFlipperAnimator != null
-                    && outView.getWindowVisibility() == View.VISIBLE) {
-                mFlipperAnimator.animateFlip(outView, inView);
-            } else {
-                outView.setVisibility(View.GONE);
-                inView.setVisibility(View.VISIBLE);
+        if (animate && mFlipperAnimator != null && inView.getWindowVisibility() == View.VISIBLE) {
+            mFlipperAnimator.animateFlip(outView, inView);
+        } else {
+            if (mFlipperAnimator != null && mFlipperAnimator.isAnimating()) {
+                outView.animate().cancel();
+                inView.animate().cancel();
             }
+            outView.setVisibility(View.GONE);
+            inView.setVisibility(View.VISIBLE);
         }
     }
 }

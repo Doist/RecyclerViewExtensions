@@ -10,6 +10,8 @@ public abstract class FlipperAnimator {
 
     public abstract void animateFlip(View out, View in);
 
+    public abstract boolean isAnimating();
+
     public long getFlipDuration() {
         return mFlipDuration;
     }
