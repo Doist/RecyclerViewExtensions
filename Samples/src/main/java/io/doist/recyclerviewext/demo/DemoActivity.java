@@ -12,9 +12,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import goncalossilva.com.recyclerviewextensions.R;
+import io.doist.recyclerviewext.animations.WithLayerItemAnimator;
 import io.doist.recyclerviewext.choice_modes.MultiSelector;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.choice_modes.SingleSelector;
+import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderCanvasItemDecoration;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderViewItemDecoration;
@@ -25,6 +27,7 @@ public class DemoActivity extends ActionBarActivity {
     private RecyclerView mRecyclerView;
     private DemoAdapter mAdapter;
     private ProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
+    private DragDropManager mDragDropManager;
 
     private RecyclerView.ItemDecoration mDecorator;
 
@@ -49,7 +52,9 @@ public class DemoActivity extends ActionBarActivity {
                 new ProgressEmptyRecyclerFlipper(mContainer, R.id.recycler_view, R.id.empty, R.id.loading);
         mProgressEmptyRecyclerFlipper.monitor(mAdapter);
         mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.getItemAnimator().setSupportsChangeAnimations(true);
+        mRecyclerView.setItemAnimator(new WithLayerItemAnimator(true));
+        mDragDropManager = new DragDropManager<>(mRecyclerView, mAdapter);
+        mAdapter.setDragDropManager(mDragDropManager);
     }
 
 
@@ -124,9 +129,9 @@ public class DemoActivity extends ActionBarActivity {
 
     public RecyclerView.ItemDecoration getDecorator() {
         if (mDecoratorCount % 2 == 0) {
-            return new StickyHeaderCanvasItemDecoration(mAdapter);
+            return new StickyHeaderCanvasItemDecoration<>(mAdapter);
         } else {
-            return new StickyHeaderViewItemDecoration(this, mAdapter);
+            return new StickyHeaderViewItemDecoration<>(this, mAdapter);
         }
     }
 
@@ -150,6 +155,7 @@ public class DemoActivity extends ActionBarActivity {
         boolean reverse = mLayoutCount % 3 == 0;
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, orientation, reverse));
         mAdapter = new DemoAdapter(orientation == LinearLayoutManager.HORIZONTAL);
+        mAdapter.setDragDropManager(mDragDropManager);
         mAdapter.setDataset(getAdapterItems());
         if (mSelector != null) {
             mAdapter.setSelector(mSelector);

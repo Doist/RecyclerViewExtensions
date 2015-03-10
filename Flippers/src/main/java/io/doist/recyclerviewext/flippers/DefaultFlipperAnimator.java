@@ -25,7 +25,8 @@ class DefaultFlipperAnimator extends FlipperAnimator {
 
         outView.setVisibility(View.VISIBLE);
         outView.setAlpha(initialOutAlpha);
-        outView.animate().alpha(0f).setDuration(getFlipDuration()).setListener(new AnimatorListenerAdapter() {
+        outView.animate().withLayer().alpha(0f).setDuration(getFlipDuration())
+               .setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 outView.setVisibility(View.GONE);
@@ -35,7 +36,8 @@ class DefaultFlipperAnimator extends FlipperAnimator {
 
         inView.setVisibility(View.VISIBLE);
         inView.setAlpha(initialInAlpha);
-        inView.animate().alpha(1f).setDuration(getFlipDuration()).setListener(new AnimatorListenerAdapter() {
+        inView.animate().withLayer().alpha(1f).setDuration(getFlipDuration())
+              .setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mAnimating = false;
