@@ -57,8 +57,8 @@ public abstract class Selector {
         RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
         if (holder != null) {
             int position = holder.getPosition();
-            if(position != RecyclerView.NO_POSITION) {
-                mAdapter.notifyItemChanged(holder.getPosition());
+            if(position != RecyclerView.NO_POSITION && position < mAdapter.getItemCount()) {
+                mAdapter.notifyItemChanged(position);
             }
         }
     }
