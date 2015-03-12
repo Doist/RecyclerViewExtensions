@@ -6,8 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * Adds sticky headers capabilities to your {@link RecyclerView.Adapter} based on {@link Canvas} drawing. Your adapter
- * must implement {@link StickyHeaders} to indicate which items are headers.
+ * Adds sticky headers capabilities to your {@link RecyclerView.Adapter} based on {@link Canvas} drawing.
  *
  * Fast, but limited. Since it's manually drawn, the sticky header has no support for animations and click listeners.
  * For a slightly slower but more powerful approach, see {@link StickyHeaderViewItemDecoration}.

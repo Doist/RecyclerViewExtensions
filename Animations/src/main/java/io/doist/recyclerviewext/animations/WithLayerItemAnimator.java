@@ -15,7 +15,7 @@ import java.util.List;
  * - All animations run in a hardware layer (via {@link ViewPropertyAnimator#withLayer()}) which makes them smoother;
  * - Added constructor parameter which sets {@link #setSupportsChangeAnimations(boolean)} automatically;
  * - All compat code removed.
- * 
+ *
  * @see DefaultItemAnimator
  */
 public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {

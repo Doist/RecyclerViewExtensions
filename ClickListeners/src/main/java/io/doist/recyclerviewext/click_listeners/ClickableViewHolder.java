@@ -11,7 +11,7 @@ public class ClickableViewHolder extends RecyclerView.ViewHolder {
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onItemClickListener.onItemClick(v, getPosition(), getItemId());
+                    onItemClickListener.onItemClick(v, getLayoutPosition(), getItemId());
                 }
             });
         }

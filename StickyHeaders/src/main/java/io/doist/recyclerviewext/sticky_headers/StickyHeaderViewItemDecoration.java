@@ -9,12 +9,13 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 /**
- * Adds sticky headers capabilities to your {@link RecyclerView.Adapter} based on {@link Canvas} drawing. Your adapter
- * must implement {@link StickyHeaders} to indicate which items are headers.
+ * Adds sticky headers capabilities to your {@link RecyclerView.Adapter} by attaching a {@link View} to the
+ * {@link RecyclerView}'s parent (which must be a {@link }
  *
  * Slightly slower than {@link StickyHeaderCanvasItemDecoration}, but more powerful. Your sticky headers can have click
- * listeners and do animations. However, the container of your {@link RecyclerView} must be a {@link FrameLayout},
- * {@link RelativeLayout} or any other {@link ViewGroup} that allows children to be positioned absolutely using margins.
+ * listeners and run animations. However, the container of your {@link RecyclerView} must be a {@link FrameLayout},
+ * {@link RelativeLayout}, or any other {@link ViewGroup} that allows children to be positioned absolutely using
+ * margins.
  */
 public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & StickyHeaders>
         extends StickyHeaderItemDecoration<T> {

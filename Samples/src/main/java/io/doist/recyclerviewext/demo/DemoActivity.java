@@ -21,7 +21,6 @@ import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderCanvasItemDecoration;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderViewItemDecoration;
 
-
 public class DemoActivity extends ActionBarActivity {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;

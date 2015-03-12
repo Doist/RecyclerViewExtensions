@@ -11,15 +11,16 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * Adds sticky headers capabilities to your {@link RecyclerView.Adapter} based on {@link Canvas} drawing. Your adapter
- * must implement {@link StickyHeaders} to indicate which items are headers.
+ * Adds sticky headers capabilities to your {@link RecyclerView.Adapter}. It must implement {@link StickyHeaders} to
+ * indicate which items are headers.
  *
  * Handles most of the background workflow, but the display logic behind it can differ depending on the implementation:
- * 1. {@link StickyHeaderCanvasItemDecoration} is the fastest implementation. However, it doesn't support click listeners
- * or animations for the sticky headers. It draws the sticky header manually on the {@link Canvas}.
+ * 1. {@link StickyHeaderCanvasItemDecoration} is the fastest implementation. However, it doesn't support click
+ * listeners or animations for the sticky headers. It draws the sticky header manually on the {@link Canvas}.
  * 2. {@link StickyHeaderViewItemDecoration} is slightly slower and requires the {@link RecyclerView} parent to be a
  * {@link FrameLayout}, {@link RelativeLayout}, or any other {@link ViewGroup} that allows children to be positioned
  * absolutely using margins. However, since a real view is being added to the hierarchy, it has full support for click
@@ -42,7 +43,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
 
     public StickyHeaderItemDecoration(T adapter) {
         mAdapter = adapter;
-        adapter.registerAdapterDataObserver(new SectionInfoAdapterDataObserver());
+        adapter.registerAdapterDataObserver(new HeaderPositionsAdapterDataObserver());
     }
 
     /**
@@ -74,13 +75,15 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                 if (!params.isItemRemoved() && !params.isViewInvalid()) {
                     firstChild = child;
                     firstChildIndex = i;
-                    firstChildPos = params.getViewPosition();
+                    firstChildPos = params.getViewLayoutPosition();
                     break;
                 }
             }
 
+            Log.e("WUT", "Header positions: " + Arrays.toString(mHeaderPositions.toArray()));
+
             if (firstChild != null) {
-                int index = findOrderedIndex(mHeaderPositions, firstChildPos);
+                int index = findHeaderIndexOrBefore(firstChildPos);
                 int headerPos = index != -1 ? mHeaderPositions.get(index) : -1;
                 // Show header if there's one to show, and if it's not the first view or is on the edge.
 
@@ -88,7 +91,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                     // Ensure existing sticky header, if any, is of correct type.
                     if (mStickyHeader != null
                             && mStickyHeader.getItemViewType() != mAdapter.getItemViewType(headerPos)) {
-                        // A sticky header was setup before but is not of the correct type. Scrap it.º
+                        // A sticky header was setup before but is not of the correct type. Scrap it.
                         scrapStickyHeader(parent);
                     }
 
@@ -96,7 +99,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                     if (mStickyHeader == null) {
                         createStickyHeader(parent, headerPos);
                     }
-                    if (mDirty || mStickyHeader.getPosition() != headerPos) {
+                    if (mDirty || mStickyHeader.getLayoutPosition() != headerPos) {
                         bindStickyHeader(parent, headerPos);
                     }
 
@@ -291,16 +294,16 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     }
 
     /**
-     * Given an ordered {@code list}, finds the position of {@code value} or the closest smaller value.
+     * Finds the header index of {@code position} in {@code mHeaderPositions}.
      */
-    private int findOrderedIndex(List<Integer> list, int value) {
+    private int findHeaderIndex(int position) {
         int low = 0;
-        int high = list.size() - 1;
+        int high = mHeaderPositions.size() - 1;
         while (low <= high) {
-            int middle = low + (high - low) / 2;
-            if (value < list.get(middle)) {
+            int middle = (low + high) / 2;
+            if (mHeaderPositions.get(middle) > position) {
                 high = middle - 1;
-            } else if (middle < list.size() - 1 && value >= list.get(middle + 1)) {
+            } else if(mHeaderPositions.get(middle) < position) {
                 low = middle + 1;
             } else {
                 return middle;
@@ -310,17 +313,57 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     }
 
     /**
-     * Given an ordered {@code list}, finds the position of {@code value} using binary search.
+     * Finds the header index of {@code position} or the one before it in {@code mHeaderPositions}.
      */
-    private int findIndex(List<Integer> list, int value) {
-        int pos = findOrderedIndex(list, value);
-        return pos != -1 && list.get(pos) == value ? pos : -1;
+    private int findHeaderIndexOrBefore(int position) {
+        int low = 0;
+        int high = mHeaderPositions.size() - 1;
+        while (low <= high) {
+            int middle = (low + high) / 2;
+            if (mHeaderPositions.get(middle) > position) {
+                high = middle - 1;
+            } else if (middle < mHeaderPositions.size() - 1 && mHeaderPositions.get(middle + 1) <= position) {
+                low = middle + 1;
+            } else {
+                return middle;
+            }
+        }
+        return -1;
     }
 
     /**
-     * Handles header information while adapter changes occur.
+     * Finds the header index of {@code position} or the one next to it in {@code mHeaderPositions}.
      */
-    private class SectionInfoAdapterDataObserver extends RecyclerView.AdapterDataObserver {
+    private int findHeaderIndexOrNext(int position) {
+        int low = 0;
+        int high = mHeaderPositions.size() - 1;
+        while (low <= high) {
+            int middle = (low + high) / 2;
+            if (middle > 0 && mHeaderPositions.get(middle - 1) >= position) {
+                high = middle - 1;
+            } else if(mHeaderPositions.get(middle) < position) {
+                low = middle + 1;
+            } else {
+                return middle;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Handles header positions while adapter changes occur.
+     */
+    private class HeaderPositionsAdapterDataObserver extends RecyclerView.AdapterDataObserver implements Runnable {
+        @Override
+        public void run() {
+            int itemCount = mAdapter.getItemCount();
+            for (int i = 0; i < itemCount; i++) {
+                if (mAdapter.isHeader(i)) {
+                    mHeaderPositions.add(i);
+                }
+            }
+        }
+
         @Override
         public void onChanged() {
             // There's no hint at what changed, so go through the adapter.
@@ -332,92 +375,127 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                 }
             }
 
-            // There's no way to know if the sticky header is dirty or not.
-            mDirty = true;
+            // Mark current header as dirty if changed.
+            dirtCurrentHeaderIfPositionChanged(null, null);
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            if (mStickyHeader != null
-                    && mStickyHeader.getPosition() >= positionStart
-                    && mStickyHeader.getPosition() < positionStart + itemCount) {
-                mDirty = true;
-            }
+            // Mark current header as dirty if changed.
+            dirtCurrentHeaderIfPositionChanged(positionStart, positionStart + itemCount);
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
+            // Shift headers below down.
+            int headerCount = mHeaderPositions.size();
+            if (headerCount > 0) {
+                for (int i = findHeaderIndexOrNext(positionStart); i != -1 && i < headerCount;  i++) {
+                    mHeaderPositions.set(i, mHeaderPositions.get(i) + itemCount);
+                }
+            }
+
+            // Add new headers.
             for (int i = positionStart; i < positionStart + itemCount; i++) {
-                // Get the first section index affected by this insertion.
-                int index = findIndex(mHeaderPositions, i);
-                if (index == -1) {
-                    index = findOrderedIndex(mHeaderPositions, i) + 1;
-                }
-
-                // If the added item itself is a header, add it to the list.
                 if (mAdapter.isHeader(i)) {
-                    mHeaderPositions.add(index, i);
-                    index++; // Increment so that the following offset doesn't apply to the new header.
-                }
-
-                // Shift all affected headers given the newly inserted item.
-                for (int j = index; j < mHeaderPositions.size(); j++) {
-                    int headerPos = mHeaderPositions.get(j);
-                    mHeaderPositions.set(j, headerPos + 1);
-
-                    // Mark the sticky header as dirty if shifted.
-                    if (mStickyHeader != null && headerPos == mStickyHeader.getPosition()) {
-                        mDirty = true;
+                    int headerIndex = findHeaderIndexOrNext(i);
+                    if (headerIndex != -1) {
+                        mHeaderPositions.add(headerIndex, i);
+                    } else {
+                        mHeaderPositions.add(i);
                     }
                 }
             }
+
+            // Mark current header as dirty if affected.
+            dirtCurrentHeaderIfPositionChanged(positionStart, null);
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            // Remove all headers affected by this remove.
-            for (int i = positionStart + itemCount - 1; i >= positionStart; i--) {
-                int index = findIndex(mHeaderPositions, i);
-                if (index != -1) {
-                    int headerPos = mHeaderPositions.remove(index);
-
-                    // Mark the sticky header as dirty if removed. There might be a different one in the same position.
-                    if (mStickyHeader != null && headerPos == mStickyHeader.getPosition()) {
-                        mDirty = true;
+            int headerCount = mHeaderPositions.size();
+            if (headerCount > 0) {
+                // Remove headers.
+                for (int i = positionStart + itemCount - 1; i >= positionStart; i--) {
+                    int index = findHeaderIndex(i);
+                    if (index != -1) {
+                        mHeaderPositions.remove(index);
+                        headerCount--;
                     }
                 }
+
+                // Shift headers below up.
+                for (int i = findHeaderIndexOrNext(positionStart + itemCount); i != -1 && i < headerCount; i++) {
+                    mHeaderPositions.set(i, mHeaderPositions.get(i) - itemCount);
+                }
             }
+
+            // Mark current header as dirty if changed.
+            dirtCurrentHeaderIfPositionChanged(positionStart, null);
         }
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            // Gather start / end positions for an increasing for loop.
-            int start;
-            int end;
-            if (fromPosition < toPosition) {
-                start = fromPosition;
-                end = toPosition;
-            } else {
-                start = toPosition;
-                end = fromPosition + itemCount;
-            }
-
-            // Remove all sections affected by the move, and check the adapter to add them back in.
-            int adapterItemCount = mAdapter.getItemCount();
-            for (int i = start; i < end; i++) {
-                int index = findIndex(mHeaderPositions, i);
-                boolean isHeader = i < adapterItemCount && mAdapter.isHeader(i);
-                if (index != -1) {
-                    if (!isHeader) {
-                        int headerPos = mHeaderPositions.remove(index);
-
-                        // Mark the sticky header as dirty if removed.
-                        if (mStickyHeader != null && headerPos == mStickyHeader.getPosition()) {
-                            mDirty = true;
+            // Shift moved headers by toPosition - fromPosition.
+            // Shift headers in-between by -itemCount (reverse if upwards).
+            int headerCount = mHeaderPositions.size();
+            if (headerCount > 0) {
+                if (fromPosition < toPosition) {
+                    for (int i = findHeaderIndexOrNext(fromPosition); i != -1 && i < headerCount; i++) {
+                        int headerPos = mHeaderPositions.get(i);
+                        if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
+                            mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos >= fromPosition + itemCount && headerPos < toPosition) {
+                            mHeaderPositions.set(i, headerPos - itemCount);
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos > toPosition) {
+                            break;
                         }
                     }
-                } else if (isHeader) {
-                    mHeaderPositions.add(findOrderedIndex(mHeaderPositions, i) + 1, i);
+                } else {
+                    for (int i = findHeaderIndexOrNext(toPosition); i != -1 && i < headerCount; i++) {
+                        int headerPos = mHeaderPositions.get(i);
+                        if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
+                            mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos >= toPosition && headerPos < fromPosition) {
+                            mHeaderPositions.set(i, headerPos + itemCount);
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos > toPosition) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Mark current header as dirty if changed.
+            dirtCurrentHeaderIfPositionChanged(Math.min(fromPosition, toPosition),
+                                               Math.max(fromPosition, toPosition) + itemCount);
+        }
+
+        private void sortHeaderAtIndex(int index) {
+            int headerPos = mHeaderPositions.remove(index);
+            int headerIndex = findHeaderIndexOrNext(headerPos);
+            if (headerIndex != -1) {
+                mHeaderPositions.add(headerIndex, headerPos);
+            } else {
+                mHeaderPositions.add(headerPos);
+            }
+        }
+
+        /**
+         * Marks the current header as dirty if it's within the start / end range (ie. its position changed) and there
+         * is another one in its previous position.
+         */
+        private void dirtCurrentHeaderIfPositionChanged(Integer rangeStart, Integer rangeEnd) {
+            if (mStickyHeader != null) {
+                if ((rangeStart == null && rangeEnd == null)
+                        || ((rangeStart == null || mStickyHeader.getLayoutPosition() >= rangeStart)
+                        && (rangeEnd == null || mStickyHeader.getLayoutPosition() < rangeEnd))) {
+                    if (findHeaderIndex(mStickyHeader.getLayoutPosition()) != -1) {
+                        mDirty = true;
+                    }
                 }
             }
         }
