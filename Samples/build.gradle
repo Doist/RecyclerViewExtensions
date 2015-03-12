@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    buildToolsVersion "22"
 
     defaultConfig {
         applicationId "io.doist.recyclerviewext"
@@ -20,10 +20,11 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support:appcompat-v7:22.0.0'
 
     compile project(':Animations')
     compile project(':ClickListeners')
+    compile project(':DragDrop')
     compile project(':Flippers')
     compile project(':Selectors')
     compile project(':StickyHeaders')
