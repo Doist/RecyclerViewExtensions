@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import java.util.Arrays;
 import java.util.List;
 
-import goncalossilva.com.recyclerviewextensions.R;
+import io.doist.recyclerviewext.R;
 import io.doist.recyclerviewext.animations.WithLayerItemAnimator;
 import io.doist.recyclerviewext.choice_modes.MultiSelector;
 import io.doist.recyclerviewext.choice_modes.Selector;

@@ -8,7 +8,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import goncalossilva.com.recyclerviewextensions.R;
+import io.doist.recyclerviewext.R;
 import io.doist.recyclerviewext.animations.AnimatedAdapter;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.dragdrop.DragDrop;
