@@ -2,6 +2,7 @@ package io.doist.recyclerviewext.sticky_headers;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,14 +31,14 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
 
     @Override
     protected void onDisplayStickyHeader(final RecyclerView.ViewHolder stickyHeader, final RecyclerView parent,
-                                         final Canvas canvas, final int translationX, final int translationY) {
-        stickyHeader.itemView.setTranslationX(translationX);
-        stickyHeader.itemView.setTranslationY(translationY);
+                                         final Canvas canvas, final int x, final int y) {
+        stickyHeader.itemView.setTranslationX(x);
+        stickyHeader.itemView.setTranslationY(y);
     }
 
     @Override
     protected void onCreateStickyHeader(final RecyclerView.ViewHolder stickyHeader, final RecyclerView parent,
-                                        int position) {
+                                        final boolean vertical, int position) {
         // Keep the original translation values for restoring later.
         mOriginalTranslationX = stickyHeader.itemView.getTranslationX();
         mOriginalTranslationY = stickyHeader.itemView.getTranslationY();
@@ -61,8 +62,6 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
         parent.post(new Runnable() {
             @Override
             public void run() {
-                boolean isVertical = isVertical(parent);
-
                 // Add the view to the container.
                 ViewGroup container = (ViewGroup) parent.getParent();
                 container.addView(mWrapper);
@@ -70,8 +69,14 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
                 // Tweak its layout params, using the parent's margins / padding.
                 ViewGroup.MarginLayoutParams parentParams = (ViewGroup.MarginLayoutParams) parent.getLayoutParams();
                 ViewGroup.MarginLayoutParams wrapperParams = (ViewGroup.MarginLayoutParams) mWrapper.getLayoutParams();
-                wrapperParams.width = wrapperParams.height = ViewGroup.MarginLayoutParams.WRAP_CONTENT;
-                if (isVertical) {
+                if (vertical) {
+                    wrapperParams.width = ViewGroup.MarginLayoutParams.MATCH_PARENT;
+                    wrapperParams.height = ViewGroup.MarginLayoutParams.WRAP_CONTENT;
+                } else {
+                    wrapperParams.width = ViewGroup.MarginLayoutParams.WRAP_CONTENT;
+                    wrapperParams.height = ViewGroup.MarginLayoutParams.MATCH_PARENT;
+                }
+                if (vertical) {
                     // Adjust width / height and horizontal margins for a vertical layout.
                     wrapperParams.leftMargin = parentParams.leftMargin + parent.getPaddingLeft();
                     wrapperParams.rightMargin = parentParams.rightMargin + parent.getPaddingRight();
@@ -90,7 +95,8 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
     }
 
     @Override
-    protected void onBindStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, int position) {
+    protected void onBindStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, boolean vertical,
+                                      int position) {
         // Do nothing. Changes in the sticky header will trigger a re-measure / layout.
     }
 
@@ -146,12 +152,12 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
         }
 
         @Override
-        public boolean addViewInLayout(View child, int index, LayoutParams params) {
+        public boolean addViewInLayout(@NonNull View child, int index, LayoutParams params) {
             return super.addViewInLayout(child, index, params);
         }
 
         @Override
-        public void removeViewInLayout(View view) {
+        public void removeViewInLayout(@NonNull View view) {
             super.removeViewInLayout(view);
         }
 

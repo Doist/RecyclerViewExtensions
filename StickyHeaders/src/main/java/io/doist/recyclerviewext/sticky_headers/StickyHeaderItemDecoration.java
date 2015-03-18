@@ -4,14 +4,12 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -30,9 +28,8 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
         extends RecyclerView.ItemDecoration {
     private T mAdapter;
 
-    // Static layout properties. If set, querying the RecyclerView's LayoutManager can be avoided.
-    private Boolean mIsVertical;
-    private Boolean mIsReverse;
+    private boolean mVertical;
+    private boolean mReverse;
 
     // Header positions for the currently displayed list.
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
@@ -42,17 +39,27 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     private boolean mDirty;
 
     public StickyHeaderItemDecoration(T adapter) {
+        this(adapter, true, false);
+    }
+
+    public StickyHeaderItemDecoration(T adapter, boolean vertical) {
+        this(adapter, vertical, false);
+    }
+
+    public StickyHeaderItemDecoration(T adapter, boolean vertical, boolean reverse) {
         mAdapter = adapter;
         adapter.registerAdapterDataObserver(new HeaderPositionsAdapterDataObserver());
+        mVertical = vertical;
+        mReverse = reverse;
     }
 
     /**
      * Sets the orientation and direction of the {@link RecyclerView.LayoutManager} used by this {@link RecyclerView}.
      * {@link LinearLayoutManager} is supported out of the box, but calling this ensures a slightly better performance.
      */
-    public void setOrientationAndDirection(boolean isVertical, boolean isReverse) {
-        mIsVertical = isVertical;
-        mIsReverse = isReverse;
+    public void setVerticalReverse(boolean vertical, boolean reverse) {
+        mVertical = vertical;
+        mReverse = reverse;
     }
 
     @Override
@@ -108,9 +115,9 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                         int nextHeaderPos = mHeaderPositions.get(index + 1);
                         nextHeaderView = parent.getChildAt(firstChildIndex + (nextHeaderPos - firstChildPos));
                     }
-                    int translationX = getTranslationX(parent, mStickyHeader.itemView, nextHeaderView);
-                    int translationY = getTranslationY(parent, mStickyHeader.itemView, nextHeaderView);
-                    onDisplayStickyHeader(mStickyHeader, parent, canvas, translationX, translationY);
+                    int x = getX(parent, mStickyHeader.itemView, nextHeaderView);
+                    int y = getY(parent, mStickyHeader.itemView, nextHeaderView);
+                    onDisplayStickyHeader(mStickyHeader, parent, canvas, x, y);
                     return;
                 }
             }
@@ -125,7 +132,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Handles display and positioning of the sticky header. Invoked inside {@link View#draw(Canvas)}.
      */
     protected abstract void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent,
-                                                  Canvas canvas, int translationX, int translationY);
+                                                  Canvas canvas, int x, int y);
 
     /**
      * Creates {@link RecyclerView.ViewHolder} for {@code position}, including measure / layout, and assigns it to
@@ -149,14 +156,14 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
         mDirty = true;
 
         // Sticky header is created. Pass it on.
-        onCreateStickyHeader(mStickyHeader, parent, position);
+        onCreateStickyHeader(mStickyHeader, parent, mVertical, position);
     }
 
     /**
      * Handles a created sticky header. Invoked inside {@link View#draw(Canvas)}.
      */
     protected abstract void onCreateStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent,
-                                                 int position);
+                                                 boolean vertical, int position);
 
     /**
      * Binds the {@link #mStickyHeader} for the given {@code position}.
@@ -168,13 +175,14 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
         mDirty = false;
 
         // Sticky header is bound. Pass it on.
-        onBindStickyHeader(mStickyHeader, parent, position);
+        onBindStickyHeader(mStickyHeader, parent, mVertical, position);
     }
 
     /**
      * Handles a bound sticky header. Invoked inside {@link View#draw(Canvas)}.
      */
-    protected abstract void onBindStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, int position);
+    protected abstract void onBindStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent,
+                                               boolean vertical, int position);
 
     /**
      * Returns {@link #mStickyHeader} to the {@link RecyclerView}'s {@link RecyclerView.RecycledViewPool}, assigning it
@@ -201,93 +209,70 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Returns true when the {@code view} is at the edge of the parent {@link RecyclerView}.
      */
     private boolean isViewOnBoundary(RecyclerView parent, View view) {
-        if (isVertical(parent)) {
-            if (isReverse(parent)) {
-                return view.getBottom() > parent.getHeight();
+        if (mVertical) {
+            if (mReverse) {
+                return view.getBottom() - view.getTranslationY() > parent.getHeight();
             } else {
-                return view.getTop() < 0;
+                return view.getTop() < -view.getTranslationY();
             }
         } else {
-            if (isReverse(parent)) {
-                return view.getRight() > parent.getWidth();
+            if (mReverse) {
+                return view.getRight() - view.getTranslationX() > parent.getWidth();
             } else {
-                return view.getLeft() < 0;
+                return view.getLeft() < -view.getTranslationX();
             }
         }
     }
 
     /**
-     * Returns the necessary translation in the X axis to position the header appropriately, depending on orientation
-     * and direction.
+     * Returns the position in the X axis to position the header appropriately, depending on orientation, direction and
+     * {@link android.R.attr#clipToPadding}.
      */
-    private int getTranslationX(RecyclerView parent, View headerView, View nextHeaderView) {
-        if (!isVertical(parent)) {
-            int translationX;
-            if (isReverse(parent)) {
-                translationX = parent.getWidth() - headerView.getWidth();
+    private int getX(RecyclerView parent, View headerView, View nextHeaderView) {
+        if (!mVertical) {
+            int x;
+            if (mReverse) {
+                x = parent.getWidth() - headerView.getWidth();
             } else {
-                translationX = 0;
+                x = 0;
             }
             if (nextHeaderView != null) {
-                if (isReverse(parent)) {
-                    translationX = Math.max(nextHeaderView.getRight(), translationX);
+                int translationX = Math.round(nextHeaderView.getTranslationX());
+                if (mReverse) {
+                    x = Math.max(nextHeaderView.getRight() + translationX, x);
                 } else {
-                    translationX = Math.min(nextHeaderView.getLeft() - headerView.getWidth(), translationX);
+                    x = Math.min(nextHeaderView.getLeft() - headerView.getWidth() + translationX, x);
                 }
             }
-            return translationX;
+            return x;
         } else {
             return 0;
         }
     }
 
     /**
-     * Returns the necessary translation in the Y axis to position the header appropriately, depending on orientation,
-     * direction and {@link android.R.attr#clipToPadding}.
+     * Returns the position in the Y axis to position the header appropriately, depending on orientation, direction and
+     * {@link android.R.attr#clipToPadding}.
      */
-    private int getTranslationY(RecyclerView parent, View headerView, View nextHeaderView) {
-        if (isVertical(parent)) {
-            int translationY;
-            if (isReverse(parent)) {
-                translationY = parent.getHeight() - headerView.getHeight();
+    private int getY(RecyclerView parent, View headerView, View nextHeaderView) {
+        if (mVertical) {
+            int y;
+            if (mReverse) {
+                y = parent.getHeight() - headerView.getHeight();
             } else {
-                translationY = 0;
+                y = 0;
             }
             if (nextHeaderView != null) {
-                if (isReverse(parent)) {
-                    translationY = Math.max(nextHeaderView.getBottom(), translationY);
+                int translationY = Math.round(nextHeaderView.getTranslationY());
+                if (mReverse) {
+                    y = Math.max(nextHeaderView.getBottom() + translationY, y);
                 } else {
-                    translationY = Math.min(nextHeaderView.getTop() - headerView.getHeight(), translationY);
+                    y = Math.min(nextHeaderView.getTop() - headerView.getHeight() + translationY, y);
                 }
             }
-            return translationY;
+            return y;
         } else {
             return 0;
-        }
-    }
-
-    /**
-     * Returns true if the layout is a vertical one.
-     */
-    protected boolean isVertical(RecyclerView parent) {
-        if (mIsVertical != null) {
-            return mIsVertical;
-        } else {
-            RecyclerView.LayoutManager manager = parent.getLayoutManager();
-            return !(manager instanceof LinearLayoutManager)
-                    || ((LinearLayoutManager) manager).getOrientation() == LinearLayoutManager.VERTICAL;
-        }
-    }
-
-    /**
-     * Returns true if the layout is in reverse.
-     */
-    protected boolean isReverse(RecyclerView parent) {
-        if (mIsReverse != null) {
-            return mIsReverse;
-        } else {
-            RecyclerView.LayoutManager manager = parent.getLayoutManager();
-            return manager instanceof LinearLayoutManager && ((LinearLayoutManager) manager).getReverseLayout();
         }
     }
 

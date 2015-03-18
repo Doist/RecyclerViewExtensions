@@ -19,21 +19,23 @@ public class StickyHeaderCanvasItemDecoration<T extends RecyclerView.Adapter & S
 
     @Override
     protected void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, Canvas canvas,
-                                         int translationX, int translationY) {
+                                         int x, int y) {
         View view = stickyHeader.itemView;
         int count = canvas.save();
-        canvas.translate(view.getLeft() + translationX, view.getTop() + translationY);
+        canvas.translate(view.getLeft() + x, view.getTop() + y);
         view.draw(canvas);
         canvas.restoreToCount(count);
     }
 
     @Override
-    protected void onCreateStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, int position) {
+    protected void onCreateStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, boolean vertical,
+                                        int position) {
         // Nothing to do. There's no container to add the view to since it's draw manually.
     }
 
     @Override
-    protected void onBindStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, int position) {
+    protected void onBindStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, boolean vertical,
+                                      int position) {
         RecyclerView.LayoutManager manager = parent.getLayoutManager();
         if (manager != null) {
             View view = stickyHeader.itemView;
@@ -48,7 +50,7 @@ public class StickyHeaderCanvasItemDecoration<T extends RecyclerView.Adapter & S
 
             // Measure and layout child.
             manager.measureChildWithMargins(view, 0, 0);
-            if (isVertical(parent)) {
+            if (vertical) {
                 manager.layoutDecorated(view, parent.getPaddingLeft(), 0,
                                         parent.getPaddingLeft() + view.getMeasuredWidth(), view.getMeasuredHeight());
             } else {
