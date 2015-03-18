@@ -80,8 +80,6 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                 }
             }
 
-            Log.e("WUT", "Header positions: " + Arrays.toString(mHeaderPositions.toArray()));
-
             if (firstChild != null) {
                 int index = findHeaderIndexOrBefore(firstChildPos);
                 int headerPos = index != -1 ? mHeaderPositions.get(index) : -1;

@@ -5,19 +5,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import goncalossilva.com.recyclerviewextensions.R;
 import io.doist.recyclerviewext.animations.AnimatedAdapter;
 import io.doist.recyclerviewext.choice_modes.Selector;
+import io.doist.recyclerviewext.dragdrop.DragDrop;
+import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaders;
 
-public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements StickyHeaders {
+public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements StickyHeaders, DragDrop {
+    private boolean mHorizontal;
+
     private Selector mSelector;
 
-    private List<Object> mDataset;
+    private DragDropManager mDragDropManager;
 
-    private boolean mHorizontal;
+    private List<Object> mDataset;
 
     public DemoAdapter(boolean horizontal) {
         super(true);
@@ -25,12 +30,16 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
     }
 
     public void setDataset(List<Object> dataset) {
-        mDataset = dataset;
+        mDataset = new ArrayList<>(dataset);
         animateDataSetChanged();
     }
 
     public void setSelector(Selector selector) {
         mSelector = selector;
+    }
+
+    public void setDragDropManager(DragDropManager dragDropManager) {
+        mDragDropManager = dragDropManager;
     }
 
     @Override
@@ -83,7 +92,23 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
         return mDataset.get(position) instanceof Integer;
     }
 
-    public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener {
+    @Override
+    public void moveItem(int from, int to) {
+        mDataset.add(to, mDataset.remove(from));
+    }
+
+    @Override
+    public int getDragStartBoundaryPosition(int position) {
+        return NO_BOUNDARY;
+    }
+
+    @Override
+    public int getDragEndBoundaryPosition(int position) {
+        return NO_BOUNDARY;
+    }
+
+    public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener,
+                                                                          View.OnLongClickListener {
         public View root;
         public TextView textView1;
         public TextView textView2;
@@ -92,6 +117,7 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
             super(root);
 
             root.setOnClickListener(this);
+            root.setOnLongClickListener(this);
 
             this.root = root;
             this.textView1 = (TextView) root.findViewById(android.R.id.text1);
@@ -108,6 +134,11 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
             if (mSelector != null) {
                 mSelector.toggleSelected(getItemId());
             }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            return mDragDropManager.start(getLayoutPosition());
         }
     }
 
