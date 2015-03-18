@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="18dip"
     android:background="@drawable/section_selector">
 
@@ -12,9 +12,4 @@
         android:gravity="center"
         android:textSize="12dip" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dip"
-        android:layout_gravity="bottom"
-        android:background="@drawable/divider_light" />
 </FrameLayout>

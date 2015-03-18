@@ -19,10 +19,4 @@
         android:textSize="14sp"
         android:text="An item in your list" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/divider_light" />
-
 </RelativeLayout>

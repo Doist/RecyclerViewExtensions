@@ -23,6 +23,7 @@ dependencies {
 
     compile project(':Animations')
     compile project(':ClickListeners')
+    compile project(':Dividers')
     compile project(':DragDrop')
     compile project(':Flippers')
     compile project(':Selectors')

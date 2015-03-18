@@ -109,19 +109,17 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
 
     public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener,
                                                                           View.OnLongClickListener {
-        public View root;
         public TextView textView1;
         public TextView textView2;
 
-        public DemoItemViewHolder(View root) {
-            super(root);
+        public DemoItemViewHolder(View itemView) {
+            super(itemView);
 
-            root.setOnClickListener(this);
-            root.setOnLongClickListener(this);
+            itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
 
-            this.root = root;
-            this.textView1 = (TextView) root.findViewById(android.R.id.text1);
-            this.textView2 = (TextView) root.findViewById(android.R.id.text2);
+            this.textView1 = (TextView) itemView.findViewById(android.R.id.text1);
+            this.textView2 = (TextView) itemView.findViewById(android.R.id.text2);
         }
 
         @Override
@@ -145,11 +143,11 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
     public class DemoSectionViewHolder extends BindableViewHolder implements View.OnClickListener {
         public TextView textView;
 
-        public DemoSectionViewHolder(View root) {
-            super(root);
+        public DemoSectionViewHolder(View itemView) {
+            super(itemView);
 
-            root.setOnClickListener(this);
-            textView = (TextView) root.findViewById(android.R.id.text1);
+            itemView.setOnClickListener(this);
+            textView = (TextView) itemView.findViewById(android.R.id.text1);
         }
 
         @Override

@@ -16,6 +16,7 @@ import io.doist.recyclerviewext.animations.WithLayerItemAnimator;
 import io.doist.recyclerviewext.choice_modes.MultiSelector;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.choice_modes.SingleSelector;
+import io.doist.recyclerviewext.dividers.DividerItemDecoration;
 import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaderCanvasItemDecoration;
@@ -46,6 +47,7 @@ public class DemoActivity extends ActionBarActivity {
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, R.drawable.divider_light, true));
         mAdapter = new DemoAdapter(false);
         mProgressEmptyRecyclerFlipper =
                 new ProgressEmptyRecyclerFlipper(mContainer, R.id.recycler_view, R.id.empty, R.id.loading);
