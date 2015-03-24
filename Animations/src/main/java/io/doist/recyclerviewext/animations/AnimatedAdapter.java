@@ -48,6 +48,10 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
      */
     protected abstract Integer getItemChangeHash(int position);
 
+    /**
+     * Prepare data set changes to later be applied using {@link #animatePendingDataSetChanges()}.
+     * The adapter must not change between both calls.
+     */
     public synchronized void prepareDataSetChanges(List<Object> animationIds, List<Integer> changeHashes) {
         mPendingOps.clear();
 
@@ -155,6 +159,10 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
         }
     }
 
+    /**
+     * Applies the changes previously determined by {@link #prepareDataSetChanges(List, List)}.
+     * The adapter must not have changed between both calls.
+     */
     private synchronized void animatePendingDataSetChanges() {
         // Ensure lists have the needed capacity ahead of time.
         mAnimationIds.ensureCapacity(mPendingSize);
@@ -167,6 +175,10 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
         mPendingOps.clear();
     }
 
+    /**
+     * Animates the adapter changes based on the {@link #getItemAnimationId(int)} and {@link #getItemChangeHash(int)} of
+     * each item.
+     */
     public synchronized void animateDataSetChanged() {
         // Prepare list of animation and change ids.
         int itemCount = getItemCount();
