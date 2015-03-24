@@ -6,7 +6,7 @@ public interface DragDrop {
     int NO_BOUNDARY = -1;
 
     /**
-     * Move item at {@code from} to {@code to}. The {@link RecyclerView.Adapter} must not be notified of any changes.
+     * Move item at {@code from} to {@code to}. The {@link RecyclerView.Adapter} must be notified about the changes.
      */
     void moveItem(int from, int to);
 

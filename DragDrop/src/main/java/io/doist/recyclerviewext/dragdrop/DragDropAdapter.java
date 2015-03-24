@@ -57,8 +57,10 @@ public class DragDropAdapter<VH extends RecyclerView.ViewHolder, T extends Recyc
      * Commits the current position to the original adapter.
      */
     void commitCurrentPosition() {
+        mBaseAdapter.unregisterAdapterDataObserver(mBaseAdapterDataObserver);
         mBaseAdapter.moveItem(mDraggedPosition, mCurrentPosition);
         mDraggedPosition = mCurrentPosition;
+        mBaseAdapter.registerAdapterDataObserver(mBaseAdapterDataObserver);
     }
 
     /**
