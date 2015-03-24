@@ -77,10 +77,11 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     public WithLayerItemAnimator() {
+        this(false);
     }
 
     public WithLayerItemAnimator(boolean supportsChangingAnimations) {
-        setSupportsChangeAnimations(true);
+        setSupportsChangeAnimations(supportsChangingAnimations);
     }
 
     @Override
