@@ -385,7 +385,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             }
         }
         int endBoundaryPosition = mDragDropAdapter.getEndBoundaryPosition();
-        Log.e("WUT", "Current position: " + mDragDropAdapter.getCurrentPosition() + ", end boundary position: " + endBoundaryPosition);
         if (endBoundaryPosition != DragDrop.NO_BOUNDARY && mDragDropAdapter.getCurrentPosition() < endBoundaryPosition) {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(endBoundaryPosition);
             if (holder != null) {
