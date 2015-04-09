@@ -3,7 +3,7 @@ package io.doist.recyclerviewext.choice_modes;
 import android.support.v7.widget.RecyclerView;
 import android.widget.AbsListView;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -15,7 +15,7 @@ import java.util.Set;
  * {@link android.R.attr#state_activated} reflect the selected state.
  */
 public class MultiSelector extends Selector {
-    private Set<Long> mSelectedIds = new HashSet<>();
+    private Set<Long> mSelectedIds = new LinkedHashSet<>();
 
     public MultiSelector(RecyclerView recyclerView, RecyclerView.Adapter adapter) {
         super(recyclerView, adapter);
