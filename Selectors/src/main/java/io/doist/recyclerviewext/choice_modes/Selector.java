@@ -36,6 +36,8 @@ public abstract class Selector {
 
     public abstract void clearSelected();
 
+    protected abstract void clearSelected(boolean notify);
+
     public void bind(RecyclerView.ViewHolder holder) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
     }
@@ -84,7 +86,7 @@ public abstract class Selector {
                         selectedIds.add(id);
                     }
                 }
-                clearSelected();
+                clearSelected(false);
                 for (Long selectedId : selectedIds) {
                     setSelected(selectedId, true);
                 }

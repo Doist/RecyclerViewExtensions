@@ -3,6 +3,7 @@ package io.doist.recyclerviewext.choice_modes;
 import android.support.v7.widget.RecyclerView;
 import android.widget.AbsListView;
 
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -53,11 +54,20 @@ public class MultiSelector extends Selector {
         return mSelectedIds.size();
     }
 
+    @Override
     public void clearSelected() {
-        for (Long selectedId : mSelectedIds) {
-            notifyItemChangedIfVisible(selectedId);
-        }
+        clearSelected(true);
+    }
 
-        mSelectedIds.clear();
+    @Override
+    protected void clearSelected(boolean notify) {
+        Iterator<Long> it = mSelectedIds.iterator();
+        while (it.hasNext()) {
+            Long selectedId = it.next();
+            it.remove();
+            if (notify) {
+                notifyItemChangedIfVisible(selectedId);
+            }
+        }
     }
 }

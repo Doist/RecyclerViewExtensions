@@ -52,11 +52,17 @@ public class SingleSelector extends Selector {
         return mSelected ? 1 : 0;
     }
 
+    @Override
     public void clearSelected() {
-        if (mSelected) {
+        clearSelected(true);
+    }
+
+    @Override
+    protected void clearSelected(boolean notify) {
+        boolean selected = mSelected;
+        mSelected = false;
+        if (notify && selected) {
             notifyItemChangedIfVisible(mSelectedId);
         }
-
-        mSelected = false;
     }
 }
