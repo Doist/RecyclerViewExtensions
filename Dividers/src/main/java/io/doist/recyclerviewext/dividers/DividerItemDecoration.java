@@ -103,7 +103,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         for (int i = 0; i < childCount; i++) {
             View child = parent.getChildAt(i);
             if (!hasDivider(parent, child)) {
-                break;
+                continue;
             }
 
             RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
@@ -121,7 +121,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         for (int i = 0; i < childCount; i++) {
             View child = parent.getChildAt(i);
             if (!hasDivider(parent, child)) {
-                break;
+                continue;
             }
 
             RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
@@ -151,6 +151,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     }
 
     private boolean hasDivider(RecyclerView parent, View child) {
-        return mDividers == null || mDividers.hasDivider(parent.getChildLayoutPosition(child));
+        int position = parent.getChildLayoutPosition(child);
+        return position == RecyclerView.NO_POSITION || mDividers == null || mDividers.hasDivider(position);
     }
 }
