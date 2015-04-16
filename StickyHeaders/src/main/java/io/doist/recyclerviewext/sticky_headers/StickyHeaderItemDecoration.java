@@ -230,11 +230,9 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      */
     private int getX(RecyclerView parent, View headerView, View nextHeaderView) {
         if (!mVertical) {
-            int x;
+            int x = (int) parent.getTranslationX();
             if (mReverse) {
                 x = parent.getWidth() - headerView.getWidth();
-            } else {
-                x = 0;
             }
             if (nextHeaderView != null) {
                 int translationX = Math.round(nextHeaderView.getTranslationX());
@@ -246,7 +244,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             }
             return x;
         } else {
-            return 0;
+            return (int) parent.getTranslationX();
         }
     }
 
@@ -256,11 +254,9 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      */
     private int getY(RecyclerView parent, View headerView, View nextHeaderView) {
         if (mVertical) {
-            int y;
+            int y = (int) parent.getTranslationY();
             if (mReverse) {
-                y = parent.getHeight() - headerView.getHeight();
-            } else {
-                y = 0;
+                y += parent.getHeight() - headerView.getHeight();
             }
             if (nextHeaderView != null) {
                 int translationY = Math.round(nextHeaderView.getTranslationY());
@@ -272,7 +268,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             }
             return y;
         } else {
-            return 0;
+            return (int) parent.getTranslationY();
         }
     }
 
