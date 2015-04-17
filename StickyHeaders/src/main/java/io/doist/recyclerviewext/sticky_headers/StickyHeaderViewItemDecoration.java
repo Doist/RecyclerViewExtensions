@@ -40,8 +40,8 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
     @Override
     protected void onDisplayStickyHeader(final RecyclerView.ViewHolder stickyHeader, final RecyclerView parent,
                                          final Canvas canvas, final int x, final int y) {
-        stickyHeader.itemView.setTranslationX(x);
-        stickyHeader.itemView.setTranslationY(y);
+        mWrapper.setTranslationX(x);
+        mWrapper.setTranslationY(y);
     }
 
     @Override
@@ -128,11 +128,10 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
     }
 
     /**
-     * Wrapper around the sticky header. Exists for two reasons:
-     * - The sticky header can be fetched from the {@link RecyclerView.RecycledViewPool}, which is used to share views
-     * between {@link RecyclerView}s. This means changing its layout params is dangerous and will lead to crashes, but
-     * by using a wrapper view we don't need to;
-     * - Easy clipping of the sticky header when above the parent's padding / margin.
+     * Wrapper around the sticky header. Exists because the sticky header can be fetched from the
+     * {@link RecyclerView.RecycledViewPool}, which is used to share views between {@link RecyclerView}s.
+     * This means changing its layout params is dangerous and will lead to crashes, but by using a wrapper view
+     * there's no need.
      */
     private static class WrapperViewGroup extends ViewGroup {
         public WrapperViewGroup(Context context) {

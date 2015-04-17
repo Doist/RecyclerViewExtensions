@@ -31,6 +31,9 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     private boolean mVertical;
     private boolean mReverse;
 
+    private int mTranslationX;
+    private int mTranslationY;
+
     // Header positions for the currently displayed list.
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
 
@@ -62,6 +65,22 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
         mReverse = reverse;
     }
 
+    /**
+     * Offsets the vertical location of the sticky header relative to the its default position.
+     * Applied when this {@link RecyclerView.ItemDecoration} is invalidated.
+     */
+    public void setTranslationY(int translationY) {
+        mTranslationY = translationY;
+    }
+
+    /**
+     * Offsets the horizontal location of the sticky header relative to the its default position.
+     * Applied when this {@link RecyclerView.ItemDecoration} is invalidated.
+     */
+    public void setTranslationX(int translationX) {
+        mTranslationX = translationX;
+    }
+
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         outRect.set(0, 0, 0, 0);
@@ -73,26 +92,25 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
         int childCount = parent.getChildCount();
         if (headerCount > 0 && childCount > 0) {
             // Find first valid child.
-            View firstChild = null;
-            int firstChildIndex = -1;
-            int firstChildPos = -1;
+            View anchorView = null;
+            int anchorIndex = -1;
+            int anchorPos = -1;
             for (int i = 0; i < childCount; i++) {
                 View child = parent.getChildAt(i);
-                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
-                if (!params.isItemRemoved() && !params.isViewInvalid()) {
-                    firstChild = child;
-                    firstChildIndex = i;
-                    firstChildPos = params.getViewLayoutPosition();
+                if (isViewValidAnchor(parent, child)) {
+                    anchorView = child;
+                    anchorIndex = i;
+                    anchorPos = parent.getChildLayoutPosition(child);
                     break;
                 }
             }
 
-            if (firstChild != null) {
-                int index = findHeaderIndexOrBefore(firstChildPos);
+            if (anchorView != null) {
+                int index = findHeaderIndexOrBefore(anchorPos);
                 int headerPos = index != -1 ? mHeaderPositions.get(index) : -1;
                 // Show header if there's one to show, and if it's not the first view or is on the edge.
 
-                if (headerPos != -1 && (headerPos != firstChildPos || isViewOnBoundary(parent, firstChild))) {
+                if (headerPos != -1 && (headerPos != anchorPos || isViewOnBoundary(parent, anchorView))) {
                     // Ensure existing sticky header, if any, is of correct type.
                     if (mStickyHeader != null
                             && mStickyHeader.getItemViewType() != mAdapter.getItemViewType(headerPos)) {
@@ -113,7 +131,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                     View nextHeaderView = null;
                     if (mHeaderPositions.size() > index + 1) {
                         int nextHeaderPos = mHeaderPositions.get(index + 1);
-                        nextHeaderView = parent.getChildAt(firstChildIndex + (nextHeaderPos - firstChildPos));
+                        nextHeaderView = parent.getChildAt(anchorIndex + (nextHeaderPos - anchorPos));
                     }
                     int x = getX(parent, mStickyHeader.itemView, nextHeaderView);
                     int y = getY(parent, mStickyHeader.itemView, nextHeaderView);
@@ -206,45 +224,45 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     protected abstract void onScrapStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent);
 
     /**
+     * Returns true when {@code view} is a valid anchor, ie. the first view to be valid and visible.
+     */
+    private boolean isViewValidAnchor(RecyclerView parent, View view) {
+        RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) view.getLayoutParams();
+        if (!params.isItemRemoved() && !params.isViewInvalid()) {
+            if (mVertical) {
+                if (mReverse) {
+                    return view.getTop() <= parent.getHeight() + mTranslationY;
+                } else {
+                    return view.getBottom() >= mTranslationY;
+                }
+            } else {
+                if (mReverse) {
+                    return view.getLeft() <= parent.getWidth() + mTranslationX;
+                } else {
+                    return view.getRight() >= mTranslationX;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Returns true when the {@code view} is at the edge of the parent {@link RecyclerView}.
      */
     private boolean isViewOnBoundary(RecyclerView parent, View view) {
         if (mVertical) {
             if (mReverse) {
-                return view.getBottom() - view.getTranslationY() > parent.getHeight();
+                return view.getBottom() - view.getTranslationY() > parent.getHeight() + mTranslationY;
             } else {
-                return view.getTop() < -view.getTranslationY();
+                return view.getTop() + view.getTranslationY() < mTranslationY;
             }
         } else {
             if (mReverse) {
-                return view.getRight() - view.getTranslationX() > parent.getWidth();
+                return view.getRight() - view.getTranslationX() > parent.getWidth() + mTranslationX;
             } else {
-                return view.getLeft() < -view.getTranslationX();
+                return view.getLeft() + view.getTranslationX() < mTranslationX;
             }
-        }
-    }
-
-    /**
-     * Returns the position in the X axis to position the header appropriately, depending on orientation, direction and
-     * {@link android.R.attr#clipToPadding}.
-     */
-    private int getX(RecyclerView parent, View headerView, View nextHeaderView) {
-        if (!mVertical) {
-            int x = (int) parent.getTranslationX();
-            if (mReverse) {
-                x = parent.getWidth() - headerView.getWidth();
-            }
-            if (nextHeaderView != null) {
-                int translationX = Math.round(nextHeaderView.getTranslationX());
-                if (mReverse) {
-                    x = Math.max(nextHeaderView.getRight() + translationX, x);
-                } else {
-                    x = Math.min(nextHeaderView.getLeft() - headerView.getWidth() + translationX, x);
-                }
-            }
-            return x;
-        } else {
-            return (int) parent.getTranslationX();
         }
     }
 
@@ -254,7 +272,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      */
     private int getY(RecyclerView parent, View headerView, View nextHeaderView) {
         if (mVertical) {
-            int y = (int) parent.getTranslationY();
+            int y = (int) parent.getTranslationY() + mTranslationY;
             if (mReverse) {
                 y += parent.getHeight() - headerView.getHeight();
             }
@@ -268,7 +286,31 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             }
             return y;
         } else {
-            return (int) parent.getTranslationY();
+            return (int) parent.getTranslationY() + mTranslationY;
+        }
+    }
+
+    /**
+     * Returns the position in the X axis to position the header appropriately, depending on orientation, direction and
+     * {@link android.R.attr#clipToPadding}.
+     */
+    private int getX(RecyclerView parent, View headerView, View nextHeaderView) {
+        if (!mVertical) {
+            int x = (int) parent.getTranslationX() + mTranslationX;
+            if (mReverse) {
+                x += parent.getWidth() - headerView.getWidth();
+            }
+            if (nextHeaderView != null) {
+                int translationX = Math.round(nextHeaderView.getTranslationX());
+                if (mReverse) {
+                    x = Math.max(nextHeaderView.getRight() + translationX, x);
+                } else {
+                    x = Math.min(nextHeaderView.getLeft() - headerView.getWidth() + translationX, x);
+                }
+            }
+            return x;
+        } else {
+            return (int) parent.getTranslationX() + mTranslationX;
         }
     }
 
