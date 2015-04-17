@@ -17,6 +17,14 @@ public class StickyHeaderCanvasItemDecoration<T extends RecyclerView.Adapter & S
         super(adapter);
     }
 
+    public StickyHeaderCanvasItemDecoration(T adapter, boolean vertical) {
+        super(adapter, vertical);
+    }
+
+    public StickyHeaderCanvasItemDecoration(T adapter, boolean vertical, boolean reverse) {
+        super(adapter, vertical, reverse);
+    }
+
     @Override
     protected void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, Canvas canvas,
                                          int x, int y) {

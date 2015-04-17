@@ -25,7 +25,15 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
     private float mOriginalTranslationY;
 
     public StickyHeaderViewItemDecoration(Context context, T adapter) {
-        super(adapter);
+        this(context, adapter, true);
+    }
+
+    public StickyHeaderViewItemDecoration(Context context, T adapter, boolean vertical) {
+        this(context, adapter, vertical, false);
+    }
+
+    public StickyHeaderViewItemDecoration(Context context, T adapter, boolean vertical, boolean reverse) {
+        super(adapter, vertical, reverse);
         mWrapper = new WrapperViewGroup(context);
     }
 

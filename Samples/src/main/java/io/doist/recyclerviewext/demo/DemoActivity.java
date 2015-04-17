@@ -25,6 +25,7 @@ import io.doist.recyclerviewext.sticky_headers.StickyHeaderViewItemDecoration;
 public class DemoActivity extends ActionBarActivity {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
+    private LinearLayoutManager mLinearLayoutManager;
     private DemoAdapter mAdapter;
     private ProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
     private DragDropManager mDragDropManager;
@@ -129,9 +130,16 @@ public class DemoActivity extends ActionBarActivity {
 
     public RecyclerView.ItemDecoration getDecorator() {
         if (mDecoratorCount % 2 == 0) {
-            return new StickyHeaderCanvasItemDecoration<>(mAdapter);
+            return new StickyHeaderCanvasItemDecoration<>(
+                    mAdapter,
+                    mLinearLayoutManager.getOrientation() == LinearLayoutManager.VERTICAL,
+                    mLinearLayoutManager.getReverseLayout());
         } else {
-            return new StickyHeaderViewItemDecoration<>(this, mAdapter);
+            return new StickyHeaderViewItemDecoration<>(
+                    this,
+                    mAdapter,
+                    mLinearLayoutManager.getOrientation() == LinearLayoutManager.VERTICAL,
+                    mLinearLayoutManager.getReverseLayout());
         }
     }
 
@@ -153,7 +161,8 @@ public class DemoActivity extends ActionBarActivity {
     public void setNextLayout() {
         int orientation = mLayoutCount % 2 == 0 ? LinearLayoutManager.VERTICAL : LinearLayoutManager.HORIZONTAL;
         boolean reverse = mLayoutCount % 3 == 0;
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this, orientation, reverse));
+        mLinearLayoutManager = new LinearLayoutManager(this, orientation, reverse);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mAdapter = new DemoAdapter(orientation == LinearLayoutManager.HORIZONTAL);
         mAdapter.setDragDropManager(mDragDropManager);
         mAdapter.setDataset(getAdapterItems());
