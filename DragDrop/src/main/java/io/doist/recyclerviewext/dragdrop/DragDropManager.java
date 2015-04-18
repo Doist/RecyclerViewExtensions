@@ -221,16 +221,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         mDragDropAdapter.destroy();
         mDragDropAdapter = null;
 
-        // Ensure no item animations triggered by swapping adapters run.
-        if (itemAnimator != null) {
-            mRecyclerView.post(new Runnable() {
-                @Override
-                public void run() {
-                    itemAnimator.endAnimations();
-                }
-            });
-        }
-
         // Reset the scroll speed.
         mScrollSpeed = 0;
     }
