@@ -21,4 +21,19 @@ public interface DragDrop {
      * If there is no boundary, return {@code NO_BOUNDARY}.
      */
     int getDragEndBoundaryPosition(int position);
+
+    /**
+     * Adjusts any necessary properties of the {@code holder} that is being dragged.
+     *
+     * {@link #teardownDragViewHolder(RecyclerView.ViewHolder)} will be called sometime after this method and before
+     * any other calls to this method go through.
+     */
+    void setupDragViewHolder(RecyclerView.ViewHolder holder);
+
+    /**
+     * Reverts any properties changed in {@link #setupDragViewHolder(RecyclerView.ViewHolder)}.
+     *
+     * Called after {@link #setupDragViewHolder(RecyclerView.ViewHolder)}.
+     */
+    void teardownDragViewHolder(RecyclerView.ViewHolder holder);
 }

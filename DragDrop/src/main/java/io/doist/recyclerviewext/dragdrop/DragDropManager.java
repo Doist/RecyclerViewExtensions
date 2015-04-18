@@ -619,6 +619,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * item changes.
      */
     void updateItemBitmap(RecyclerView.ViewHolder holder) {
+        mAdapter.setupDragViewHolder(holder);
+
         int draggedItemWidth = holder.itemView.getWidth();
         int draggedItemHeight = holder.itemView.getHeight();
 
@@ -636,6 +638,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
         Canvas canvas = new Canvas(mItemBitmap);
         holder.itemView.draw(canvas);
+
+        mAdapter.teardownDragViewHolder(holder);
     }
 
     /**
