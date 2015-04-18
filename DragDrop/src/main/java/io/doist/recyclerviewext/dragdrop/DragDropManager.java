@@ -52,11 +52,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private boolean mDragging;
 
     /**
-     * Position of the dragged item in the original adapter. It's updated by {@link DragDropAdapter} if the underlying
-     * adapter changes.
-     */
-    private int mItemPosition;
-    /**
      * Used to draw the item. Updates can be requested by {@link DragDropAdapter} when the underlying item changes.
      * Due to lack of support for z-order on KitKat and before the view itself is not used, as it'd be clipped by the
      * following view while dragging.
@@ -112,8 +107,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(position);
             if (holder != null && holder.itemView != null) {
                 mDragging = true;
-
-                mItemPosition = position;
 
                 int itemLeft = holder.itemView.getLeft();
                 int itemTop = holder.itemView.getTop();
@@ -669,7 +662,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * changes.
      */
     void updateItemPosition(int position) {
-        mItemPosition = position;
         if (!mFindPositionRunnable.isScheduled()) {
             mRecyclerView.postOnAnimation(mFindPositionRunnable);
             mFindPositionRunnable.setScheduled();
