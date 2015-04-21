@@ -27,8 +27,10 @@ public interface DragDrop {
      *
      * {@link #teardownDragViewHolder(RecyclerView.ViewHolder)} will be called sometime after this method and before
      * any other calls to this method go through.
+     *
+     * @return true if any changes require a re-layout, false if not.
      */
-    void setupDragViewHolder(RecyclerView.ViewHolder holder);
+    boolean setupDragViewHolder(RecyclerView.ViewHolder holder);
 
     /**
      * Reverts any properties changed in {@link #setupDragViewHolder(RecyclerView.ViewHolder)}.

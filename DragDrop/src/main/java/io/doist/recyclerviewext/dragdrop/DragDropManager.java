@@ -13,6 +13,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 
@@ -615,31 +616,26 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     }
 
     /**
-     * Updates the item bitmap. Besides the initial creation, it's used by {@link DragDropAdapter} whenever the dragged
-     * item changes.
+     * Updates the item bitmap, including setting any necessary changes and tearing them down.
      */
-    void updateItemBitmap(RecyclerView.ViewHolder holder) {
-        mAdapter.setupDragViewHolder(holder);
+    void updateItemBitmap(final RecyclerView.ViewHolder holder) {
+        if(mAdapter.setupDragViewHolder(holder)) {
+            holder.itemView.getViewTreeObserver().addOnGlobalLayoutListener(
+                    new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-        int draggedItemWidth = holder.itemView.getWidth();
-        int draggedItemHeight = holder.itemView.getHeight();
+                            updateItemBitmapInternal(holder);
 
-        if (mItemBitmap != null) {
-            if (mItemBitmap.getWidth() == draggedItemWidth && mItemBitmap.getHeight() == draggedItemHeight) {
-                mItemBitmap.eraseColor(Color.TRANSPARENT);
-            } else {
-                mItemBitmap.recycle();
-                mItemBitmap = null;
-            }
+                            mAdapter.teardownDragViewHolder(holder);
+                        }
+                    });
+        } else {
+            updateItemBitmapInternal(holder);
+
+            mAdapter.teardownDragViewHolder(holder);
         }
-        if (mItemBitmap == null) {
-            mItemBitmap = Bitmap.createBitmap(draggedItemWidth, draggedItemHeight, Bitmap.Config.ARGB_8888);
-        }
-
-        Canvas canvas = new Canvas(mItemBitmap);
-        holder.itemView.draw(canvas);
-
-        mAdapter.teardownDragViewHolder(holder);
     }
 
     /**
@@ -659,6 +655,30 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
                 }
             }
         });
+    }
+
+    /**
+     * Updates the item bitmap. Besides the initial creation, it's used by {@link DragDropAdapter} whenever the dragged
+     * item changes.
+     */
+    private void updateItemBitmapInternal(RecyclerView.ViewHolder holder) {
+        int draggedItemWidth = holder.itemView.getWidth();
+        int draggedItemHeight = holder.itemView.getHeight();
+
+        if (mItemBitmap != null) {
+            if (mItemBitmap.getWidth() == draggedItemWidth && mItemBitmap.getHeight() == draggedItemHeight) {
+                mItemBitmap.eraseColor(Color.TRANSPARENT);
+            } else {
+                mItemBitmap.recycle();
+                mItemBitmap = null;
+            }
+        }
+        if (mItemBitmap == null) {
+            mItemBitmap = Bitmap.createBitmap(draggedItemWidth, draggedItemHeight, Bitmap.Config.ARGB_8888);
+        }
+
+        Canvas canvas = new Canvas(mItemBitmap);
+        holder.itemView.draw(canvas);
     }
 
     /**
