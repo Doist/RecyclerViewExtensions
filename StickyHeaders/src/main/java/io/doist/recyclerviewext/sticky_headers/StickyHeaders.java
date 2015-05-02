@@ -7,5 +7,5 @@ import android.support.v7.widget.RecyclerView;
  * positions that represent sticky headers.
  */
 public interface StickyHeaders {
-    public boolean isHeader(int position);
+    boolean isHeader(int position);
 }
