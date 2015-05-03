@@ -139,10 +139,6 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        if (!hasDivider(parent, view)) {
-            return;
-        }
-
         if (mVertical) {
             outRect.set(0, 0, 0, mDrawable.getIntrinsicHeight());
         } else {
