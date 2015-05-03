@@ -34,18 +34,18 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
 
     public StickyHeaderViewItemDecoration(Context context, T adapter, boolean vertical, boolean reverse) {
         super(adapter, vertical, reverse);
-        mWrapper = new WrapperViewGroup(context);
+        mWrapper = new WrapperViewGroup(context, vertical);
     }
 
     @Override
-    protected void onDisplayStickyHeader(final RecyclerView.ViewHolder stickyHeader, final RecyclerView parent,
-                                         final Canvas canvas, final int x, final int y) {
+    protected void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, Canvas canvas,
+                                         int x, int y) {
         mWrapper.setTranslationX(x);
         mWrapper.setTranslationY(y);
     }
 
     @Override
-    protected void onCreateStickyHeader(final RecyclerView.ViewHolder stickyHeader, final RecyclerView parent,
+    protected void onCreateStickyHeader(RecyclerView.ViewHolder stickyHeader, final RecyclerView parent,
                                         final boolean vertical, int position) {
         // Keep the original translation values for restoring later.
         mOriginalTranslationX = stickyHeader.itemView.getTranslationX();
@@ -54,36 +54,19 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
         // Add the sticky header to the wrapper view.
         mWrapper.addViewInLayout(stickyHeader.itemView, -1, stickyHeader.itemView.getLayoutParams());
 
-        // Use the parent to measure and use the exact dimensions it'd have inside the list.
-        RecyclerView.LayoutManager manager = parent.getLayoutManager();
-        if (manager != null) {
-            ViewGroup.MarginLayoutParams params =
-                    (ViewGroup.MarginLayoutParams) stickyHeader.itemView.getLayoutParams();
-            manager.measureChildWithMargins(stickyHeader.itemView, 0, 0);
-            params.width = stickyHeader.itemView.getMeasuredWidth();
-            params.height = stickyHeader.itemView.getMeasuredHeight();
-            params.leftMargin = params.rightMargin = params.topMargin = params.bottomMargin = 0;
-            stickyHeader.itemView.setLayoutParams(params);
-        }
-
         // Add the wrapper to the parent's container. Do it on a post given this is called in RecyclerView#draw().
         parent.post(new Runnable() {
             @Override
             public void run() {
-                // Add the view to the container.
+                // Add the wrapper view to the container.
                 ViewGroup container = (ViewGroup) parent.getParent();
-                container.addView(mWrapper);
+                container.addView(mWrapper,
+                                  new ViewGroup.MarginLayoutParams(ViewGroup.MarginLayoutParams.WRAP_CONTENT,
+                                                                   ViewGroup.MarginLayoutParams.WRAP_CONTENT));
 
                 // Tweak its layout params, using the parent's margins / padding.
                 ViewGroup.MarginLayoutParams parentParams = (ViewGroup.MarginLayoutParams) parent.getLayoutParams();
                 ViewGroup.MarginLayoutParams wrapperParams = (ViewGroup.MarginLayoutParams) mWrapper.getLayoutParams();
-                if (vertical) {
-                    wrapperParams.width = ViewGroup.MarginLayoutParams.MATCH_PARENT;
-                    wrapperParams.height = ViewGroup.MarginLayoutParams.WRAP_CONTENT;
-                } else {
-                    wrapperParams.width = ViewGroup.MarginLayoutParams.WRAP_CONTENT;
-                    wrapperParams.height = ViewGroup.MarginLayoutParams.MATCH_PARENT;
-                }
                 if (vertical) {
                     // Adjust width / height and horizontal margins for a vertical layout.
                     wrapperParams.leftMargin = parentParams.leftMargin + parent.getPaddingLeft();
@@ -134,8 +117,11 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
      * there's no need.
      */
     private static class WrapperViewGroup extends ViewGroup {
-        public WrapperViewGroup(Context context) {
+        private boolean mVertical;
+
+        public WrapperViewGroup(Context context, boolean vertical) {
             super(context);
+            mVertical = vertical;
         }
 
         @Override
@@ -150,8 +136,11 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             View child = getChildAt(0);
             if (child != null) {
-                child.measure(widthMeasureSpec, heightMeasureSpec);
-
+                LayoutParams lp = child.getLayoutParams();
+                child.measure(RecyclerView.LayoutManager.getChildMeasureSpec(
+                                      MeasureSpec.getSize(widthMeasureSpec), 0, lp.width, !mVertical),
+                              RecyclerView.LayoutManager.getChildMeasureSpec(
+                                      MeasureSpec.getSize(heightMeasureSpec), 0, lp.height, mVertical));
                 setMeasuredDimension(child.getMeasuredWidth(), child.getMeasuredHeight());
             } else {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
