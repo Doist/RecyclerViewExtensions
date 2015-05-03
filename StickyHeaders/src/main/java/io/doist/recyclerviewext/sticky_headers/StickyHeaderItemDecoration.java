@@ -379,7 +379,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
         public void run() {
             int itemCount = mAdapter.getItemCount();
             for (int i = 0; i < itemCount; i++) {
-                if (mAdapter.isHeader(i)) {
+                if (mAdapter.isStickyHeader(i)) {
                     mHeaderPositions.add(i);
                 }
             }
@@ -391,7 +391,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             mHeaderPositions.clear();
             int itemCount = mAdapter.getItemCount();
             for (int i = 0; i < itemCount; i++) {
-                if (mAdapter.isHeader(i)) {
+                if (mAdapter.isStickyHeader(i)) {
                     mHeaderPositions.add(i);
                 }
             }
@@ -418,7 +418,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
 
             // Add new headers.
             for (int i = positionStart; i < positionStart + itemCount; i++) {
-                if (mAdapter.isHeader(i)) {
+                if (mAdapter.isStickyHeader(i)) {
                     int headerIndex = findHeaderIndexOrNext(i);
                     if (headerIndex != -1) {
                         mHeaderPositions.add(headerIndex, i);
