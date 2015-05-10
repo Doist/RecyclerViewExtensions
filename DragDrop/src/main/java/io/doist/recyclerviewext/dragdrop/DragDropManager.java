@@ -13,6 +13,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -108,6 +109,12 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(position);
             if (holder != null && holder.itemView != null) {
                 mDragging = true;
+
+                // Prevent ancestors from intercepting touch events.
+                ViewParent recyclerViewParent = mRecyclerView.getParent();
+                if (recyclerViewParent != null) {
+                    recyclerViewParent.requestDisallowInterceptTouchEvent(true);
+                }
 
                 int itemLeft = holder.itemView.getLeft();
                 int itemTop = holder.itemView.getTop();
