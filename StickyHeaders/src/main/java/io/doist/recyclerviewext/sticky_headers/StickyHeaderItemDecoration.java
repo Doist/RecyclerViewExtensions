@@ -51,9 +51,13 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
 
     public StickyHeaderItemDecoration(T adapter, boolean vertical, boolean reverse) {
         mAdapter = adapter;
-        adapter.registerAdapterDataObserver(new HeaderPositionsAdapterDataObserver());
         mVertical = vertical;
         mReverse = reverse;
+
+        // Monitor the adapter, building a list of the current headers.
+        RecyclerView.AdapterDataObserver observer = new HeaderPositionsAdapterDataObserver();
+        adapter.registerAdapterDataObserver(observer);
+        observer.onChanged();
     }
 
     /**
