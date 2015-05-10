@@ -1,6 +1,7 @@
 package io.doist.recyclerviewext.animations;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +53,19 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
     public abstract Integer getItemChangeHash(int position);
 
     /**
+     * Returns wether animations are enabled or not.
+     */
+    public final boolean areAnimationsEnabled() {
+        return mAnimationsEnabled;
+    }
+
+    /**
      * Sets whether animations are enabled or not (by default they are).
      *
      * If set to {@code false}, {@link #animateDataSetChanged()} and {@link #animatePendingDataSetChanges()} proxy to
      * {@link #notifyDataSetChanged()}, and {@link #prepareDataSetChanges(List, List)} is a no-op.
      */
-    public void setAnimationsEnabled(boolean enabled) {
+    public final void setAnimationsEnabled(boolean enabled) {
         if (mAnimationsEnabled != enabled) {
             mAnimationsEnabled = enabled;
 
@@ -77,7 +85,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
      * Prepare data set changes to later be applied using {@link #animatePendingDataSetChanges()}.
      * The adapter must not change between both calls.
      */
-    public synchronized void prepareDataSetChanges(List<Object> animationIds, List<Integer> changeHashes) {
+    public final synchronized void prepareDataSetChanges(List<Object> animationIds, List<Integer> changeHashes) {
         if (mAnimationsEnabled) {
             mPendingOps.clear();
 
@@ -210,7 +218,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
      * Animates the adapter changes based on the {@link #getItemAnimationId(int)} and {@link #getItemChangeHash(int)} of
      * each item.
      */
-    public synchronized void animateDataSetChanged() {
+    public final synchronized void animateDataSetChanged() {
         if (mAnimationsEnabled) {
             // Prepare list of animation and change ids.
             int itemCount = getItemCount();
@@ -240,6 +248,10 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
             mChangeHashes.clear();
 
             int itemCount = getItemCount();
+
+            mAnimationIds.ensureCapacity(itemCount);
+            mChangeHashes.ensureCapacity(itemCount);
+
             for (int i = 0; i < itemCount; i++) {
                 mAnimationIds.add(getItemAnimationId(i));
                 mChangeHashes.add(getItemChangeHash(i));
