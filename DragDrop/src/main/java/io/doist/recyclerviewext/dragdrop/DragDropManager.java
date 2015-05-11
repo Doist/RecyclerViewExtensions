@@ -116,18 +116,19 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
                     recyclerViewParent.requestDisallowInterceptTouchEvent(true);
                 }
 
+                // Create the item bitmap to be drawn in onDrawOver().
+                // Has the side-effect of setting up the holder, if required by the adapter, before getting properties.
+                updateItemBitmap(holder);
+
                 int itemLeft = holder.itemView.getLeft();
                 int itemTop = holder.itemView.getTop();
 
-                // Grab the first location using this item's view.
+                // Get the first location using this item's view.
                 mItemLocation.set(itemLeft, itemTop, holder.itemView.getRight(), holder.itemView.getBottom());
 
-                // Store the initial left / top of the item to calculate left / top limits during the drag.
+                // Get the initial left / top of the item to calculate left / top limits during the drag.
                 mItemInitialLeft = itemLeft;
                 mItemInitialTop = itemTop;
-
-                // Create the item bitmap to be drawn in onDrawOver().
-                updateItemBitmap(holder);
 
                 // Swap the adapter with a wrapper adapter that facilitates drag and drop by moving the dragged position
                 // around while mapping to the original adapter's positions.
