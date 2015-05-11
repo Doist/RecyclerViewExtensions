@@ -322,27 +322,29 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         final View view = holder.itemView;
         final RecyclerView.ViewHolder newHolder = changeInfo.newHolder;
         final View newView = newHolder != null ? newHolder.itemView : null;
-        mChangeAnimations.add(changeInfo.oldHolder);
+        if (view != null) {
+            mChangeAnimations.add(changeInfo.oldHolder);
+            final ViewPropertyAnimator oldViewAnim = view.animate().withLayer().setDuration(getChangeDuration());
+            oldViewAnim.translationX(changeInfo.toX - changeInfo.fromX);
+            oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
+            oldViewAnim.alpha(0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationStart(Animator anim) {
+                    dispatchChangeStarting(changeInfo.oldHolder, true);
+                }
 
-        final ViewPropertyAnimator oldViewAnim = view.animate().withLayer().setDuration(getChangeDuration());
-        oldViewAnim.translationX(changeInfo.toX - changeInfo.fromX);
-        oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
-        oldViewAnim.alpha(0).setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator anim) {
-                dispatchChangeStarting(changeInfo.oldHolder, true);
-            }
-            @Override
-            public void onAnimationEnd(Animator anim) {
-                oldViewAnim.setListener(null);
-                view.setAlpha(1);
-                view.setTranslationX(0);
-                view.setTranslationY(0);
-                dispatchChangeFinished(changeInfo.oldHolder, true);
-                mChangeAnimations.remove(changeInfo.oldHolder);
-                dispatchFinishedWhenDone();
-            }
-        }).start();
+                @Override
+                public void onAnimationEnd(Animator anim) {
+                    oldViewAnim.setListener(null);
+                    view.setAlpha(1);
+                    view.setTranslationX(0);
+                    view.setTranslationY(0);
+                    dispatchChangeFinished(changeInfo.oldHolder, true);
+                    mChangeAnimations.remove(changeInfo.oldHolder);
+                    dispatchFinishedWhenDone();
+                }
+            }).start();
+        }
         if (newView != null) {
             mChangeAnimations.add(changeInfo.newHolder);
             final ViewPropertyAnimator newViewAnimation = newView.animate().withLayer();
