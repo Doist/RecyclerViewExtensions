@@ -22,7 +22,8 @@ import android.view.animation.Interpolator;
  * Adds drag and drop abilities to your {@link RecyclerView} and its {@link RecyclerView.Adapter}.
  *
  * The workflow is as follows:
- * 1. Have the adapter implement {@link DragDrop}
+ * 1. Have the adapter implement {@link DragDrop} (optionally also {@link DragDrop.Boundaries} and / or
+ * {@link DragDrop.ViewSetup}
  * 2. Call {@link #start(int)} for the position to be dragged when there is an ongoing touch event, which will be
  * tracked
  * 3. Your adapter's {@link DragDrop#moveItem(int, int)} is called when the user releases the item
@@ -356,8 +357,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     /**
      * Updates the item bitmap draw location using the touch position relative to start and the boundaries imposed
-     * by both the {@link RecyclerView} and the specified {@link DragDrop#getDragStartBoundaryPosition(int)} and
-     * {@link DragDrop#getDragEndBoundaryPosition(int)} in the adapter.
+     * by both the {@link RecyclerView} and the specified {@link DragDrop.Boundaries#getDragStartBoundaryPosition(int)}
+     * and {@link DragDrop.Boundaries#getDragEndBoundaryPosition(int)} in the adapter.
      */
     private void updateItemLocation() {
         int minLeft = mRecyclerView.getPaddingLeft();
@@ -366,7 +367,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         int maxTop = mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom() - mItemBitmap.getHeight();
 
         int startBoundaryPosition = mDragDropAdapter.getStartBoundaryPosition();
-        if (startBoundaryPosition != DragDrop.NO_BOUNDARY) {
+        if (startBoundaryPosition != DragDrop.Boundaries.NO_BOUNDARY) {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(startBoundaryPosition);
             if (holder != null) {
                 if (mLayoutOrientation == LinearLayoutManager.HORIZONTAL) {
@@ -377,7 +378,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             }
         }
         int endBoundaryPosition = mDragDropAdapter.getEndBoundaryPosition();
-        if (endBoundaryPosition != DragDrop.NO_BOUNDARY && mDragDropAdapter.getCurrentPosition() < endBoundaryPosition) {
+        if (endBoundaryPosition != DragDrop.Boundaries.NO_BOUNDARY
+                && mDragDropAdapter.getCurrentPosition() < endBoundaryPosition) {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(endBoundaryPosition);
             if (holder != null) {
                 if (mLayoutOrientation == LinearLayoutManager.HORIZONTAL) {
@@ -624,25 +626,30 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     }
 
     /**
-     * Updates the item bitmap, including setting any necessary changes and tearing them down.
+     * Updates the item bitmap, including setting up any necessary changes and tearing them down.
      */
     void updateItemBitmap(final RecyclerView.ViewHolder holder) {
-        if(mAdapter.setupDragViewHolder(holder)) {
-            holder.itemView.getViewTreeObserver().addOnGlobalLayoutListener(
-                    new ViewTreeObserver.OnGlobalLayoutListener() {
-                        @Override
-                        public void onGlobalLayout() {
-                            holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+        if (mAdapter instanceof DragDrop.ViewSetup) {
+            final DragDrop.ViewSetup viewSetupAdapter = (DragDrop.ViewSetup) mAdapter;
+            if (viewSetupAdapter.setupDragViewHolder(holder)) {
+                holder.itemView.getViewTreeObserver().addOnGlobalLayoutListener(
+                        new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-                            updateItemBitmapInternal(holder);
+                                updateItemBitmapInternal(holder);
 
-                            mAdapter.teardownDragViewHolder(holder);
-                        }
-                    });
+                                viewSetupAdapter.teardownDragViewHolder(holder);
+                            }
+                        });
+            } else {
+                updateItemBitmapInternal(holder);
+
+                viewSetupAdapter.teardownDragViewHolder(holder);
+            }
         } else {
             updateItemBitmapInternal(holder);
-
-            mAdapter.teardownDragViewHolder(holder);
         }
     }
 

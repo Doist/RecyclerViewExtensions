@@ -78,7 +78,12 @@ public class DragDropAdapter<VH extends RecyclerView.ViewHolder, T extends Recyc
      */
     int getStartBoundaryPosition() {
         if (mStartBoundaryPosition == null) {
-            mStartBoundaryPosition = mBaseAdapter.getDragStartBoundaryPosition(mDraggedPosition);
+            if (mBaseAdapter instanceof DragDrop.Boundaries) {
+                mStartBoundaryPosition =
+                        ((DragDrop.Boundaries) mBaseAdapter).getDragStartBoundaryPosition(mDraggedPosition);
+            } else {
+                mStartBoundaryPosition = DragDrop.Boundaries.NO_BOUNDARY;
+            }
         }
         return mStartBoundaryPosition;
     }
@@ -88,7 +93,12 @@ public class DragDropAdapter<VH extends RecyclerView.ViewHolder, T extends Recyc
      */
     int getEndBoundaryPosition() {
         if (mEndBoundaryPosition == null) {
-            mEndBoundaryPosition = mBaseAdapter.getDragEndBoundaryPosition(mDraggedPosition);
+            if (mBaseAdapter instanceof DragDrop.Boundaries) {
+                mEndBoundaryPosition =
+                        ((DragDrop.Boundaries) mBaseAdapter).getDragEndBoundaryPosition(mDraggedPosition);
+            } else {
+                mEndBoundaryPosition = DragDrop.Boundaries.NO_BOUNDARY;
+            }
         }
         return mEndBoundaryPosition;
     }

@@ -174,6 +174,11 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             mStickyHeader = mAdapter.createViewHolder(parent, itemViewType);
         }
 
+        // Setup holder if the adapter requires it.
+        if (mAdapter instanceof StickyHeaders.ViewSetup) {
+            ((StickyHeaders.ViewSetup) mAdapter).setupStickyHeaderViewHolder(mStickyHeader);
+        }
+
         // Mark dirty as its not bound yet.
         mDirty = true;
 
@@ -212,6 +217,11 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      */
     private void scrapStickyHeader(final RecyclerView parent) {
         onScrapStickyHeader(mStickyHeader, parent);
+
+        // Teardown holder if the adapter requires it.
+        if (mAdapter instanceof StickyHeaders.ViewSetup) {
+            ((StickyHeaders.ViewSetup) mAdapter).teardownStickyHeaderViewHolder(mStickyHeader);
+        }
 
         RecyclerView.RecycledViewPool pool = parent.getRecycledViewPool();
         if (pool != null) {
@@ -281,11 +291,11 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                 y += parent.getHeight() - headerView.getHeight();
             }
             if (nextHeaderView != null) {
-                int translationY = Math.round(nextHeaderView.getTranslationY());
+                int nextHeaderTranslationY = Math.round(nextHeaderView.getTranslationY());
                 if (mReverse) {
-                    y = Math.max(nextHeaderView.getBottom() + translationY, y);
+                    y = Math.max(nextHeaderView.getBottom() + nextHeaderTranslationY, y);
                 } else {
-                    y = Math.min(nextHeaderView.getTop() - headerView.getHeight() + translationY, y);
+                    y = Math.min(nextHeaderView.getTop() - headerView.getHeight() + nextHeaderTranslationY, y);
                 }
             }
             return y;
@@ -305,11 +315,11 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                 x += parent.getWidth() - headerView.getWidth();
             }
             if (nextHeaderView != null) {
-                int translationX = Math.round(nextHeaderView.getTranslationX());
+                int nextHeaderTranslationX = Math.round(nextHeaderView.getTranslationX());
                 if (mReverse) {
-                    x = Math.max(nextHeaderView.getRight() + translationX, x);
+                    x = Math.max(nextHeaderView.getRight() + nextHeaderTranslationX, x);
                 } else {
-                    x = Math.min(nextHeaderView.getLeft() - headerView.getWidth() + translationX, x);
+                    x = Math.min(nextHeaderView.getLeft() - headerView.getWidth() + nextHeaderTranslationX, x);
                 }
             }
             return x;

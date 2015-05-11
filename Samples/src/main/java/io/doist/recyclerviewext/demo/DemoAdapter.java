@@ -97,16 +97,6 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
         mDataset.add(to, mDataset.remove(from));
     }
 
-    @Override
-    public int getDragStartBoundaryPosition(int position) {
-        return NO_BOUNDARY;
-    }
-
-    @Override
-    public int getDragEndBoundaryPosition(int position) {
-        return NO_BOUNDARY;
-    }
-
     public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener,
                                                                           View.OnLongClickListener {
         public TextView textView1;

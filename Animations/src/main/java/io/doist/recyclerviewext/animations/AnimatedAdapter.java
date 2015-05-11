@@ -1,7 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
