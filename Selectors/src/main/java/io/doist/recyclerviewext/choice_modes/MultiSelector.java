@@ -31,6 +31,9 @@ public class MultiSelector extends Selector {
         }
 
         if (changed) {
+            if (mObserver != null) {
+                mObserver.onSelectionChanged(this);
+            }
             notifyItemChangedIfVisible(id);
         }
     }
@@ -65,6 +68,9 @@ public class MultiSelector extends Selector {
         while (it.hasNext()) {
             Long selectedId = it.next();
             it.remove();
+            if (mObserver != null) {
+                mObserver.onSelectionChanged(this);
+            }
             if (notify) {
                 notifyItemChangedIfVisible(selectedId);
             }

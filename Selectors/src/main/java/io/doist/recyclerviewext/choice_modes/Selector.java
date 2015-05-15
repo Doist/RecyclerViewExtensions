@@ -16,10 +16,12 @@ public abstract class Selector {
     protected RecyclerView mRecyclerView;
     protected RecyclerView.Adapter mAdapter;
 
+    protected OnSelectionChangedListener mObserver;
+
     protected Selector(RecyclerView recyclerView, RecyclerView.Adapter adapter) {
         mRecyclerView = recyclerView;
         mAdapter = adapter;
-        mAdapter.registerAdapterDataObserver(new SelectorObserver());
+        mAdapter.registerAdapterDataObserver(new SelectorAdapterDataObserver());
     }
 
     public abstract void setSelected(long id, boolean selected);
@@ -37,6 +39,10 @@ public abstract class Selector {
     public abstract void clearSelected();
 
     protected abstract void clearSelected(boolean notify);
+
+    public void setOnSelectionChangedListener(OnSelectionChangedListener observer) {
+        mObserver = observer;
+    }
 
     public void bind(RecyclerView.ViewHolder holder) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
@@ -65,7 +71,11 @@ public abstract class Selector {
         }
     }
 
-    private class SelectorObserver extends RecyclerView.AdapterDataObserver {
+    public interface OnSelectionChangedListener {
+        void onSelectionChanged(Selector selector);
+    }
+
+    private class SelectorAdapterDataObserver extends RecyclerView.AdapterDataObserver {
         @Override
         public void onChanged() {
             deselectMissingIds();
