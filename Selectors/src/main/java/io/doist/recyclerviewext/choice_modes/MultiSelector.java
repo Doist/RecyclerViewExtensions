@@ -31,10 +31,11 @@ public class MultiSelector extends Selector {
         }
 
         if (changed) {
+            notifyItemChangedIfVisible(id);
+
             if (mObserver != null) {
                 mObserver.onSelectionChanged(this);
             }
-            notifyItemChangedIfVisible(id);
         }
     }
 
@@ -64,16 +65,19 @@ public class MultiSelector extends Selector {
 
     @Override
     protected void clearSelected(boolean notify) {
+        boolean hadSelections = mSelectedIds.size() > 0;
+
         Iterator<Long> it = mSelectedIds.iterator();
         while (it.hasNext()) {
             Long selectedId = it.next();
             it.remove();
-            if (mObserver != null) {
-                mObserver.onSelectionChanged(this);
-            }
             if (notify) {
                 notifyItemChangedIfVisible(selectedId);
             }
+        }
+
+        if (hadSelections && mObserver != null) {
+            mObserver.onSelectionChanged(this);
         }
     }
 }

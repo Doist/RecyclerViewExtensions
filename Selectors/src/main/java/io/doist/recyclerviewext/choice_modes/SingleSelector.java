@@ -29,15 +29,15 @@ public class SingleSelector extends Selector {
         }
 
         if(mSelected != oldSelected || oldSelectedId != mSelectedId) {
-            if (mObserver != null) {
-                mObserver.onSelectionChanged(this);
-            }
-
             if (oldSelected) {
                 notifyItemChangedIfVisible(oldSelectedId);
             }
             if (mSelected) {
                 notifyItemChangedIfVisible(mSelectedId);
+            }
+
+            if (mObserver != null) {
+                mObserver.onSelectionChanged(this);
             }
         }
     }
@@ -63,14 +63,16 @@ public class SingleSelector extends Selector {
 
     @Override
     protected void clearSelected(boolean notify) {
-        boolean selected = mSelected;
+        boolean hadSelection = mSelected;
+
         mSelected = false;
-        if (selected) {
-            if (mObserver != null) {
-                mObserver.onSelectionChanged(this);
-            }
+
+        if (hadSelection) {
             if (notify) {
                 notifyItemChangedIfVisible(mSelectedId);
+            }
+            if (mObserver != null) {
+                mObserver.onSelectionChanged(this);
             }
         }
     }
