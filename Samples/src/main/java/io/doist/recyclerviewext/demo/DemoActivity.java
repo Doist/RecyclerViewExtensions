@@ -101,6 +101,8 @@ public class DemoActivity extends ActionBarActivity {
     }
 
     private static final Object[][] ITEMS = {
+            {"e", "b", "f", "f", "a", "b", "c", "d", "e"},
+            {"f", "g", "h", "e"},
             {1,"a","b","c","d","e","f","g","h","i","j",2,3,"k","l",4,"m","n","o","p","q","r","s","t","u","v","w","x","y","z"},
             {2,"c","f","b"},
             {"c","e",2,"b"},

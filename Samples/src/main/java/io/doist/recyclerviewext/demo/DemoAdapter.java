@@ -1,5 +1,6 @@
 package io.doist.recyclerviewext.demo;
 
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,13 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.doist.recyclerviewext.R;
-import io.doist.recyclerviewext.animations.AnimatedAdapter;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.dragdrop.DragDrop;
 import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaders;
 
-public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements StickyHeaders, DragDrop {
+public class DemoAdapter extends RecyclerView.Adapter<BindableViewHolder> implements StickyHeaders, DragDrop {
     private boolean mHorizontal;
 
     private Selector mSelector;
@@ -25,13 +25,13 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
     private List<Object> mDataset;
 
     public DemoAdapter(boolean horizontal) {
-        super(true);
+        setHasStableIds(true);
         mHorizontal = horizontal;
     }
 
     public void setDataset(List<Object> dataset) {
         mDataset = new ArrayList<>(dataset);
-        animateDataSetChanged();
+        notifyDataSetChanged();
     }
 
     public void setSelector(Selector selector) {
@@ -73,22 +73,12 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
     }
 
     @Override
-    public Object getItemAnimationId(int position) {
-        return mDataset.get(position);
-    }
-
-    @Override
-    public Integer getItemChangeHash(int position) {
-        return mDataset.get(position).hashCode();
-    }
-
-    @Override
     public int getItemViewType(int position) {
         return mDataset.get(position) instanceof String ? 0 : 1;
     }
 
     @Override
-    public boolean isHeader(int position) {
+    public boolean isStickyHeader(int position) {
         return mDataset.get(position) instanceof Integer;
     }
 
