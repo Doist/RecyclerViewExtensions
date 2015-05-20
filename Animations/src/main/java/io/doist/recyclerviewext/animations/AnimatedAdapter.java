@@ -86,7 +86,6 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
      */
     public synchronized void prepareDataSetChanges(List<Object> animationIds, List<Integer> changeHashes) {
         if (mAnimationsEnabled) {
-
             mPendingOps.clear();
 
             List<Object> currentAnimationIds = new ArrayList<>(mAnimationIds);
@@ -130,7 +129,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
             Op.Insert insertOp = null;
             for (int i = 0; i < mPendingSize; i++) {
                 if (i >= currentAnimationIds.size()) {
-                    break; // There are duplicate animation ids. Break the loop and bailing out below.
+                    break; // Inconsistency detected. Break the loop and bail out below.
                 }
 
                 Object animationId = animationIds.get(i);
@@ -203,7 +202,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
                 mPendingOps.add(insertOp);
             }
 
-            // Check for duplicate animation ids and bail out if they exist.
+            // Check for inconsistencies (ie. duplicate animation ids) and bail out if they exist.
             if (mAnimationIds.size() + insertCount - removeCount != animationIds.size()) {
                 mPendingOps.clear();
                 mPendingOps.add(new Op.Unknown());
