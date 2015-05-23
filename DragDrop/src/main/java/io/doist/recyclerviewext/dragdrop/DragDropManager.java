@@ -60,6 +60,12 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * following view while dragging.
      */
     private Bitmap mItemBitmap;
+
+    /**
+     * Keeps track of pending item bitmap updates when the {@link RecyclerView.ViewHolder} is waiting for a layout.
+     */
+    private ViewHolderOnGlobalLayoutListener mItemBitmapUpdateListener;
+
     /**
      * Item location on screen, updated in every {@link #onDrawOver(Canvas, RecyclerView, RecyclerView.State)} cycle.
      */
@@ -630,20 +636,33 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      */
     void updateItemBitmap(final RecyclerView.ViewHolder holder) {
         if (mAdapter instanceof DragDrop.ViewSetup) {
+            // Cancel and tear down any item holder waiting for be laid out.
+            if (mItemBitmapUpdateListener != null) {
+                holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(mItemBitmapUpdateListener);
+                ((DragDrop.ViewSetup) mAdapter).teardownDragViewHolder(mItemBitmapUpdateListener.getViewHolder());
+                mItemBitmapUpdateListener = null;
+            }
+
+            // Setup the holder and update the item bitmap.
             final DragDrop.ViewSetup viewSetupAdapter = (DragDrop.ViewSetup) mAdapter;
             if (viewSetupAdapter.setupDragViewHolder(holder)) {
-                holder.itemView.getViewTreeObserver().addOnGlobalLayoutListener(
-                        new ViewTreeObserver.OnGlobalLayoutListener() {
-                            @Override
-                            public void onGlobalLayout() {
-                                holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                // A layout is required, wait for it before updating the item bitmap and tearing down the holder.
+                
+                mItemBitmapUpdateListener = new ViewHolderOnGlobalLayoutListener(holder) {
+                    @Override
+                    public void onGlobalLayout() {
+                        holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mItemBitmapUpdateListener = null;
 
-                                updateItemBitmapInternal(holder);
+                        updateItemBitmapInternal(holder);
 
-                                viewSetupAdapter.teardownDragViewHolder(holder);
-                            }
-                        });
+                        viewSetupAdapter.teardownDragViewHolder(holder);
+                    }
+                };
+                holder.itemView.getViewTreeObserver().addOnGlobalLayoutListener(mItemBitmapUpdateListener);
             } else {
+                // Update item bitmap and tear down the holder immediately.
+
                 updateItemBitmapInternal(holder);
 
                 viewSetupAdapter.teardownDragViewHolder(holder);
@@ -784,6 +803,21 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             mStartTime = SystemClock.uptimeMillis();
             mRecyclerView.invalidate(mItemLocation);
             mRecyclerView.postOnAnimation(this);
+        }
+    }
+
+    /**
+     * {@link ViewTreeObserver.OnGlobalLayoutListener} that keeps track of its {@link RecyclerView.ViewHolder}.
+     */
+    private static abstract class ViewHolderOnGlobalLayoutListener implements ViewTreeObserver.OnGlobalLayoutListener {
+        private RecyclerView.ViewHolder mViewHolder;
+
+        public ViewHolderOnGlobalLayoutListener(RecyclerView.ViewHolder viewHolder) {
+            mViewHolder = viewHolder;
+        }
+
+        public RecyclerView.ViewHolder getViewHolder() {
+            return mViewHolder;
         }
     }
 }
