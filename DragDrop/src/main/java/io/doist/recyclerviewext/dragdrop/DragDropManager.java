@@ -204,6 +204,9 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     @SuppressWarnings("unchecked")
     private void cleanupInternal() {
+        // Clear find position runnable, if pending.
+        mRecyclerView.removeCallbacks(mFindPositionRunnable);
+
         // Clear the item bitmap.
         if (mItemBitmap != null) {
             mItemBitmap.recycle();
