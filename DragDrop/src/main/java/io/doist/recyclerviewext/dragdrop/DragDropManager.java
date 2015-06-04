@@ -80,6 +80,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private int mTouchCurrentY;
     private boolean mTouchUpToDate;
 
+    private boolean mDisallowInterceptTouchEvent = false;
+
     private int mLayoutOrientation;
 
     private final float mScrollSpeedMax;
@@ -239,10 +241,21 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     @Override
     public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-        // Despite returning true the first time, the next event still comes here, hence the apparently unecessary
-        // handling for ACTION_MOVE, ACTION_UP and ACTION_CANCEL.
-
         int action = MotionEventCompat.getActionMasked(e);
+
+        if (mDisallowInterceptTouchEvent) {
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    mDisallowInterceptTouchEvent = false;
+                    break; // Continue handling since down event should always be handled.
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    mDisallowInterceptTouchEvent = false;
+                default:
+                    return false; // Exit now as UP, CANCEL, MOVE and other events shouldn't be handled when disallowed.
+            }
+        }
+
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 handleDown(e);
@@ -289,6 +302,14 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             case MotionEvent.ACTION_CANCEL:
                 handleCancel();
                 break;
+        }
+    }
+
+    @Override
+    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        mDisallowInterceptTouchEvent = disallowIntercept;
+        if (mDisallowInterceptTouchEvent) {
+            mTouchUpToDate = false;
         }
     }
 
