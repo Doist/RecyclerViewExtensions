@@ -494,7 +494,11 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         }
 
         if (scrollByX > 0 || scrollByY > 0) {
-            mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
+            try {
+                mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
+            } catch (NullPointerException e) {
+                // TODO: Remove this when RV is updated: https://code.google.com/p/android/issues/detail?id=174981
+            }
         }
     }
 

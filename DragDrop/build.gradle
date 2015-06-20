@@ -13,5 +13,6 @@ android {
 }
 
 dependencies {
+    // TODO: When updating, look for TODO in DragDropManager and remove the try / catch.
     compile 'com.android.support:recyclerview-v7:22.2.0'
 }
