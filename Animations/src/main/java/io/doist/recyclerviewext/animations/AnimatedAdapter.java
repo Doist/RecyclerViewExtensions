@@ -102,7 +102,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
                 Object currentAnimationId = currentAnimationIds.get(i);
 
                 // Check if the item was removed.
-                if (Utils.indexOf(animationIds, currentAnimationId, i) == -1) {
+                if (Utils.indexOf(animationIds, currentAnimationId, Math.max(i, mPendingSize - 1)) == -1) {
                     currentAnimationIds.remove(i);
                     currentChangeHashes.remove(i);
 

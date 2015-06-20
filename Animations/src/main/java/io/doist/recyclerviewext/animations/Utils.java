@@ -35,7 +35,7 @@ class Utils {
             }
         } else if (startPosition > size / 2) {
             // Search backward if the tail was hit.
-            for (int i = size - (size - Math.max(startPosition, size)) * 2 - 1; i >= 0; i--) {
+            for (int i = size - (size - startPosition) * 2 - 1; i >= 0; i--) {
                 if (equals(object, list.get(i))) {
                     return i;
                 }
