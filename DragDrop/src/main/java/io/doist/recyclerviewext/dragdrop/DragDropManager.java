@@ -62,7 +62,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private Bitmap mItemBitmap;
 
     /**
-     * Keeps track of pending item bitmap updates when the {@link RecyclerView.ViewHolder} is waiting for a layout.
+     * Keeps track of pending item bitmap updates when the {@link RecyclerView.ViewHolder} is waiting to be laid out.
+     * When updated, it removes and clears itself, and updates {@link #mItemBitmap}.
      */
     private ViewHolderOnGlobalLayoutListener mItemBitmapUpdateListener;
 
@@ -208,6 +209,11 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private void cleanupInternal() {
         // Clear find position runnable, if pending.
         mRecyclerView.removeCallbacks(mFindPositionRunnable);
+
+        // Cancel and tear down any item holder waiting for be laid out.
+        if (mItemBitmapUpdateListener != null) {
+            mItemBitmapUpdateListener.onGlobalLayout();
+        }
 
         // Clear the item bitmap.
         if (mItemBitmap != null) {
@@ -666,9 +672,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         if (mAdapter instanceof DragDrop.ViewSetup) {
             // Cancel and tear down any item holder waiting for be laid out.
             if (mItemBitmapUpdateListener != null) {
-                holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(mItemBitmapUpdateListener);
-                ((DragDrop.ViewSetup) mAdapter).teardownDragViewHolder(mItemBitmapUpdateListener.getViewHolder());
-                mItemBitmapUpdateListener = null;
+                mItemBitmapUpdateListener.onGlobalLayout();
             }
 
             // Setup the holder and update the item bitmap.
