@@ -12,7 +12,7 @@ import android.widget.ListView;
  * {@link ListView}.
  */
 public class EmptyRecyclerFlipper extends Flipper {
-    protected View mRecyclerView;
+    protected RecyclerView mRecyclerView;
     protected View mEmptyView;
 
     private RecyclerView.Adapter mAdapter;
@@ -31,15 +31,6 @@ public class EmptyRecyclerFlipper extends Flipper {
     public EmptyRecyclerFlipper(RecyclerView recyclerView, View emptyView) {
         mRecyclerView = recyclerView;
         mEmptyView = emptyView;
-
-        // Grab add / remove ItemAnimator duration (equal in DefaultItemAnimator) as our animator's time.
-        RecyclerView.ItemAnimator itemAnimator = recyclerView.getItemAnimator();
-        if (itemAnimator != null) {
-            long duration = Math.max(itemAnimator.getAddDuration(), itemAnimator.getRemoveDuration());
-            if (duration > 0) {
-                getFlipperAnimator().setFlipDuration(duration);
-            }
-        }
     }
 
     public boolean monitor(RecyclerView.Adapter adapter) {
@@ -63,47 +54,51 @@ public class EmptyRecyclerFlipper extends Flipper {
         return false;
     }
 
-    private class EmptyAdapterDataObserver extends RecyclerView.AdapterDataObserver implements Runnable {
-        private boolean mScheduledCheck = false;
+    private void disableItemAnimatorForRecyclerInAnimation() {
+        final RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
+        FlipperAnimator flipperAnimator = getFlipperAnimator();
+        if(itemAnimator != null && flipperAnimator != null) {
+            mRecyclerView.setItemAnimator(null);
+            mRecyclerView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mRecyclerView.setItemAnimator(itemAnimator);
+                }
+            }, flipperAnimator.getFlipDuration());
+        }
+    }
 
+    @Override
+    protected void replaceInternal(View outView, View inView, boolean animate) {
+        if (animate && inView == mRecyclerView) {
+            disableItemAnimatorForRecyclerInAnimation();
+        }
+        super.replaceInternal(outView, inView, animate);
+    }
+
+    private class EmptyAdapterDataObserver extends RecyclerView.AdapterDataObserver {
         @Override
         public void onChanged() {
-            postRunIfWindowVisible();
+            checkCount(mAdapter.getItemCount());
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            postRunIfWindowVisible();
+            checkCount(mCount + itemCount);
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            postRunIfWindowVisible();
+            checkCount(mCount - itemCount);
         }
 
-        private void postRunIfWindowVisible() {
-            if (mRecyclerView.getWindowVisibility() == View.VISIBLE) {
-                // Adjust visibility in a post to let all notify* calls go through.
-                if (!mScheduledCheck) {
-                    mRecyclerView.post(this);
-                    mScheduledCheck = true;
-                }
-            } else {
-                // Window is not visible yet, so animations won't run. Adjust visibility now.
-                run();
-            }
-        }
-
-        @Override
-        public void run() {
-            int count = mAdapter.getItemCount();
+        private void checkCount(int count) {
             if (count == 0 && mCount > 0) {
                 replace(mRecyclerView, mEmptyView);
             } else if(count > 0 && mCount == 0) {
                 replace(mEmptyView, mRecyclerView);
             }
             mCount = count;
-            mScheduledCheck = false;
         }
     }
 }

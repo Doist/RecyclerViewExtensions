@@ -34,16 +34,6 @@ public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
         mCurrentView = recyclerView.getVisibility() == View.VISIBLE ? recyclerView : emptyView;
     }
 
-    @Override
-    public boolean monitor(RecyclerView.Adapter adapter) {
-        boolean monitored = super.monitor(adapter);
-        if (monitored) {
-            mProgressView.setVisibility(View.GONE);
-            mLoading = false;
-        }
-        return monitored;
-    }
-
     public void setLoading(boolean loading) {
         setLoading(loading, true);
     }
@@ -61,6 +51,16 @@ public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
                 super.replaceInternal(mProgressView, mCurrentView, animate);
             }
         }
+    }
+
+    @Override
+    public boolean monitor(RecyclerView.Adapter adapter) {
+        boolean monitored = super.monitor(adapter);
+        if (monitored) {
+            mProgressView.setVisibility(View.GONE);
+            mLoading = false;
+        }
+        return monitored;
     }
 
     @Override

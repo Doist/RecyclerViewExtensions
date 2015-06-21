@@ -9,45 +9,35 @@ class DefaultFlipperAnimator extends FlipperAnimator {
 
     @Override
     public void animateFlip(final View outView, final View inView) {
-        float initialOutAlpha;
-        float initialInAlpha;
-        if (mAnimating) {
-            initialOutAlpha = outView.getAlpha();
-            initialInAlpha = inView.getAlpha();
-            outView.animate().cancel();
-            inView.animate().cancel();
-        } else {
-            initialInAlpha = 0f;
-            initialOutAlpha = 1f;
-        }
-
-        mAnimating = true;
-
         outView.setVisibility(View.VISIBLE);
-        outView.setAlpha(initialOutAlpha);
-        outView.animate().withLayer().alpha(0f).setDuration(getFlipDuration())
+        outView.setAlpha(1f);
+        outView.animate()
+               .alpha(0f)
+               .setDuration(getFlipDuration())
                .setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                outView.setVisibility(View.GONE);
-                outView.setAlpha(1f);
-            }
-        }).start();
+                   @Override
+                   public void onAnimationEnd(Animator animation) {
+                       outView.setVisibility(View.GONE);
+                       outView.setAlpha(1f);
+                   }
+               })
+               .withLayer();
 
         inView.setVisibility(View.VISIBLE);
-        inView.setAlpha(initialInAlpha);
-        inView.animate().withLayer().alpha(1f).setDuration(getFlipDuration())
+        inView.setAlpha(0f);
+        inView.animate()
+              .alpha(1f)
+              .setDuration(getFlipDuration())
               .setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mAnimating = false;
-            }
+                  @Override
+                  public void onAnimationEnd(Animator animation) {
+                      inView.setAlpha(1f);
+                      mAnimating = false;
+                  }
+              })
+              .withLayer();
 
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                inView.setAlpha(1f);
-            }
-        }).start();
+        mAnimating = true;
     }
 
     @Override
