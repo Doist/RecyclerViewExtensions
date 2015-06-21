@@ -209,6 +209,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private void cleanupInternal() {
         // Clear find position runnable, if pending.
         mRecyclerView.removeCallbacks(mFindPositionRunnable);
+        mFindPositionRunnable.setScheduled(false);
 
         // Cancel and tear down any item holder waiting for be laid out.
         if (mItemBitmapUpdateListener != null) {
@@ -753,8 +754,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      */
     void updateItemPosition() {
         if (!mFindPositionRunnable.isScheduled()) {
-            mRecyclerView.postOnAnimation(mFindPositionRunnable);
-            mFindPositionRunnable.setScheduled();
+            mRecyclerView.post(mFindPositionRunnable);
+            mFindPositionRunnable.setScheduled(true);
         }
     }
 
@@ -784,8 +785,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             return mScheduled;
         }
 
-        public void setScheduled() {
-            mScheduled = true;
+        public void setScheduled(boolean scheduled) {
+            mScheduled = scheduled;
         }
     }
 
