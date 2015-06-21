@@ -168,16 +168,16 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         if (mDragging) {
             mDragging = false;
 
-            // Commit the move tracked so far by the wrapper adapter.
-            mDragDropAdapter.commitCurrentPosition();
-
-            // Settle the item bitmap in its final location. When done, call cleanupInternal() which will release the
-            // remaining resources and effectively stop the drag and drop.
+            // Settle the item bitmap in its final location. When done, commit the move and cleanup resources,
+            // effectively ending the drag & drop.
             mSettlePositionRunnable.start(
                     mDragDropAdapter.getCurrentPosition(),
                     new Runnable() {
                         @Override
                         public void run() {
+                            // Commit the move tracked so far by the wrapper adapter.
+                            mDragDropAdapter.commitCurrentPosition();
+
                             cleanupInternal();
                         }
                     });
