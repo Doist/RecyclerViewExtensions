@@ -229,7 +229,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         // Undo any changes made by the wrapper adapter or animations on the dragged item, ensuring it's returned to the
         // view pool in a sane and usable state.
         VH holder = (VH) mRecyclerView.findViewHolderForLayoutPosition(mDragDropAdapter.getCurrentPosition());
-        if (!holder.isRecyclable()) {
+        if (holder != null && !holder.isRecyclable()) {
             mDragDropAdapter.onFailedToRecycleView(holder);
             if (itemAnimator != null) {
                 itemAnimator.endAnimation(holder);
