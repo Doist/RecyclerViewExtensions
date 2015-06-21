@@ -683,7 +683,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
                 mItemBitmapUpdateListener = new ViewHolderOnGlobalLayoutListener(holder) {
                     @Override
                     public void onGlobalLayout() {
-                        holder.itemView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                         mItemBitmapUpdateListener = null;
 
                         updateItemBitmapInternal(holder);
@@ -691,7 +691,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
                         viewSetupAdapter.teardownDragViewHolder(holder);
                     }
                 };
-                holder.itemView.getViewTreeObserver().addOnGlobalLayoutListener(mItemBitmapUpdateListener);
+                mRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(mItemBitmapUpdateListener);
             } else {
                 // Update item bitmap and tear down the holder immediately.
 
