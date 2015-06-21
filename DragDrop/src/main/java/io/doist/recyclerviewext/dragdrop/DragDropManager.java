@@ -751,7 +751,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * Updates the item position. Used by {@link DragDropAdapter} whenever the item position in the original adapter
      * changes.
      */
-    void updateItemPosition(int position) {
+    void updateItemPosition() {
         if (!mFindPositionRunnable.isScheduled()) {
             mRecyclerView.postOnAnimation(mFindPositionRunnable);
             mFindPositionRunnable.setScheduled();

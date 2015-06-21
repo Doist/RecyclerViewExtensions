@@ -280,7 +280,7 @@ public class DragDropAdapter<VH extends RecyclerView.ViewHolder, T extends Recyc
             notifyItemRangeInserted(positionStart, itemCount);
 
             // Update item position after everything is measure and laid out in the appropriate locations.
-            mManager.updateItemPosition(mDraggedPosition);
+            mManager.updateItemPosition();
 
             // Invalidate item boundaries, as it's unknown whether they have changed.
             invalidateBoundaries();
@@ -311,7 +311,7 @@ public class DragDropAdapter<VH extends RecyclerView.ViewHolder, T extends Recyc
             notifyItemRangeRemoved(positionStart, itemCount);
 
             // Update item position after everything is measure and laid out in the appropriate locations.
-            mManager.updateItemPosition(mDraggedPosition);
+            mManager.updateItemPosition();
 
             // Invalidate item boundaries, as it's unknown whether they have changed.
             invalidateBoundaries();
@@ -350,7 +350,7 @@ public class DragDropAdapter<VH extends RecyclerView.ViewHolder, T extends Recyc
             }
 
             // Update item position after everything is measure and laid out in the appropriate locations.
-            mManager.updateItemPosition(mDraggedPosition);
+            mManager.updateItemPosition();
 
             // Invalidate item boundaries, as it's unknown whether they have changed.
             invalidateBoundaries();
