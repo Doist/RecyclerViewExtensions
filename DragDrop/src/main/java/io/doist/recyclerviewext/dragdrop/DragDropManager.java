@@ -406,7 +406,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         int startBoundaryPosition = mDragDropAdapter.getStartBoundaryPosition();
         if (startBoundaryPosition != DragDrop.Boundaries.NO_BOUNDARY) {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(startBoundaryPosition);
-            if (holder != null) {
+            if (holder != null && holder.itemView != null) {
                 if (mLayoutOrientation == LinearLayoutManager.HORIZONTAL) {
                     minLeft = Math.max(minLeft, holder.itemView.getRight());
                 } else {
@@ -418,7 +418,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         if (endBoundaryPosition != DragDrop.Boundaries.NO_BOUNDARY
                 && mDragDropAdapter.getCurrentPosition() < endBoundaryPosition) {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(endBoundaryPosition);
-            if (holder != null) {
+            if (holder != null && holder.itemView != null) {
                 if (mLayoutOrientation == LinearLayoutManager.HORIZONTAL) {
                     maxLeft = Math.min(maxLeft, holder.itemView.getLeft() - mItemBitmap.getWidth());
                 } else {
@@ -716,9 +716,11 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             public void run() {
                 int position = mDragDropAdapter.getCurrentPosition();
                 RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(position);
-                if (holder != null) {
+                if (holder != null && holder.itemView != null) {
                     mDragDropAdapter.bindViewHolder(holder, position);
                     updateItemBitmap(holder);
+                } else {
+                    mRecyclerView.post(this);
                 }
             }
         });
@@ -808,7 +810,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         public void run() {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForAdapterPosition(mPosition);
             float fraction = (SystemClock.uptimeMillis() - mStartTime) / (float) SETTLE_DURATION_MS;
-            if (holder != null && fraction < 1f) {
+            if (holder != null && holder.itemView != null && fraction < 1f) {
                 int oldLeft = mItemLocation.left;
                 int oldTop = mItemLocation.top;
                 int oldRight = mItemLocation.right;
