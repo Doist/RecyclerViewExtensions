@@ -770,17 +770,19 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
         @Override
         public void run() {
-            mScheduled = false;
+            if (mScheduled) {
+                mScheduled = false;
 
-            int position = RecyclerView.NO_POSITION;
-            View view = findChildViewUnder(mItemLocation.centerX(), mItemLocation.centerY());
-            if (view != null) {
-                position = mRecyclerView.getChildLayoutPosition(view);
+                int position = RecyclerView.NO_POSITION;
+                View view = findChildViewUnder(mItemLocation.centerX(), mItemLocation.centerY());
+                if (view != null) {
+                    position = mRecyclerView.getChildLayoutPosition(view);
+                }
+                if (position == RecyclerView.NO_POSITION) {
+                    position = mAdapter.getItemCount() - 1;
+                }
+                mDragDropAdapter.setCurrentPosition(position);
             }
-            if (position == RecyclerView.NO_POSITION) {
-                position = mAdapter.getItemCount() - 1;
-            }
-            mDragDropAdapter.setCurrentPosition(position);
         }
 
         public boolean isScheduled() {
