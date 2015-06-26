@@ -76,29 +76,34 @@ public abstract class Selector {
     }
 
     private class SelectorAdapterDataObserver extends RecyclerView.AdapterDataObserver {
+        private DeselectMissingIdsRunnable mDeselectMissingIdsRunnable = new DeselectMissingIdsRunnable();
+
         @Override
         public void onChanged() {
-            deselectMissingIds();
+            mDeselectMissingIdsRunnable.run();
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            deselectMissingIds();
+            mRecyclerView.post(mDeselectMissingIdsRunnable); // Run after all changes go through.
         }
 
-        private void deselectMissingIds() {
-            int selectedCount = getSelectedCount();
-            if (selectedCount > 0) {
-                List<Long> selectedIds = new ArrayList<>(selectedCount);
-                for (int i = 0; i < mAdapter.getItemCount(); i++) {
-                    long id = mAdapter.getItemId(i);
-                    if (isSelected(id)) {
-                        selectedIds.add(id);
+        private class DeselectMissingIdsRunnable implements Runnable {
+            @Override
+            public void run() {
+                int selectedCount = getSelectedCount();
+                if (selectedCount > 0) {
+                    List<Long> selectedIds = new ArrayList<>(selectedCount);
+                    for (int i = 0; i < mAdapter.getItemCount(); i++) {
+                        long id = mAdapter.getItemId(i);
+                        if (isSelected(id)) {
+                            selectedIds.add(id);
+                        }
                     }
-                }
-                clearSelected(false);
-                for (Long selectedId : selectedIds) {
-                    setSelected(selectedId, true);
+                    clearSelected(false);
+                    for (Long selectedId : selectedIds) {
+                        setSelected(selectedId, true);
+                    }
                 }
             }
         }
