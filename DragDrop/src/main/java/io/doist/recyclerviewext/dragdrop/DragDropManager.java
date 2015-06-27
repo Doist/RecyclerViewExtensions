@@ -88,6 +88,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private final float mScrollSpeedMax;
     private float mScrollSpeed = 0f;
 
+    private UpdateItemBitmapRunnable mUpdateItemBitmapRunnable = new UpdateItemBitmapRunnable();
     private FindPositionRunnable mFindPositionRunnable = new FindPositionRunnable();
     private SettlePositionRunnable mSettlePositionRunnable = new SettlePositionRunnable();
 
@@ -207,6 +208,9 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     @SuppressWarnings("unchecked")
     private void cleanupInternal() {
+        // Clear bitmap update, if pending.
+        mRecyclerView.removeCallbacks(mUpdateItemBitmapRunnable);
+
         // Clear find position runnable, if pending.
         mRecyclerView.removeCallbacks(mFindPositionRunnable);
         mFindPositionRunnable.setScheduled(false);
@@ -706,24 +710,10 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     }
 
     /**
-     * Updates the item bitmap in the next message queue loop using the {@link RecyclerView.ViewHolder} in the position
-     * returned by {@link DragDropAdapter#getCurrentPosition()}.
+     * @see {@link UpdateItemBitmapRunnable}
      */
     void postUpdateItemBitmap() {
-        mRecyclerView.post(new Runnable() {
-            @SuppressWarnings("unchecked")
-            @Override
-            public void run() {
-                int position = mDragDropAdapter.getCurrentPosition();
-                RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(position);
-                if (holder != null && holder.itemView != null) {
-                    mDragDropAdapter.bindViewHolder(holder, position);
-                    updateItemBitmap(holder);
-                } else {
-                    mRecyclerView.post(this);
-                }
-            }
-        });
+        mRecyclerView.post(mUpdateItemBitmapRunnable);
     }
 
     /**
@@ -758,6 +748,25 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         if (!mFindPositionRunnable.isScheduled()) {
             mRecyclerView.post(mFindPositionRunnable);
             mFindPositionRunnable.setScheduled(true);
+        }
+    }
+
+    /**
+     * Updates the item bitmap in the next message queue loop using the {@link RecyclerView.ViewHolder} in the position
+     * returned by {@link DragDropAdapter#getCurrentPosition()}.
+     */
+    private class UpdateItemBitmapRunnable implements Runnable {
+        @SuppressWarnings("unchecked")
+        @Override
+        public void run() {
+            int position = mDragDropAdapter.getCurrentPosition();
+            RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForLayoutPosition(position);
+            if (holder != null && holder.itemView != null) {
+                mDragDropAdapter.bindViewHolder(holder, position);
+                updateItemBitmap(holder);
+            } else {
+                mRecyclerView.post(this);
+            }
         }
     }
 
