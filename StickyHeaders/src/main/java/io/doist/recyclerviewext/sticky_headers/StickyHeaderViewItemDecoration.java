@@ -39,7 +39,7 @@ public class StickyHeaderViewItemDecoration<T extends RecyclerView.Adapter & Sti
 
     @Override
     protected void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, Canvas canvas,
-                                         int x, int y) {
+                                         float x, float y) {
         mWrapper.setTranslationX(x);
         mWrapper.setTranslationY(y);
     }

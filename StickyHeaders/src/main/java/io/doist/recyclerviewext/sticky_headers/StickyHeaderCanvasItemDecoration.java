@@ -27,7 +27,7 @@ public class StickyHeaderCanvasItemDecoration<T extends RecyclerView.Adapter & S
 
     @Override
     protected void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent, Canvas canvas,
-                                         int x, int y) {
+                                         float x, float y) {
         View view = stickyHeader.itemView;
         int count = canvas.save();
         canvas.translate(view.getLeft() + x, view.getTop() + y);

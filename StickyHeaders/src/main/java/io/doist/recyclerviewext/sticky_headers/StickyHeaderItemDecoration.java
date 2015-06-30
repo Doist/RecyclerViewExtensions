@@ -31,8 +31,8 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     private boolean mVertical;
     private boolean mReverse;
 
-    private int mTranslationX;
-    private int mTranslationY;
+    private float mTranslationX;
+    private float mTranslationY;
 
     // Header positions for the currently displayed list.
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
@@ -73,7 +73,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Offsets the vertical location of the sticky header relative to the its default position.
      * Applied when this {@link RecyclerView.ItemDecoration} is invalidated.
      */
-    public void setTranslationY(int translationY) {
+    public void setTranslationY(float translationY) {
         mTranslationY = translationY;
     }
 
@@ -81,7 +81,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Offsets the horizontal location of the sticky header relative to the its default position.
      * Applied when this {@link RecyclerView.ItemDecoration} is invalidated.
      */
-    public void setTranslationX(int translationX) {
+    public void setTranslationX(float translationX) {
         mTranslationX = translationX;
     }
 
@@ -137,8 +137,8 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
                         int nextHeaderPos = mHeaderPositions.get(index + 1);
                         nextHeaderView = parent.getChildAt(anchorIndex + (nextHeaderPos - anchorPos));
                     }
-                    int x = getX(parent, mStickyHeader.itemView, nextHeaderView);
-                    int y = getY(parent, mStickyHeader.itemView, nextHeaderView);
+                    float x = getX(parent, mStickyHeader.itemView, nextHeaderView);
+                    float y = getY(parent, mStickyHeader.itemView, nextHeaderView);
                     onDisplayStickyHeader(mStickyHeader, parent, canvas, x, y);
                     return;
                 }
@@ -154,7 +154,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Handles display and positioning of the sticky header. Invoked inside {@link View#draw(Canvas)}.
      */
     protected abstract void onDisplayStickyHeader(RecyclerView.ViewHolder stickyHeader, RecyclerView parent,
-                                                  Canvas canvas, int x, int y);
+                                                  Canvas canvas, float x, float y);
 
     /**
      * Creates {@link RecyclerView.ViewHolder} for {@code position}, including measure / layout, and assigns it to
@@ -284,9 +284,9 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Returns the position in the Y axis to position the header appropriately, depending on orientation, direction and
      * {@link android.R.attr#clipToPadding}.
      */
-    private int getY(RecyclerView parent, View headerView, View nextHeaderView) {
+    private float getY(RecyclerView parent, View headerView, View nextHeaderView) {
         if (mVertical) {
-            int y = (int) parent.getTranslationY() + mTranslationY;
+            float y = parent.getTranslationY() + mTranslationY;
             if (mReverse) {
                 y += parent.getHeight() - headerView.getHeight();
             }
@@ -300,7 +300,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             }
             return y;
         } else {
-            return (int) parent.getTranslationY() + mTranslationY;
+            return parent.getTranslationY() + mTranslationY;
         }
     }
 
@@ -308,9 +308,9 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Returns the position in the X axis to position the header appropriately, depending on orientation, direction and
      * {@link android.R.attr#clipToPadding}.
      */
-    private int getX(RecyclerView parent, View headerView, View nextHeaderView) {
+    private float getX(RecyclerView parent, View headerView, View nextHeaderView) {
         if (!mVertical) {
-            int x = (int) parent.getTranslationX() + mTranslationX;
+            float x = parent.getTranslationX() + mTranslationX;
             if (mReverse) {
                 x += parent.getWidth() - headerView.getWidth();
             }
@@ -324,7 +324,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
             }
             return x;
         } else {
-            return (int) parent.getTranslationX() + mTranslationX;
+            return parent.getTranslationX() + mTranslationX;
         }
     }
 
