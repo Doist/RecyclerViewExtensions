@@ -160,7 +160,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Creates {@link RecyclerView.ViewHolder} for {@code position}, including measure / layout, and assigns it to
      * {@link #mStickyHeader}.
      */
-    private void createStickyHeader(RecyclerView parent, int position) {
+    protected void createStickyHeader(RecyclerView parent, int position) {
         int itemViewType = mAdapter.getItemViewType(position);
 
         // Check the pool to see if we can recycle a view.
@@ -196,7 +196,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Binds the {@link #mStickyHeader} for the given {@code position}.
      */
     @SuppressWarnings("unchecked")
-    private void bindStickyHeader(RecyclerView parent, int position) {
+    protected void bindStickyHeader(RecyclerView parent, int position) {
         // Bind the sticky header.
         mAdapter.bindViewHolder(mStickyHeader, position);
         mDirty = false;
@@ -215,7 +215,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
      * Returns {@link #mStickyHeader} to the {@link RecyclerView}'s {@link RecyclerView.RecycledViewPool}, assigning it
      * to {@code null}.
      */
-    private void scrapStickyHeader(final RecyclerView parent) {
+    protected void scrapStickyHeader(final RecyclerView parent) {
         onScrapStickyHeader(mStickyHeader, parent);
 
         // Teardown holder if the adapter requires it.
