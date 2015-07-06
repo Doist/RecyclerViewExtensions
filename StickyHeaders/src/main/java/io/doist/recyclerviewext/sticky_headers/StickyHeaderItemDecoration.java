@@ -38,7 +38,7 @@ abstract class StickyHeaderItemDecoration<T extends RecyclerView.Adapter & Stick
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
 
     // Sticky header's ViewHolder and dirty state.
-    private RecyclerView.ViewHolder mStickyHeader;
+    protected RecyclerView.ViewHolder mStickyHeader;
     private boolean mDirty;
 
     public StickyHeaderItemDecoration(T adapter) {
