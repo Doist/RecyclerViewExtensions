@@ -13,16 +13,27 @@ import android.view.ViewGroup;
  */
 public class StickyHeaderCanvasItemDecoration<T extends RecyclerView.Adapter & StickyHeaders>
         extends StickyHeaderItemDecoration<T> {
+
+    private boolean mDecorate;
+
     public StickyHeaderCanvasItemDecoration(T adapter) {
-        super(adapter);
+        this(adapter, true);
     }
 
     public StickyHeaderCanvasItemDecoration(T adapter, boolean vertical) {
-        super(adapter, vertical);
+        this(adapter, vertical, false);
     }
 
     public StickyHeaderCanvasItemDecoration(T adapter, boolean vertical, boolean reverse) {
+        this(adapter, vertical, reverse, true);
+    }
+
+    /**
+     * @param decorate true to layout header views with decoration insets; false, otherwise.
+     */
+    public StickyHeaderCanvasItemDecoration(T adapter, boolean vertical, boolean reverse, boolean decorate) {
         super(adapter, vertical, reverse);
+        mDecorate = decorate;
     }
 
     @Override
@@ -59,12 +70,20 @@ public class StickyHeaderCanvasItemDecoration<T extends RecyclerView.Adapter & S
             // Measure and layout child.
             manager.measureChildWithMargins(view, 0, 0);
             if (vertical) {
-                manager.layoutDecorated(view, parent.getPaddingLeft(), 0,
-                                        parent.getPaddingLeft() + view.getMeasuredWidth(), view.getMeasuredHeight());
+                layout(manager, view, parent.getPaddingLeft(), 0, parent.getPaddingLeft() + view.getMeasuredWidth(),
+                       view.getMeasuredHeight());
             } else {
-                manager.layoutDecorated(view, 0, parent.getPaddingTop(), view.getMeasuredWidth(),
-                                        parent.getPaddingTop() + view.getMeasuredHeight());
+                layout(manager, view, 0, parent.getPaddingTop(), view.getMeasuredWidth(),
+                       parent.getPaddingTop() + view.getMeasuredHeight());
             }
+        }
+    }
+
+    private void layout(RecyclerView.LayoutManager manager, View view, int left, int top, int right, int bottom) {
+        if (mDecorate) {
+            manager.layoutDecorated(view, left, top, right, bottom);
+        } else {
+            view.layout(left, top, right, bottom);
         }
     }
 
