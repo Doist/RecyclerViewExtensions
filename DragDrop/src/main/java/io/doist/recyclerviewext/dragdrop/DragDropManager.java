@@ -403,7 +403,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      */
     private void updateItemLocation() {
         int minLeft = mRecyclerView.getPaddingLeft();
-        int maxLeft = mRecyclerView.getWidth() - mRecyclerView.getPaddingLeft() - mItemBitmap.getWidth();
+        int maxLeft = mRecyclerView.getWidth() - mRecyclerView.getPaddingRight() - mItemBitmap.getWidth();
         int minTop = mRecyclerView.getPaddingTop();
         int maxTop = mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom() - mItemBitmap.getHeight();
 
