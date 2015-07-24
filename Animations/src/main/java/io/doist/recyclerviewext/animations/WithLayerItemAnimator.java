@@ -2,8 +2,8 @@ package io.doist.recyclerviewext.animations;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
 
@@ -11,33 +11,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clone of {@link DefaultItemAnimator}, with the following differences:
- * - All animations run in a hardware layer (via {@link ViewPropertyAnimator#withLayer()}) which makes them smoother;
- * - Added constructor parameter which sets {@link #setSupportsChangeAnimations(boolean)} automatically;
- * - All compat code removed.
+ * Clone of {@link android.support.v7.widget.DefaultItemAnimator}, with the following differences:
+ * <ul>
+ * <li>All animations run in a hardware layer (via {@link ViewPropertyAnimator#withLayer()}) which makes them smoother;
+ * <li>Added constructor parameter which sets {@link #setSupportsChangeAnimations(boolean)} automatically;
+ * <li>All compat code removed;
+ * <li>All debug code removed.
  *
- * @see DefaultItemAnimator
+ * @see android.support.v7.widget.DefaultItemAnimator
  */
 public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
-    private ArrayList<RecyclerView.ViewHolder> mPendingRemovals = new ArrayList<>();
-    private ArrayList<RecyclerView.ViewHolder> mPendingAdditions = new ArrayList<>();
+    private ArrayList<ViewHolder> mPendingRemovals = new ArrayList<>();
+    private ArrayList<ViewHolder> mPendingAdditions = new ArrayList<>();
     private ArrayList<MoveInfo> mPendingMoves = new ArrayList<>();
     private ArrayList<ChangeInfo> mPendingChanges = new ArrayList<>();
 
-    private ArrayList<ArrayList<RecyclerView.ViewHolder>> mAdditionsList = new ArrayList<>();
+    private ArrayList<ArrayList<ViewHolder>> mAdditionsList = new ArrayList<>();
     private ArrayList<ArrayList<MoveInfo>> mMovesList = new ArrayList<>();
     private ArrayList<ArrayList<ChangeInfo>> mChangesList = new ArrayList<>();
 
-    private ArrayList<RecyclerView.ViewHolder> mAddAnimations = new ArrayList<>();
-    private ArrayList<RecyclerView.ViewHolder> mMoveAnimations = new ArrayList<>();
-    private ArrayList<RecyclerView.ViewHolder> mRemoveAnimations = new ArrayList<>();
-    private ArrayList<RecyclerView.ViewHolder> mChangeAnimations = new ArrayList<>();
+    private ArrayList<ViewHolder> mAddAnimations = new ArrayList<>();
+    private ArrayList<ViewHolder> mMoveAnimations = new ArrayList<>();
+    private ArrayList<ViewHolder> mRemoveAnimations = new ArrayList<>();
+    private ArrayList<ViewHolder> mChangeAnimations = new ArrayList<>();
 
     private static class MoveInfo {
-        public RecyclerView.ViewHolder holder;
+        public ViewHolder holder;
         public int fromX, fromY, toX, toY;
 
-        private MoveInfo(RecyclerView.ViewHolder holder, int fromX, int fromY, int toX, int toY) {
+        private MoveInfo(ViewHolder holder, int fromX, int fromY, int toX, int toY) {
             this.holder = holder;
             this.fromX = fromX;
             this.fromY = fromY;
@@ -47,14 +49,14 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     private static class ChangeInfo {
-        public RecyclerView.ViewHolder oldHolder, newHolder;
+        public ViewHolder oldHolder, newHolder;
         public int fromX, fromY, toX, toY;
-        private ChangeInfo(RecyclerView.ViewHolder oldHolder, RecyclerView.ViewHolder newHolder) {
+        private ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder) {
             this.oldHolder = oldHolder;
             this.newHolder = newHolder;
         }
 
-        private ChangeInfo(RecyclerView.ViewHolder oldHolder, RecyclerView.ViewHolder newHolder,
+        private ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder,
                            int fromX, int fromY, int toX, int toY) {
             this(oldHolder, newHolder);
             this.fromX = fromX;
@@ -76,14 +78,6 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         }
     }
 
-    public WithLayerItemAnimator() {
-        this(false);
-    }
-
-    public WithLayerItemAnimator(boolean supportsChangingAnimations) {
-        setSupportsChangeAnimations(supportsChangingAnimations);
-    }
-
     @Override
     public void runPendingAnimations() {
         boolean removalsPending = !mPendingRemovals.isEmpty();
@@ -95,7 +89,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
             return;
         }
         // First, remove stuff
-        for (RecyclerView.ViewHolder holder : mPendingRemovals) {
+        for (ViewHolder holder : mPendingRemovals) {
             animateRemoveImpl(holder);
         }
         mPendingRemovals.clear();
@@ -140,7 +134,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
                 }
             };
             if (removalsPending) {
-                RecyclerView.ViewHolder holder = changes.get(0).oldHolder;
+                ViewHolder holder = changes.get(0).oldHolder;
                 holder.itemView.postOnAnimationDelayed(changer, getRemoveDuration());
             } else {
                 changer.run();
@@ -148,13 +142,13 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         }
         // Next, add stuff
         if (additionsPending) {
-            final ArrayList<RecyclerView.ViewHolder> additions = new ArrayList<>();
+            final ArrayList<ViewHolder> additions = new ArrayList<>();
             additions.addAll(mPendingAdditions);
             mAdditionsList.add(additions);
             mPendingAdditions.clear();
             Runnable adder = new Runnable() {
                 public void run() {
-                    for (RecyclerView.ViewHolder holder : additions) {
+                    for (ViewHolder holder : additions) {
                         animateAddImpl(holder);
                     }
                     additions.clear();
@@ -175,20 +169,22 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     @Override
-    public boolean animateRemove(final RecyclerView.ViewHolder holder) {
+    public boolean animateRemove(final ViewHolder holder) {
         endAnimation(holder);
         mPendingRemovals.add(holder);
         return true;
     }
 
-    private void animateRemoveImpl(final RecyclerView.ViewHolder holder) {
+    private void animateRemoveImpl(final ViewHolder holder) {
         final View view = holder.itemView;
         final ViewPropertyAnimator animation = view.animate().withLayer();
+        mRemoveAnimations.add(holder);
         animation.setDuration(getRemoveDuration()).alpha(0).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator anim) {
                 dispatchRemoveStarting(holder);
             }
+
             @Override
             public void onAnimationEnd(Animator anim) {
                 animation.setListener(null);
@@ -198,21 +194,20 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
                 dispatchFinishedWhenDone();
             }
         }).start();
-        mRemoveAnimations.add(holder);
     }
 
     @Override
-    public boolean animateAdd(final RecyclerView.ViewHolder holder) {
+    public boolean animateAdd(final ViewHolder holder) {
         endAnimation(holder);
         holder.itemView.setAlpha(0);
         mPendingAdditions.add(holder);
         return true;
     }
 
-    private void animateAddImpl(final RecyclerView.ViewHolder holder) {
+    private void animateAddImpl(final ViewHolder holder) {
         final View view = holder.itemView;
-        mAddAnimations.add(holder);
         final ViewPropertyAnimator animation = view.animate().withLayer();
+        mAddAnimations.add(holder);
         animation.alpha(1).setDuration(getAddDuration()).
                 setListener(new AnimatorListenerAdapter() {
                     @Override
@@ -235,7 +230,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     @Override
-    public boolean animateMove(final RecyclerView.ViewHolder holder, int fromX, int fromY,
+    public boolean animateMove(final ViewHolder holder, int fromX, int fromY,
                                int toX, int toY) {
         final View view = holder.itemView;
         fromX += holder.itemView.getTranslationX();
@@ -257,7 +252,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         return true;
     }
 
-    private void animateMoveImpl(final RecyclerView.ViewHolder holder, int fromX, int fromY, int toX, int toY) {
+    private void animateMoveImpl(final ViewHolder holder, int fromX, int fromY, int toX, int toY) {
         final View view = holder.itemView;
         final int deltaX = toX - fromX;
         final int deltaY = toY - fromY;
@@ -267,8 +262,8 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         if (deltaY != 0) {
             view.animate().withLayer().translationY(0);
         }
-        mMoveAnimations.add(holder);
         final ViewPropertyAnimator animation = view.animate().withLayer();
+        mMoveAnimations.add(holder);
         animation.setDuration(getMoveDuration()).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator anim) {
@@ -294,7 +289,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     @Override
-    public boolean animateChange(RecyclerView.ViewHolder oldHolder, RecyclerView.ViewHolder newHolder,
+    public boolean animateChange(ViewHolder oldHolder, ViewHolder newHolder,
                                  int fromX, int fromY, int toX, int toY) {
         final float prevTranslationX = oldHolder.itemView.getTranslationX();
         final float prevTranslationY = oldHolder.itemView.getTranslationY();
@@ -318,34 +313,37 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     private void animateChangeImpl(final ChangeInfo changeInfo) {
-        final RecyclerView.ViewHolder holder = changeInfo.oldHolder;
-        final View view = holder.itemView;
-        final RecyclerView.ViewHolder newHolder = changeInfo.newHolder;
+        final ViewHolder holder = changeInfo.oldHolder;
+        final View view = holder == null ? null : holder.itemView;
+        final ViewHolder newHolder = changeInfo.newHolder;
         final View newView = newHolder != null ? newHolder.itemView : null;
-        mChangeAnimations.add(changeInfo.oldHolder);
+        if (view != null) {
+            final ViewPropertyAnimator oldViewAnim = view.animate().withLayer().setDuration(
+                    getChangeDuration());
+            mChangeAnimations.add(changeInfo.oldHolder);
+            oldViewAnim.translationX(changeInfo.toX - changeInfo.fromX);
+            oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
+            oldViewAnim.alpha(0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationStart(Animator anim) {
+                    dispatchChangeStarting(changeInfo.oldHolder, true);
+                }
 
-        final ViewPropertyAnimator oldViewAnim = view.animate().withLayer().setDuration(getChangeDuration());
-        oldViewAnim.translationX(changeInfo.toX - changeInfo.fromX);
-        oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
-        oldViewAnim.alpha(0).setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator anim) {
-                dispatchChangeStarting(changeInfo.oldHolder, true);
-            }
-            @Override
-            public void onAnimationEnd(Animator anim) {
-                oldViewAnim.setListener(null);
-                view.setAlpha(1);
-                view.setTranslationX(0);
-                view.setTranslationY(0);
-                dispatchChangeFinished(changeInfo.oldHolder, true);
-                mChangeAnimations.remove(changeInfo.oldHolder);
-                dispatchFinishedWhenDone();
-            }
-        }).start();
+                @Override
+                public void onAnimationEnd(Animator anim) {
+                    oldViewAnim.setListener(null);
+                    view.setAlpha(1);
+                    view.setTranslationX(0);
+                    view.setTranslationY(0);
+                    dispatchChangeFinished(changeInfo.oldHolder, true);
+                    mChangeAnimations.remove(changeInfo.oldHolder);
+                    dispatchFinishedWhenDone();
+                }
+            }).start();
+        }
         if (newView != null) {
-            mChangeAnimations.add(changeInfo.newHolder);
             final ViewPropertyAnimator newViewAnimation = newView.animate().withLayer();
+            mChangeAnimations.add(changeInfo.newHolder);
             newViewAnimation.translationX(0).translationY(0).setDuration(getChangeDuration()).
                     alpha(1).setListener(new AnimatorListenerAdapter() {
                 @Override
@@ -366,7 +364,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         }
     }
 
-    private void endChangeAnimation(List<ChangeInfo> infoList, RecyclerView.ViewHolder item) {
+    private void endChangeAnimation(List<ChangeInfo> infoList, ViewHolder item) {
         for (int i = infoList.size() - 1; i >= 0; i--) {
             ChangeInfo changeInfo = infoList.get(i);
             if (endChangeAnimationIfNecessary(changeInfo, item)) {
@@ -385,7 +383,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
             endChangeAnimationIfNecessary(changeInfo, changeInfo.newHolder);
         }
     }
-    private boolean endChangeAnimationIfNecessary(ChangeInfo changeInfo, RecyclerView.ViewHolder item) {
+    private boolean endChangeAnimationIfNecessary(ChangeInfo changeInfo, ViewHolder item) {
         boolean oldItem = false;
         if (changeInfo.newHolder == item) {
             changeInfo.newHolder = null;
@@ -403,7 +401,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     }
 
     @Override
-    public void endAnimation(RecyclerView.ViewHolder item) {
+    public void endAnimation(ViewHolder item) {
         final View view = item.itemView;
         // this will trigger end callback which should set properties to their target values.
         view.animate().cancel();
@@ -414,7 +412,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
                 view.setTranslationY(0);
                 view.setTranslationX(0);
                 dispatchMoveFinished(item);
-                mPendingMoves.remove(moveInfo);
+                mPendingMoves.remove(i);
             }
         }
         endChangeAnimation(mPendingChanges, item);
@@ -431,7 +429,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
             ArrayList<ChangeInfo> changes = mChangesList.get(i);
             endChangeAnimation(changes, item);
             if (changes.isEmpty()) {
-                mChangesList.remove(changes);
+                mChangesList.remove(i);
             }
         }
         for (int i = mMovesList.size() - 1; i >= 0; i--) {
@@ -444,19 +442,19 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
                     dispatchMoveFinished(item);
                     moves.remove(j);
                     if (moves.isEmpty()) {
-                        mMovesList.remove(moves);
+                        mMovesList.remove(i);
                     }
                     break;
                 }
             }
         }
         for (int i = mAdditionsList.size() - 1; i >= 0; i--) {
-            ArrayList<RecyclerView.ViewHolder> additions = mAdditionsList.get(i);
+            ArrayList<ViewHolder> additions = mAdditionsList.get(i);
             if (additions.remove(item)) {
                 view.setAlpha(1);
                 dispatchAddFinished(item);
                 if (additions.isEmpty()) {
-                    mAdditionsList.remove(additions);
+                    mAdditionsList.remove(i);
                 }
             }
         }
@@ -503,13 +501,13 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         }
         count = mPendingRemovals.size();
         for (int i = count - 1; i >= 0; i--) {
-            RecyclerView.ViewHolder item = mPendingRemovals.get(i);
+            ViewHolder item = mPendingRemovals.get(i);
             dispatchRemoveFinished(item);
             mPendingRemovals.remove(i);
         }
         count = mPendingAdditions.size();
         for (int i = count - 1; i >= 0; i--) {
-            RecyclerView.ViewHolder item = mPendingAdditions.get(i);
+            ViewHolder item = mPendingAdditions.get(i);
             View view = item.itemView;
             view.setAlpha(1);
             dispatchAddFinished(item);
@@ -530,7 +528,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
             count = moves.size();
             for (int j = count - 1; j >= 0; j--) {
                 MoveInfo moveInfo = moves.get(j);
-                RecyclerView.ViewHolder item = moveInfo.holder;
+                ViewHolder item = moveInfo.holder;
                 View view = item.itemView;
                 view.setTranslationY(0);
                 view.setTranslationX(0);
@@ -543,10 +541,10 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         }
         listCount = mAdditionsList.size();
         for (int i = listCount - 1; i >= 0; i--) {
-            ArrayList<RecyclerView.ViewHolder> additions = mAdditionsList.get(i);
+            ArrayList<ViewHolder> additions = mAdditionsList.get(i);
             count = additions.size();
             for (int j = count - 1; j >= 0; j--) {
-                RecyclerView.ViewHolder item = additions.get(j);
+                ViewHolder item = additions.get(j);
                 View view = item.itemView;
                 view.setAlpha(1);
                 dispatchAddFinished(item);
@@ -576,7 +574,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         dispatchAnimationsFinished();
     }
 
-    void cancelAll(List<RecyclerView.ViewHolder> viewHolders) {
+    void cancelAll(List<ViewHolder> viewHolders) {
         for (int i = viewHolders.size() - 1; i >= 0; i--) {
             viewHolders.get(i).itemView.animate().cancel();
         }
