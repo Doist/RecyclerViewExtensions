@@ -512,11 +512,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         }
 
         if (scrollByX > 0 || scrollByY > 0) {
-            try {
-                mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
-            } catch (NullPointerException e) {
-                // TODO: Remove this when RV is updated: https://code.google.com/p/android/issues/detail?id=174981
-            }
+            mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
 
             // Stack from end if needed to ensure anchor position is reversed and never swapped,
             // which causes glitches. Ref: https://code.google.com/p/android/issues/detail?id=99047
