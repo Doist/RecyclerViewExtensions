@@ -210,7 +210,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     @SuppressWarnings("unchecked")
     private void cleanupInternal() {
-        // Restore original reverse layout.
+        // Restore original stack from end.
         setStackFromEndAndKeepPosition(mStackFromEnd);
 
         // Clear bitmap update, if pending.
@@ -520,31 +520,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         }
     }
 
-    private void setStackFromEndAndKeepPosition(boolean stackFromEnd) {
-        if (mLayoutManager.getStackFromEnd() != stackFromEnd) {
-            mLayoutManager.setStackFromEnd(stackFromEnd);
-
-            View view = null;
-            int position = RecyclerView.NO_POSITION;
-            for (int i = mLayoutManager.getChildCount() - 1; i >= 0; i--) {
-                view = mLayoutManager.getChildAt(i);
-                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) view.getLayoutParams();
-                if (!params.isItemRemoved() && !params.isViewInvalid()
-                        && (position = params.getViewAdapterPosition()) != RecyclerView.NO_POSITION) {
-                    break;
-                }
-            }
-            if (position != RecyclerView.NO_POSITION) {
-                boolean horizontal = mLayoutOrientation == LinearLayoutManager.HORIZONTAL;
-                mLayoutManager.scrollToPositionWithOffset(
-                        position, horizontal ? (stackFromEnd ? mRecyclerView.getWidth() - view.getRight()
-                                                             : view.getLeft())
-                                             : (stackFromEnd ? mRecyclerView.getHeight() - view.getBottom()
-                                                             : view.getTop()));
-            }
-        }
-    }
-
     /**
      * Alternative to {@link RecyclerView#canScrollVertically(int)} that is considerably faster and more suited to use
      * while drawing. Doesn't compute scroll offsets, ranges or extents, and just relies on the child views.
@@ -637,6 +612,37 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             mScrollSpeed = mScrollSpeed / 1.2f;
         } else if(mScrollSpeed > 0) {
             mScrollSpeed = 0;
+        }
+    }
+
+    /**
+     * Sets {@link LinearLayoutManager#setStackFromEnd(boolean)} while maintaining position.
+     */
+    private void setStackFromEndAndKeepPosition(boolean stackFromEnd) {
+        if (mLayoutManager.getStackFromEnd() != stackFromEnd) {
+            mLayoutManager.setStackFromEnd(stackFromEnd);
+
+            View view = null;
+            int position = RecyclerView.NO_POSITION;
+            for (int i = mLayoutManager.getChildCount() - 1; i >= 0; i--) {
+                view = mLayoutManager.getChildAt(i);
+                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) view.getLayoutParams();
+                if (!params.isItemRemoved() && !params.isViewInvalid()
+                        && (position = params.getViewAdapterPosition()) != RecyclerView.NO_POSITION) {
+                    break;
+                }
+            }
+
+            // This works great in 22.2.1, but it's a deviation from the official documentation:
+            // - We shouldn't have to take padding into account;
+            // - When stackFromBottom is true, the offset should be inverted,
+            // ie. mRecyclerView.getHeight() - view.getBottom().
+            if (position != RecyclerView.NO_POSITION) {
+                boolean horizontal = mLayoutOrientation == LinearLayoutManager.HORIZONTAL;
+                mLayoutManager.scrollToPositionWithOffset(position,
+                                                          horizontal ? view.getLeft() - mRecyclerView.getPaddingLeft()
+                                                                     : view.getTop() - mRecyclerView.getPaddingTop());
+            }
         }
     }
 
