@@ -41,7 +41,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         extends RecyclerView.ItemDecoration implements RecyclerView.OnItemTouchListener {
     public static final String LOG_TAG = DragDropManager.class.getSimpleName();
 
-    private static final float SCROLL_SPEED_MAX_DP = 16;
+    private static final float SCROLL_SPEED_MAX_DP = 12;
     private static final int SETTLE_DURATION_MS = 250;
 
     private RecyclerView mRecyclerView;
