@@ -47,7 +47,8 @@ public class DemoActivity extends ActionBarActivity {
         mContainer = (ViewGroup) findViewById(R.id.container);
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this, R.drawable.divider_light, true));
         mAdapter = new DemoAdapter(false);
         mProgressEmptyRecyclerFlipper =

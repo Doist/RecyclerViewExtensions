@@ -41,10 +41,11 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         extends RecyclerView.ItemDecoration implements RecyclerView.OnItemTouchListener {
     public static final String LOG_TAG = DragDropManager.class.getSimpleName();
 
-    private static final float SCROLL_SPEED_MAX_DP = 16;
+    private static final float SCROLL_SPEED_MAX_DP = 12;
     private static final int SETTLE_DURATION_MS = 250;
 
     private RecyclerView mRecyclerView;
+    private LinearLayoutManager mLayoutManager;
     private T mAdapter;
 
     /**
@@ -65,7 +66,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * Keeps track of pending item bitmap updates when the {@link RecyclerView.ViewHolder} is waiting to be laid out.
      * When updated, it removes and clears itself, and updates {@link #mItemBitmap}.
      */
-    private ViewHolderOnGlobalLayoutListener mItemBitmapUpdateListener;
+    private ViewTreeObserver.OnGlobalLayoutListener mItemBitmapUpdateListener;
 
     /**
      * Item location on screen, updated in every {@link #onDrawOver(Canvas, RecyclerView, RecyclerView.State)} cycle.
@@ -84,6 +85,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     private boolean mDisallowInterceptTouchEvent = false;
 
     private int mLayoutOrientation;
+    private boolean mStackFromEnd;
 
     private final float mScrollSpeedMax;
     private float mScrollSpeed = 0f;
@@ -208,6 +210,9 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     @SuppressWarnings("unchecked")
     private void cleanupInternal() {
+        // Restore original stack from end.
+        setStackFromEndAndKeepPosition(mStackFromEnd);
+
         // Clear bitmap update, if pending.
         mRecyclerView.removeCallbacks(mUpdateItemBitmapRunnable);
 
@@ -329,7 +334,9 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         if (!(layoutManager instanceof LinearLayoutManager)) {
             throw new UnsupportedOperationException("DragDropManager only supports LinearLayoutManager");
         }
-        mLayoutOrientation = ((LinearLayoutManager) layoutManager).getOrientation();
+        mLayoutManager = (LinearLayoutManager) layoutManager;
+        mLayoutOrientation = mLayoutManager.getOrientation();
+        mStackFromEnd = mLayoutManager.getStackFromEnd();
 
         // Grab the starting touch position to calculate the offset later.
         mTouchStartX = mTouchCurrentX = (int) e.getX();
@@ -505,11 +512,11 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         }
 
         if (scrollByX > 0 || scrollByY > 0) {
-            try {
-                mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
-            } catch (NullPointerException e) {
-                // TODO: Remove this when RV is updated: https://code.google.com/p/android/issues/detail?id=174981
-            }
+            mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
+
+            // Stack from end if needed to ensure anchor position is reversed and never swapped,
+            // which causes glitches. Ref: https://code.google.com/p/android/issues/detail?id=99047
+            setStackFromEndAndKeepPosition(direction < 0);
         }
     }
 
@@ -609,17 +616,46 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
     }
 
     /**
+     * Sets {@link LinearLayoutManager#setStackFromEnd(boolean)} while maintaining position.
+     */
+    private void setStackFromEndAndKeepPosition(boolean stackFromEnd) {
+        if (mLayoutManager.getStackFromEnd() != stackFromEnd) {
+            mLayoutManager.setStackFromEnd(stackFromEnd);
+
+            View view = null;
+            int position = RecyclerView.NO_POSITION;
+            for (int i = mLayoutManager.getChildCount() - 1; i >= 0; i--) {
+                view = mLayoutManager.getChildAt(i);
+                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) view.getLayoutParams();
+                if (!params.isItemRemoved() && !params.isViewInvalid()
+                        && (position = params.getViewAdapterPosition()) != RecyclerView.NO_POSITION) {
+                    break;
+                }
+            }
+
+            // This works great in 22.2.1, but it's a deviation from the official documentation:
+            // - We shouldn't have to take padding into account;
+            // - When stackFromBottom is true, the offset should be inverted,
+            // ie. mRecyclerView.getHeight() - view.getBottom().
+            if (position != RecyclerView.NO_POSITION) {
+                boolean horizontal = mLayoutOrientation == LinearLayoutManager.HORIZONTAL;
+                mLayoutManager.scrollToPositionWithOffset(position,
+                                                          horizontal ? view.getLeft() - mRecyclerView.getPaddingLeft()
+                                                                     : view.getTop() - mRecyclerView.getPaddingTop());
+            }
+        }
+    }
+
+    /**
      * Swaps the dragged position in the wrapper adapter whenever it overlaps at least half of another position.
      */
     private void handleSwap() {
         View swapView = null;
-        boolean mightHaveWrongAnchorView = false;
 
         if (mLayoutOrientation == LinearLayoutManager.HORIZONTAL) {
             View leftView = findChildViewUnder(mItemLocation.left, mItemLocation.centerY());
             if (leftView != null && mItemLocation.left < (leftView.getLeft() + leftView.getRight()) / 2f) {
                 swapView = leftView;
-                mightHaveWrongAnchorView = true;
             } else {
                 View rightView = findChildViewUnder(mItemLocation.right, mItemLocation.centerY());
                 if (rightView != null && mItemLocation.right > (rightView.getLeft() + rightView.getRight()) / 2f) {
@@ -630,7 +666,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             View topView = findChildViewUnder(mItemLocation.centerX(), mItemLocation.top);
             if (topView != null && mItemLocation.top < (topView.getTop() + topView.getBottom()) / 2f) {
                 swapView = topView;
-                mightHaveWrongAnchorView = true;
             } else {
                 View bottomView = findChildViewUnder(mItemLocation.centerX(), mItemLocation.bottom);
                 if (bottomView != null && mItemLocation.bottom > (bottomView.getTop() + bottomView.getBottom()) / 2f) {
@@ -643,11 +678,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             int swapPosition = mRecyclerView.getChildLayoutPosition(swapView);
             if (swapPosition != RecyclerView.NO_POSITION) {
                 mDragDropAdapter.setCurrentPosition(swapPosition);
-
-                // FIXME: https://code.google.com/p/android/issues/detail?id=99047
-                if (mightHaveWrongAnchorView && (mRecyclerView.getChildAt(0) == swapView || mScrollSpeed > 0)) {
-                    mRecyclerView.getLayoutManager().scrollToPosition(swapPosition);
-                }
             }
         }
     }
@@ -657,10 +687,9 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * disregards translation values.
      */
     private View findChildViewUnder(float x, float y) {
-        RecyclerView.LayoutManager manager = mRecyclerView.getLayoutManager();
-        final int count = manager.getChildCount();
+        final int count = mLayoutManager.getChildCount();
         for (int i = count - 1; i >= 0; i--) {
-            final View child = manager.getChildAt(i);
+            final View child = mLayoutManager.getChildAt(i);
             if (child.getVisibility() == View.VISIBLE
                     && x >= child.getLeft() && x <= child.getRight()
                     && y >= child.getTop() && y <= child.getBottom()) {
@@ -684,8 +713,8 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             final DragDrop.ViewSetup viewSetupAdapter = (DragDrop.ViewSetup) mAdapter;
             if (viewSetupAdapter.setupDragViewHolder(holder)) {
                 // A layout is required, wait for it before updating the item bitmap and tearing down the holder.
-                
-                mItemBitmapUpdateListener = new ViewHolderOnGlobalLayoutListener(holder) {
+
+                mItemBitmapUpdateListener = new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
                     public void onGlobalLayout() {
                         mRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -849,21 +878,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             mStartTime = SystemClock.uptimeMillis();
             mRecyclerView.invalidate(mItemLocation);
             mRecyclerView.postOnAnimation(this);
-        }
-    }
-
-    /**
-     * {@link ViewTreeObserver.OnGlobalLayoutListener} that keeps track of its {@link RecyclerView.ViewHolder}.
-     */
-    private static abstract class ViewHolderOnGlobalLayoutListener implements ViewTreeObserver.OnGlobalLayoutListener {
-        private RecyclerView.ViewHolder mViewHolder;
-
-        public ViewHolderOnGlobalLayoutListener(RecyclerView.ViewHolder viewHolder) {
-            mViewHolder = viewHolder;
-        }
-
-        public RecyclerView.ViewHolder getViewHolder() {
-            return mViewHolder;
         }
     }
 }

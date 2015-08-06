@@ -78,6 +78,14 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         }
     }
 
+    public WithLayerItemAnimator() {
+        super();
+    }
+
+    public WithLayerItemAnimator(boolean supportsChangingAnimations) {
+        setSupportsChangeAnimations(supportsChangingAnimations);
+    }
+
     @Override
     public void runPendingAnimations() {
         boolean removalsPending = !mPendingRemovals.isEmpty();
