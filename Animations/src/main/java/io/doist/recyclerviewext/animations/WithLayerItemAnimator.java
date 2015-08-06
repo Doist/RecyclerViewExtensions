@@ -17,6 +17,7 @@ import java.util.List;
  * <li>Added constructor parameter which sets {@link #setSupportsChangeAnimations(boolean)} automatically;
  * <li>All compat code removed;
  * <li>All debug code removed.
+ * </ul>
  *
  * @see android.support.v7.widget.DefaultItemAnimator
  */
