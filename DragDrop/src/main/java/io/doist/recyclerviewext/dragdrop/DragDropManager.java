@@ -650,32 +650,32 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * Swaps the dragged position in the wrapper adapter whenever it overlaps at least half of another position.
      */
     private void handleSwap() {
-        ViewInfo swap = null;
+        View swapView = null;
 
         if (mLayoutOrientation == LinearLayoutManager.HORIZONTAL) {
-            ViewInfo left = findChildViewUnder(mItemLocation.left, mItemLocation.centerY());
-            if (left != null && mItemLocation.left < (left.view.getLeft() + left.view.getRight()) / 2f) {
-                swap = left;
+            View leftView = findChildViewUnder(mItemLocation.left, mItemLocation.centerY());
+            if (leftView != null && mItemLocation.left < (leftView.getLeft() + leftView.getRight()) / 2f) {
+                swapView = leftView;
             } else {
-                ViewInfo right = findChildViewUnder(mItemLocation.right, mItemLocation.centerY());
-                if (right != null && mItemLocation.right > (right.view.getLeft() + right.view.getRight()) / 2f) {
-                    swap = right;
+                View rightView = findChildViewUnder(mItemLocation.right, mItemLocation.centerY());
+                if (rightView != null && mItemLocation.right > (rightView.getLeft() + rightView.getRight()) / 2f) {
+                    swapView = rightView;
                 }
             }
         } else {
-            ViewInfo top = findChildViewUnder(mItemLocation.centerX(), mItemLocation.top);
-            if (top != null && mItemLocation.top < (top.view.getTop() + top.view.getBottom()) / 2f) {
-                swap = top;
+            View topView = findChildViewUnder(mItemLocation.centerX(), mItemLocation.top);
+            if (topView != null && mItemLocation.top < (topView.getTop() + topView.getBottom()) / 2f) {
+                swapView = topView;
             } else {
-                ViewInfo bottom = findChildViewUnder(mItemLocation.centerX(), mItemLocation.bottom);
-                if (bottom != null && mItemLocation.bottom > (bottom.view.getTop() + bottom.view.getBottom()) / 2f) {
-                    swap = bottom;
+                View bottomView = findChildViewUnder(mItemLocation.centerX(), mItemLocation.bottom);
+                if (bottomView != null && mItemLocation.bottom > (bottomView.getTop() + bottomView.getBottom()) / 2f) {
+                    swapView = bottomView;
                 }
             }
         }
 
-        if (swap != null) {
-            int swapPosition = mRecyclerView.getChildLayoutPosition(swap.view);
+        if (swapView != null) {
+            int swapPosition = mRecyclerView.getChildLayoutPosition(swapView);
             if (swapPosition != RecyclerView.NO_POSITION) {
                 mDragDropAdapter.setCurrentPosition(swapPosition);
             }
@@ -686,17 +686,14 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
      * Similar to {@link RecyclerView#findChildViewUnder(float, float)}, but only considers visible children and
      * disregards translation values.
      */
-    private ViewInfo mViewInfo = new ViewInfo();
-    private ViewInfo findChildViewUnder(float x, float y) {
+    private View findChildViewUnder(float x, float y) {
         final int count = mLayoutManager.getChildCount();
         for (int i = count - 1; i >= 0; i--) {
             final View child = mLayoutManager.getChildAt(i);
             if (child.getVisibility() == View.VISIBLE
                     && x >= child.getLeft() && x <= child.getRight()
                     && y >= child.getTop() && y <= child.getBottom()) {
-                mViewInfo.view = child;
-                mViewInfo.start = i == 0;
-                return mViewInfo;
+                return child;
             }
         }
         return null;
@@ -815,9 +812,9 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
                 mScheduled = false;
 
                 int position = RecyclerView.NO_POSITION;
-                ViewInfo info = findChildViewUnder(mItemLocation.centerX(), mItemLocation.centerY());
-                if (info != null) {
-                    position = mRecyclerView.getChildLayoutPosition(info.view);
+                View view = findChildViewUnder(mItemLocation.centerX(), mItemLocation.centerY());
+                if (view != null) {
+                    position = mRecyclerView.getChildLayoutPosition(view);
                 }
                 if (position == RecyclerView.NO_POSITION) {
                     position = mAdapter.getItemCount() - 1;
@@ -882,13 +879,5 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             mRecyclerView.invalidate(mItemLocation);
             mRecyclerView.postOnAnimation(this);
         }
-    }
-
-    /**
-     * Reused in every {@link #findChildViewUnder(float, float)} call.
-     */
-    private static class ViewInfo {
-        public View view;
-        public boolean start;
     }
 }
