@@ -128,10 +128,6 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
             Op.Change changeOp = null;
             Op.Insert insertOp = null;
             for (int i = 0; i < mPendingSize; i++) {
-                if (i >= currentAnimationIds.size()) {
-                    break; // Inconsistency detected. Break the loop and bail out below.
-                }
-
                 Object animationId = animationIds.get(i);
 
                 // Check if the item was inserted.
