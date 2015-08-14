@@ -11,10 +11,6 @@
         android:title="Items"
         app:showAsAction="always" />
     <item
-        android:id="@+id/action_decorator"
-        android:title="Decorator"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/action_selector"
         android:title="Selector"
         app:showAsAction="always" />
