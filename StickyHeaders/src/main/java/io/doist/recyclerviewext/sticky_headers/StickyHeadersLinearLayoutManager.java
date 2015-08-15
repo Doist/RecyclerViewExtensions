@@ -21,8 +21,9 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private float mTranslationX;
     private float mTranslationY;
 
-    // Header positions for the currently displayed list.
+    // Header positions for the currently displayed list and their observer.
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
+    private RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
     // Sticky header's ViewHolder and dirty state.
     protected View mStickyHeader;
@@ -49,14 +50,29 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         mTranslationX = translationX;
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+    public void onAttachedToWindow(RecyclerView view) {
+        super.onAttachedToWindow(view);
+        setAdapter(view.getAdapter());
+    }
+
     @Override
     public void onAdapterChanged(RecyclerView.Adapter oldAdapter, RecyclerView.Adapter newAdapter) {
         super.onAdapterChanged(oldAdapter, newAdapter);
-        if (newAdapter instanceof StickyHeaders) {
-            mAdapter = (T) newAdapter;
-            rebuildHeaderPositions();
-        } else if (newAdapter == null) {
+        setAdapter(newAdapter);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setAdapter(RecyclerView.Adapter adapter) {
+        if (mAdapter != null) {
+            mAdapter.unregisterAdapterDataObserver(mHeaderPositionsObserver);
+        }
+
+        if (adapter instanceof StickyHeaders) {
+            mAdapter = (T) adapter;
+            mAdapter.registerAdapterDataObserver(mHeaderPositionsObserver);
+            mHeaderPositionsObserver.onChanged();
+        } else if (adapter == null) {
             mAdapter = null;
             mHeaderPositions.clear();
         } else {
@@ -451,116 +467,121 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         return -1;
     }
 
-    @Override
-    public void onItemsChanged(RecyclerView recyclerView) {
-        super.onItemsChanged(recyclerView);
-
-        // There's no hint at what changed, so rebuild header positions from scratch.
-        rebuildHeaderPositions();
-    }
-
-    @Override
-    public void onItemsAdded(RecyclerView recyclerView, int positionStart, int itemCount) {
-        super.onItemsAdded(recyclerView, positionStart, itemCount);
-
-        // Shift headers below down.
-        int headerCount = mHeaderPositions.size();
-        if (headerCount > 0) {
-            for (int i = findHeaderIndexOrNext(positionStart); i != -1 && i < headerCount; i++) {
-                mHeaderPositions.set(i, mHeaderPositions.get(i) + itemCount);
-            }
-        }
-
-        // Add new headers.
-        for (int i = positionStart; i < positionStart + itemCount; i++) {
-            if (mAdapter.isStickyHeader(i)) {
-                int headerIndex = findHeaderIndexOrNext(i);
-                if (headerIndex != -1) {
-                    mHeaderPositions.add(headerIndex, i);
-                } else {
+    /**
+     * Handles header positions while adapter changes occur.
+     *
+     * This is used in detriment of {@link RecyclerView.LayoutManager}'s callbacks to control when they're received.
+     */
+    private class HeaderPositionsAdapterDataObserver extends RecyclerView.AdapterDataObserver implements Runnable {
+        @Override
+        public void run() {
+            int itemCount = mAdapter.getItemCount();
+            for (int i = 0; i < itemCount; i++) {
+                if (mAdapter.isStickyHeader(i)) {
                     mHeaderPositions.add(i);
                 }
             }
         }
-    }
 
-    @Override
-    public void onItemsRemoved(RecyclerView recyclerView, int positionStart, int itemCount) {
-        super.onItemsRemoved(recyclerView, positionStart, itemCount);
-
-        int headerCount = mHeaderPositions.size();
-        if (headerCount > 0) {
-            // Remove headers.
-            for (int i = positionStart + itemCount - 1; i >= positionStart; i--) {
-                int index = findHeaderIndex(i);
-                if (index != -1) {
-                    mHeaderPositions.remove(index);
-                    headerCount--;
+        @Override
+        public void onChanged() {
+            // There's no hint at what changed, so go through the adapter.
+            mHeaderPositions.clear();
+            int itemCount = mAdapter.getItemCount();
+            for (int i = 0; i < itemCount; i++) {
+                if (mAdapter.isStickyHeader(i)) {
+                    mHeaderPositions.add(i);
                 }
-            }
-
-            // Shift headers below up.
-            for (int i = findHeaderIndexOrNext(positionStart + itemCount); i != -1 && i < headerCount; i++) {
-                mHeaderPositions.set(i, mHeaderPositions.get(i) - itemCount);
             }
         }
-    }
 
-    @Override
-    public void onItemsMoved(RecyclerView recyclerView, int fromPosition, int toPosition, int itemCount) {
-        super.onItemsMoved(recyclerView, fromPosition, toPosition, itemCount);
+        @Override
+        public void onItemRangeInserted(int positionStart, int itemCount) {
+            // Shift headers below down.
+            int headerCount = mHeaderPositions.size();
+            if (headerCount > 0) {
+                for (int i = findHeaderIndexOrNext(positionStart); i != -1 && i < headerCount;  i++) {
+                    mHeaderPositions.set(i, mHeaderPositions.get(i) + itemCount);
+                }
+            }
 
-        // Shift moved headers by toPosition - fromPosition.
-        // Shift headers in-between by -itemCount (reverse if upwards).
-        int headerCount = mHeaderPositions.size();
-        if (headerCount > 0) {
-            if (fromPosition < toPosition) {
-                for (int i = findHeaderIndexOrNext(fromPosition); i != -1 && i < headerCount; i++) {
-                    int headerPos = mHeaderPositions.get(i);
-                    if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
-                        mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
-                        sortHeaderAtIndex(i);
-                    } else if (headerPos >= fromPosition + itemCount && headerPos < toPosition) {
-                        mHeaderPositions.set(i, headerPos - itemCount);
-                        sortHeaderAtIndex(i);
-                    } else if (headerPos > toPosition) {
-                        break;
+            // Add new headers.
+            for (int i = positionStart; i < positionStart + itemCount; i++) {
+                if (mAdapter.isStickyHeader(i)) {
+                    int headerIndex = findHeaderIndexOrNext(i);
+                    if (headerIndex != -1) {
+                        mHeaderPositions.add(headerIndex, i);
+                    } else {
+                        mHeaderPositions.add(i);
                     }
                 }
+            }
+        }
+
+        @Override
+        public void onItemRangeRemoved(int positionStart, int itemCount) {
+            int headerCount = mHeaderPositions.size();
+            if (headerCount > 0) {
+                // Remove headers.
+                for (int i = positionStart + itemCount - 1; i >= positionStart; i--) {
+                    int index = findHeaderIndex(i);
+                    if (index != -1) {
+                        mHeaderPositions.remove(index);
+                        headerCount--;
+                    }
+                }
+
+                // Shift headers below up.
+                for (int i = findHeaderIndexOrNext(positionStart + itemCount); i != -1 && i < headerCount; i++) {
+                    mHeaderPositions.set(i, mHeaderPositions.get(i) - itemCount);
+                }
+            }
+        }
+
+        @Override
+        public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+            // Shift moved headers by toPosition - fromPosition.
+            // Shift headers in-between by -itemCount (reverse if upwards).
+            int headerCount = mHeaderPositions.size();
+            if (headerCount > 0) {
+                if (fromPosition < toPosition) {
+                    for (int i = findHeaderIndexOrNext(fromPosition); i != -1 && i < headerCount; i++) {
+                        int headerPos = mHeaderPositions.get(i);
+                        if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
+                            mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos >= fromPosition + itemCount && headerPos < toPosition) {
+                            mHeaderPositions.set(i, headerPos - itemCount);
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos > toPosition) {
+                            break;
+                        }
+                    }
+                } else {
+                    for (int i = findHeaderIndexOrNext(toPosition); i != -1 && i < headerCount; i++) {
+                        int headerPos = mHeaderPositions.get(i);
+                        if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
+                            mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos >= toPosition && headerPos < fromPosition) {
+                            mHeaderPositions.set(i, headerPos + itemCount);
+                            sortHeaderAtIndex(i);
+                        } else if (headerPos > toPosition) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void sortHeaderAtIndex(int index) {
+            int headerPos = mHeaderPositions.remove(index);
+            int headerIndex = findHeaderIndexOrNext(headerPos);
+            if (headerIndex != -1) {
+                mHeaderPositions.add(headerIndex, headerPos);
             } else {
-                for (int i = findHeaderIndexOrNext(toPosition); i != -1 && i < headerCount; i++) {
-                    int headerPos = mHeaderPositions.get(i);
-                    if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
-                        mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
-                        sortHeaderAtIndex(i);
-                    } else if (headerPos >= toPosition && headerPos < fromPosition) {
-                        mHeaderPositions.set(i, headerPos + itemCount);
-                        sortHeaderAtIndex(i);
-                    } else if (headerPos > toPosition) {
-                        break;
-                    }
-                }
+                mHeaderPositions.add(headerPos);
             }
-        }
-    }
-
-    private void rebuildHeaderPositions() {
-        mHeaderPositions.clear();
-        int itemCount = mAdapter.getItemCount();
-        for (int i = 0; i < itemCount; i++) {
-            if (mAdapter.isStickyHeader(i)) {
-                mHeaderPositions.add(i);
-            }
-        }
-    }
-
-    private void sortHeaderAtIndex(int index) {
-        int headerPos = mHeaderPositions.remove(index);
-        int headerIndex = findHeaderIndexOrNext(headerPos);
-        if (headerIndex != -1) {
-            mHeaderPositions.add(headerIndex, headerPos);
-        } else {
-            mHeaderPositions.add(headerPos);
         }
     }
 }
