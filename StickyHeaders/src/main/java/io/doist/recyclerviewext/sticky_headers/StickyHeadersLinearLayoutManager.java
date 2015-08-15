@@ -41,6 +41,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      */
     public void setStickyHeaderTranslationY(float translationY) {
         mTranslationY = translationY;
+        requestLayout();
     }
 
     /**
@@ -48,6 +49,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      */
     public void setStickyHeaderTranslationX(float translationX) {
         mTranslationX = translationX;
+        requestLayout();
     }
 
     @Override
