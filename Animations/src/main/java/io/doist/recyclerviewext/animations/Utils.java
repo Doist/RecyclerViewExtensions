@@ -28,14 +28,14 @@ class Utils {
         }
         if (startPosition < size / 2) {
             // Search forward if the head was hit.
-            for (int i = startPosition * 2 + 1; i >= 0 && i < size; i++) {
+            for (int i = Math.max(startPosition * 2 + 1, 0); i < size; i++) {
                 if (equals(object, list.get(i))) {
                     return i;
                 }
             }
         } else if (startPosition > size / 2) {
             // Search backward if the tail was hit.
-            for (int i = size - (size - startPosition) * 2 - 1; i >= 0 && i < size; i--) {
+            for (int i = Math.min(size - (size - startPosition) * 2 - 1, size - 1); i >= 0; i--) {
                 if (equals(object, list.get(i))) {
                     return i;
                 }
