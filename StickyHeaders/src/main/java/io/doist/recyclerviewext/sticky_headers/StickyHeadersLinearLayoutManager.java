@@ -282,14 +282,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         // Add sticky header as a child view, to be detached / reattached whenever LinearLayoutManager#fill() is called,
         // which happens on layout and scroll (see overrides).
         addView(mStickyHeader);
-        measureChildWithMargins(mStickyHeader, 0, 0);
-        if (getOrientation() == VERTICAL) {
-            mStickyHeader.layout(getPaddingLeft(), 0,
-                                 getWidth() - getPaddingRight(), mStickyHeader.getMeasuredHeight());
-        } else {
-            mStickyHeader.layout(0, getPaddingTop(),
-                                 mStickyHeader.getMeasuredWidth(), getHeight() - getPaddingBottom());
-        }
+        measureAndLayoutStickyHeader();
     }
 
     /**
@@ -299,6 +292,21 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     protected void bindStickyHeader(RecyclerView.Recycler recycler, int position) {
         // Bind the sticky header.
         recycler.bindViewToPosition(mStickyHeader, position);
+        measureAndLayoutStickyHeader();
+    }
+
+    /**
+     * Measures and lays out {@link #mStickyHeader}.
+     */
+    private void measureAndLayoutStickyHeader() {
+        measureChildWithMargins(mStickyHeader, 0, 0);
+        if (getOrientation() == VERTICAL) {
+            mStickyHeader.layout(getPaddingLeft(), 0,
+                                 getWidth() - getPaddingRight(), mStickyHeader.getMeasuredHeight());
+        } else {
+            mStickyHeader.layout(0, getPaddingTop(),
+                                 mStickyHeader.getMeasuredWidth(), getHeight() - getPaddingBottom());
+        }
     }
 
     /**
