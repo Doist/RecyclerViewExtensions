@@ -74,12 +74,9 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             mAdapter = (T) adapter;
             mAdapter.registerAdapterDataObserver(mHeaderPositionsObserver);
             mHeaderPositionsObserver.onChanged();
-        } else if (adapter == null) {
+        } else {
             mAdapter = null;
             mHeaderPositions.clear();
-        } else {
-            throw new IllegalStateException("StickyHeadersLinearLayoutManager must be used with an Adapter that "
-                                                    + "implements StickyHeaders");
         }
     }
 
