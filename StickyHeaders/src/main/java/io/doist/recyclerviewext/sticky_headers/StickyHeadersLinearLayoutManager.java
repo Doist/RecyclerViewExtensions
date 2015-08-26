@@ -2,7 +2,6 @@ package io.doist.recyclerviewext.sticky_headers;
 
 import android.content.Context;
 import android.graphics.PointF;
-import android.os.Build;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -314,10 +313,6 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         // Revert translation values.
         mStickyHeader.setTranslationX(0);
         mStickyHeader.setTranslationY(0);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mStickyHeader.setTranslationZ(0);
-        }
 
         // Teardown holder if the adapter requires it.
         if (mAdapter instanceof StickyHeaders.ViewSetup) {
