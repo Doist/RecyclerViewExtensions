@@ -238,7 +238,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                     if (mStickyHeader == null) {
                         createStickyHeader(recycler, headerPos);
                     }
-                    if(layout || getPosition(mStickyHeader) != headerPos) {
+                    if (layout || getPosition(mStickyHeader) != headerPos) {
                         bindStickyHeader(recycler, headerPos);
                     }
 
