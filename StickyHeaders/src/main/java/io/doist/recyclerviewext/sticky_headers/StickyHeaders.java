@@ -1,6 +1,7 @@
 package io.doist.recyclerviewext.sticky_headers;
 
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 
 /**
  * Adds sticky headers capabilities to the {@link RecyclerView.Adapter}. Should return {@code true} for all
@@ -13,16 +14,16 @@ public interface StickyHeaders {
         /**
          * Adjusts any necessary properties of the {@code holder} that is being used as a sticky header.
          *
-         * {@link #teardownStickyHeaderViewHolder(RecyclerView.ViewHolder)} will be called sometime after this method
+         * {@link #teardownStickyHeaderView(View)} will be called sometime after this method
          * and before any other calls to this method go through.
          */
-        void setupStickyHeaderViewHolder(RecyclerView.ViewHolder holder);
+        void setupStickyHeaderView(View stickyHeader);
 
         /**
-         * Reverts any properties changed in {@link #setupStickyHeaderViewHolder(RecyclerView.ViewHolder)}.
+         * Reverts any properties changed in {@link #setupStickyHeaderView(View)}.
          *
-         * Called after {@link #setupStickyHeaderViewHolder(RecyclerView.ViewHolder)}.
+         * Called after {@link #setupStickyHeaderView(View)}.
          */
-        void teardownStickyHeaderViewHolder(RecyclerView.ViewHolder holder);
+        void teardownStickyHeaderView(View stickyHeader);
     }
 }

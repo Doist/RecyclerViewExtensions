@@ -19,8 +19,7 @@ import io.doist.recyclerviewext.choice_modes.SingleSelector;
 import io.doist.recyclerviewext.dividers.DividerItemDecoration;
 import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
-import io.doist.recyclerviewext.sticky_headers.StickyHeaderCanvasItemDecoration;
-import io.doist.recyclerviewext.sticky_headers.StickyHeaderViewItemDecoration;
+import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
 
 public class DemoActivity extends ActionBarActivity {
     private ViewGroup mContainer;
@@ -30,12 +29,9 @@ public class DemoActivity extends ActionBarActivity {
     private ProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
     private DragDropManager mDragDropManager;
 
-    private RecyclerView.ItemDecoration mDecorator;
-
     private Selector mSelector;
 
     private int mDataCount = 0;
-    private int mDecoratorCount = 0;
     private int mSelectorCount = 0;
     private int mLayoutCount = 0;
 
@@ -47,7 +43,7 @@ public class DemoActivity extends ActionBarActivity {
         mContainer = (ViewGroup) findViewById(R.id.container);
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
-        mLinearLayoutManager = new LinearLayoutManager(this);
+        mLinearLayoutManager = new StickyHeadersLinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this, R.drawable.divider_light, true));
         mAdapter = new DemoAdapter(false);
@@ -84,10 +80,6 @@ public class DemoActivity extends ActionBarActivity {
                 setNextAdapterItems();
                 return true;
 
-            case R.id.action_decorator:
-                setNextDecorator();
-                return true;
-
             case R.id.action_selector:
                 setNextSelector();
                 return true;
@@ -121,31 +113,6 @@ public class DemoActivity extends ActionBarActivity {
         return Arrays.asList(ITEMS[mDataCount % ITEMS.length]);
     }
 
-    public void setNextDecorator() {
-        if (mDecorator != null) {
-            mRecyclerView.removeItemDecoration(mDecorator);
-        }
-        mDecorator = getDecorator();
-        mRecyclerView.addItemDecoration(mDecorator);
-        mAdapter.notifyDataSetChanged();
-        mDecoratorCount++;
-    }
-
-    public RecyclerView.ItemDecoration getDecorator() {
-        if (mDecoratorCount % 2 == 0) {
-            return new StickyHeaderCanvasItemDecoration<>(
-                    mAdapter,
-                    mLinearLayoutManager.getOrientation() == LinearLayoutManager.VERTICAL,
-                    mLinearLayoutManager.getReverseLayout());
-        } else {
-            return new StickyHeaderViewItemDecoration<>(
-                    this,
-                    mAdapter,
-                    mLinearLayoutManager.getOrientation() == LinearLayoutManager.VERTICAL,
-                    mLinearLayoutManager.getReverseLayout());
-        }
-    }
-
     public void setNextSelector() {
         mSelector = getSelector();
         mAdapter.setSelector(mSelector);
@@ -164,14 +131,14 @@ public class DemoActivity extends ActionBarActivity {
     public void setNextLayout() {
         int orientation = mLayoutCount % 2 == 0 ? LinearLayoutManager.VERTICAL : LinearLayoutManager.HORIZONTAL;
         boolean reverse = mLayoutCount % 3 == 0;
-        mLinearLayoutManager = new LinearLayoutManager(this, orientation, reverse);
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mAdapter = new DemoAdapter(orientation == LinearLayoutManager.HORIZONTAL);
         mAdapter.setDragDropManager(mDragDropManager);
         mAdapter.setDataset(getAdapterItems());
         if (mSelector != null) {
             mAdapter.setSelector(mSelector);
         }
+        mLinearLayoutManager = new StickyHeadersLinearLayoutManager(this, orientation, reverse);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mProgressEmptyRecyclerFlipper.monitor(mAdapter);
         mRecyclerView.setAdapter(mAdapter);
         mLayoutCount++;
