@@ -107,11 +107,18 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-        detachStickyHeader();
-        super.onLayoutChildren(recycler, state);
-        attachStickyHeader();
+        if (state.isPreLayout()) {
+            // FIXME: Detect if mStickyHeader's ViewHolder is in a removed state and only scrap then,
+            // but there's no straightforward way to access it.
+            if (mStickyHeader != null) {
+                scrapStickyHeader(recycler);
+            }
+            super.onLayoutChildren(recycler, state);
+        } else {
+            detachStickyHeader();
+            super.onLayoutChildren(recycler, state);
+            attachStickyHeader();
 
-        if (!state.isPreLayout()) {
             updateStickyHeader(recycler, true);
         }
     }
