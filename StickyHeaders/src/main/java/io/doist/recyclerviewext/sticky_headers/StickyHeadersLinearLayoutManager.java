@@ -107,18 +107,11 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-        if (state.isPreLayout()) {
-            // FIXME: Detect if mStickyHeader's ViewHolder is in a removed state and only scrap then,
-            // but there's no straightforward way to access it.
-            if (mStickyHeader != null) {
-                scrapStickyHeader(recycler);
-            }
-            super.onLayoutChildren(recycler, state);
-        } else {
-            detachStickyHeader();
-            super.onLayoutChildren(recycler, state);
-            attachStickyHeader();
+        detachStickyHeader();
+        super.onLayoutChildren(recycler, state);
+        attachStickyHeader();
 
+        if (!state.isPreLayout()) {
             updateStickyHeader(recycler, true);
         }
     }
@@ -286,12 +279,14 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         // which happens on layout and scroll (see overrides).
         addView(mStickyHeader);
         measureAndLayoutStickyHeader();
+
+        // Ignore sticky header, as it's fully managed by this LayoutManager.
+        ignoreView(mStickyHeader);
     }
 
     /**
      * Binds the {@link #mStickyHeader} for the given {@code position}.
      */
-    @SuppressWarnings("unchecked")
     protected void bindStickyHeader(RecyclerView.Recycler recycler, int position) {
         // Bind the sticky header.
         recycler.bindViewToPosition(mStickyHeader, position);
@@ -326,6 +321,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             ((StickyHeaders.ViewSetup) mAdapter).teardownStickyHeaderView(mStickyHeader);
         }
 
+        // Stop ignoring sticky header so that it can be recycled.
+        stopIgnoringView(mStickyHeader);
+
+        // Remove and recycle sticky header.
         removeAndRecycleView(mStickyHeader, recycler);
 
         mStickyHeader = null;
