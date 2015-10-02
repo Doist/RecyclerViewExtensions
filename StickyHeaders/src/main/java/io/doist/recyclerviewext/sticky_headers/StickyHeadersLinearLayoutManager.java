@@ -2,6 +2,8 @@ package io.doist.recyclerviewext.sticky_headers;
 
 import android.content.Context;
 import android.graphics.PointF;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -26,6 +28,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
     // Sticky header's ViewHolder and dirty state.
     protected View mStickyHeader;
+    private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
 
     public StickyHeadersLinearLayoutManager(Context context) {
         super(context);
@@ -267,8 +270,9 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      * Creates {@link RecyclerView.ViewHolder} for {@code position}, including measure / layout, and assigns it to
      * {@link #mStickyHeader}.
      */
-    protected void createStickyHeader(RecyclerView.Recycler recycler, int position) {
+    protected void createStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
         mStickyHeader = recycler.getViewForPosition(position);
+        mStickyHeaderPosition = position;
 
         // Setup sticky header if the adapter requires it.
         if (mAdapter instanceof StickyHeaders.ViewSetup) {
@@ -287,9 +291,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     /**
      * Binds the {@link #mStickyHeader} for the given {@code position}.
      */
-    protected void bindStickyHeader(RecyclerView.Recycler recycler, int position) {
+    protected void bindStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
         // Bind the sticky header.
         recycler.bindViewToPosition(mStickyHeader, position);
+        mStickyHeaderPosition = position;
         measureAndLayoutStickyHeader();
     }
 
@@ -310,8 +315,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     /**
      * Returns {@link #mStickyHeader} to the {@link RecyclerView}'s {@link RecyclerView.RecycledViewPool}, assigning it
      * to {@code null}.
+     *
+     * @param recycler If passed, the sticky header will be returned to the recycled view pool.
      */
-    protected void scrapStickyHeader(RecyclerView.Recycler recycler) {
+    protected void scrapStickyHeader(@Nullable RecyclerView.Recycler recycler) {
         // Revert translation values.
         mStickyHeader.setTranslationX(0);
         mStickyHeader.setTranslationY(0);
@@ -325,9 +332,13 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         stopIgnoringView(mStickyHeader);
 
         // Remove and recycle sticky header.
-        removeAndRecycleView(mStickyHeader, recycler);
+        removeView(mStickyHeader);
+        if (recycler != null) {
+            recycler.recycleView(mStickyHeader);
+        }
 
         mStickyHeader = null;
+        mStickyHeaderPosition = RecyclerView.NO_POSITION;
     }
 
     /**
@@ -491,6 +502,11 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                     mHeaderPositions.add(i);
                 }
             }
+
+            // Remove sticky header immediately if the entry it represents has been removed. A layout will follow.
+            if (mStickyHeader != null && !mHeaderPositions.contains(mStickyHeaderPosition)) {
+                scrapStickyHeader(null);
+            }
         }
 
         @Override
@@ -527,6 +543,11 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                         mHeaderPositions.remove(index);
                         headerCount--;
                     }
+                }
+
+                // Remove sticky header immediately if the entry it represents has been removed. A layout will follow.
+                if (mStickyHeader != null && !mHeaderPositions.contains(mStickyHeaderPosition)) {
+                    scrapStickyHeader(null);
                 }
 
                 // Shift headers below up.
