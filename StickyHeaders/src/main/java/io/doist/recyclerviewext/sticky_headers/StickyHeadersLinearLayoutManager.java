@@ -480,17 +480,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      *
      * This is used in detriment of {@link RecyclerView.LayoutManager}'s callbacks to control when they're received.
      */
-    private class HeaderPositionsAdapterDataObserver extends RecyclerView.AdapterDataObserver implements Runnable {
-        @Override
-        public void run() {
-            int itemCount = mAdapter.getItemCount();
-            for (int i = 0; i < itemCount; i++) {
-                if (mAdapter.isStickyHeader(i)) {
-                    mHeaderPositions.add(i);
-                }
-            }
-        }
-
+    private class HeaderPositionsAdapterDataObserver extends RecyclerView.AdapterDataObserver {
         @Override
         public void onChanged() {
             // There's no hint at what changed, so go through the adapter.
