@@ -2,8 +2,9 @@ package io.doist.recyclerviewext.animations;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.support.v7.widget.RecyclerView;
+import android.support.v4.animation.AnimatorCompatHelper;
 import android.support.v7.widget.RecyclerView.ViewHolder;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
 
@@ -21,7 +22,7 @@ import java.util.List;
  *
  * @see android.support.v7.widget.DefaultItemAnimator
  */
-public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
+public class WithLayerItemAnimator extends SimpleItemAnimator {
     private ArrayList<ViewHolder> mPendingRemovals = new ArrayList<>();
     private ArrayList<ViewHolder> mPendingAdditions = new ArrayList<>();
     private ArrayList<MoveInfo> mPendingMoves = new ArrayList<>();
@@ -179,7 +180,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
 
     @Override
     public boolean animateRemove(final ViewHolder holder) {
-        endAnimation(holder);
+        resetAnimation(holder);
         mPendingRemovals.add(holder);
         return true;
     }
@@ -207,7 +208,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
 
     @Override
     public boolean animateAdd(final ViewHolder holder) {
-        endAnimation(holder);
+        resetAnimation(holder);
         holder.itemView.setAlpha(0);
         mPendingAdditions.add(holder);
         return true;
@@ -244,7 +245,7 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
         final View view = holder.itemView;
         fromX += holder.itemView.getTranslationX();
         fromY += holder.itemView.getTranslationY();
-        endAnimation(holder);
+        resetAnimation(holder);
         int deltaX = toX - fromX;
         int deltaY = toY - fromY;
         if (deltaX == 0 && deltaY == 0) {
@@ -300,19 +301,24 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
     @Override
     public boolean animateChange(ViewHolder oldHolder, ViewHolder newHolder,
                                  int fromX, int fromY, int toX, int toY) {
+        if (oldHolder == newHolder) {
+            // Don't know how to run change animations when the same view holder is re-used.
+            // run a move animation to handle position changes.
+            return animateMove(oldHolder, fromX, fromY, toX, toY);
+        }
         final float prevTranslationX = oldHolder.itemView.getTranslationX();
         final float prevTranslationY = oldHolder.itemView.getTranslationY();
         final float prevAlpha = oldHolder.itemView.getAlpha();
-        endAnimation(oldHolder);
+        resetAnimation(oldHolder);
         int deltaX = (int) (toX - fromX - prevTranslationX);
         int deltaY = (int) (toY - fromY - prevTranslationY);
         // recover prev translation state after ending animation
         oldHolder.itemView.setTranslationX(prevTranslationX);
         oldHolder.itemView.setTranslationY(prevTranslationY);
         oldHolder.itemView.setAlpha(prevAlpha);
-        if (newHolder != null && newHolder.itemView != null) {
+        if (newHolder != null) {
             // carry over translation values
-            endAnimation(newHolder);
+            resetAnimation(newHolder);
             newHolder.itemView.setTranslationX(-deltaX);
             newHolder.itemView.setTranslationY(-deltaY);
             newHolder.itemView.setAlpha(0);
@@ -467,8 +473,12 @@ public class WithLayerItemAnimator extends RecyclerView.ItemAnimator {
                 }
             }
         }
-
         dispatchFinishedWhenDone();
+    }
+
+    private void resetAnimation(ViewHolder holder) {
+        AnimatorCompatHelper.clearInterpolator(holder.itemView);
+        endAnimation(holder);
     }
 
     @Override
