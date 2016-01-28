@@ -192,7 +192,12 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
     private void attachStickyHeader() {
         if (mStickyHeader != null) {
-            attachView(mStickyHeader);
+            RecyclerView.LayoutParams rlp = (RecyclerView.LayoutParams) mStickyHeader.getLayoutParams();
+            // Check if the view is still valid. This prevents
+            // https://fabric.io/doist/android/apps/com.todoist/issues/562b0832f5d3a7f76b08e19f
+            if (!rlp.isViewInvalid()) {
+                attachView(mStickyHeader);
+            }
         }
     }
 
