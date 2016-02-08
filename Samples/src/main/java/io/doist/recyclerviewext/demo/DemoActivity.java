@@ -1,7 +1,7 @@
 package io.doist.recyclerviewext.demo;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -21,7 +21,7 @@ import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
 
-public class DemoActivity extends ActionBarActivity {
+public class DemoActivity extends AppCompatActivity {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
