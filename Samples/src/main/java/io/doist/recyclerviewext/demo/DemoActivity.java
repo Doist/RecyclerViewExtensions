@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,9 +20,10 @@ import io.doist.recyclerviewext.choice_modes.SingleSelector;
 import io.doist.recyclerviewext.dividers.DividerItemDecoration;
 import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
+import io.doist.recyclerviewext.pinch_zoom.PinchZoomOnItemTouchListener;
 import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
 
-public class DemoActivity extends AppCompatActivity {
+public class DemoActivity extends AppCompatActivity implements PinchZoomOnItemTouchListener.PinchZoomListener {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -54,6 +56,7 @@ public class DemoActivity extends AppCompatActivity {
         mRecyclerView.setItemAnimator(new WithLayerItemAnimator(true));
         mDragDropManager = new DragDropManager<>(mRecyclerView, mAdapter);
         mAdapter.setDragDropManager(mDragDropManager);
+        mRecyclerView.addOnItemTouchListener(new PinchZoomOnItemTouchListener(this, this));
     }
 
     @Override
@@ -91,6 +94,11 @@ public class DemoActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onPinchZoom(int position) {
+        Toast.makeText(this, "Pinched " + position, Toast.LENGTH_SHORT).show();
     }
 
     private static final Object[][] ITEMS = {
