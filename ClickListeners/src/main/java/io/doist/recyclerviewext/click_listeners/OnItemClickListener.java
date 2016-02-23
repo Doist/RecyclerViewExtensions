@@ -1,7 +1,7 @@
 package io.doist.recyclerviewext.click_listeners;
 
-import android.view.View;
+import android.support.v7.widget.RecyclerView;
 
 public interface OnItemClickListener {
-    public void onItemClick(View view, int position, long id);
+    void onItemClick(RecyclerView.ViewHolder holder);
 }
