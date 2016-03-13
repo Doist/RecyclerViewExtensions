@@ -2,6 +2,8 @@ package io.doist.recyclerviewext.sticky_headers;
 
 import android.content.Context;
 import android.graphics.PointF;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -84,6 +86,30 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             mAdapter = null;
             mHeaderPositions.clear();
         }
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+
+        SavedState ss = new SavedState();
+        ss.superState = superState;
+        ss.pendingScrollPosition = mPendingScrollPosition;
+        ss.pendingScrollOffset = mPendingScrollOffset;
+
+        return ss;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (state instanceof SavedState) {
+            SavedState ss = (SavedState) state;
+            mPendingScrollPosition = ss.pendingScrollPosition;
+            mPendingScrollOffset = ss.pendingScrollOffset;
+            state = ss.superState;
+        }
+
+        super.onRestoreInstanceState(state);
     }
 
     @Override
@@ -665,5 +691,44 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                 mHeaderPositions.add(headerPos);
             }
         }
+    }
+
+    public static class SavedState implements Parcelable {
+        private Parcelable superState;
+        private int pendingScrollPosition;
+        private int pendingScrollOffset;
+
+        public SavedState() {
+        }
+
+        public SavedState(Parcel in) {
+            superState = in.readParcelable(StickyHeadersLinearLayoutManager.class.getClassLoader());
+            pendingScrollPosition = in.readInt();
+            pendingScrollOffset = in.readInt();
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(@NonNull Parcel dest, int flags) {
+            dest.writeParcelable(superState, flags);
+            dest.writeInt(pendingScrollPosition);
+            dest.writeInt(pendingScrollOffset);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+            @Override
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
     }
 }
