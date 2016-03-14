@@ -708,7 +708,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         }
 
         public SavedState(Parcel in) {
-            superState = in.readParcelable(StickyHeadersLinearLayoutManager.class.getClassLoader());
+            superState = in.readParcelable(SavedState.class.getClassLoader());
             pendingScrollPosition = in.readInt();
             pendingScrollOffset = in.readInt();
         }
