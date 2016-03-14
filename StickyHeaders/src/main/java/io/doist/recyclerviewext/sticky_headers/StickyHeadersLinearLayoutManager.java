@@ -90,13 +90,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
     @Override
     public Parcelable onSaveInstanceState() {
-        Parcelable superState = super.onSaveInstanceState();
-
         SavedState ss = new SavedState();
-        ss.superState = superState;
+        ss.superState = super.onSaveInstanceState();
         ss.pendingScrollPosition = mPendingScrollPosition;
         ss.pendingScrollOffset = mPendingScrollOffset;
-
         return ss;
     }
 
