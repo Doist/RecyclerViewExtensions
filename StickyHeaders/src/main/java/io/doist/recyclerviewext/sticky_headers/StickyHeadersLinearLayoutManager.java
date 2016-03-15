@@ -2,11 +2,14 @@ package io.doist.recyclerviewext.sticky_headers;
 
 import android.content.Context;
 import android.graphics.PointF;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +32,9 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     // Sticky header's ViewHolder and dirty state.
     protected View mStickyHeader;
     private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
+
+    private int mPendingScrollPosition = RecyclerView.NO_POSITION;
+    private int mPendingScrollOffset = 0;
 
     public StickyHeadersLinearLayoutManager(Context context) {
         super(context);
@@ -83,6 +89,27 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     @Override
+    public Parcelable onSaveInstanceState() {
+        SavedState ss = new SavedState();
+        ss.superState = super.onSaveInstanceState();
+        ss.pendingScrollPosition = mPendingScrollPosition;
+        ss.pendingScrollOffset = mPendingScrollOffset;
+        return ss;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (state instanceof SavedState) {
+            SavedState ss = (SavedState) state;
+            mPendingScrollPosition = ss.pendingScrollPosition;
+            mPendingScrollOffset = ss.pendingScrollOffset;
+            state = ss.superState;
+        }
+
+        super.onRestoreInstanceState(state);
+    }
+
+    @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
         detachStickyHeader();
         int scrolled = super.scrollVerticallyBy(dy, recycler, state);
@@ -117,6 +144,50 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         if (!state.isPreLayout()) {
             updateStickyHeader(recycler, true);
         }
+    }
+
+    @Override
+    public void scrollToPosition(int position) {
+        scrollToPositionWithOffset(position, INVALID_OFFSET);
+    }
+
+    @Override
+    public void scrollToPositionWithOffset(int position, int offset) {
+        scrollToPositionWithOffset(position, offset, true);
+    }
+
+    public void scrollToPositionWithOffset(int position, int offset, boolean adjustForStickyHeader) {
+        // Reset pending scroll.
+        setPendingScroll(RecyclerView.NO_POSITION, 0);
+
+        // Adjusting is disabled.
+        if (!adjustForStickyHeader) {
+            super.scrollToPositionWithOffset(position, offset);
+            return;
+        }
+
+        // There is no header above or the position is a header.
+        int headerIndex = findHeaderIndexOrBefore(position);
+        if (headerIndex == -1 || findHeaderIndex(position) != -1) {
+            super.scrollToPositionWithOffset(position, offset);
+            return;
+        }
+
+        // The position is right below a header, scroll to the header.
+        if (findHeaderIndex(position - 1) != -1) {
+            super.scrollToPositionWithOffset(position - 1, offset);
+            return;
+        }
+
+        // Current sticky header is the same as at the position. Adjust the scroll offset and reset pending scroll.
+        if (mStickyHeader != null && headerIndex == findHeaderIndex(mStickyHeaderPosition)) {
+            super.scrollToPositionWithOffset(position, offset + mStickyHeader.getHeight());
+            return;
+        }
+
+        // Remember this position and offset and scroll to it to trigger creating the sticky header.
+        setPendingScroll(position, offset);
+        super.scrollToPositionWithOffset(position, offset);
     }
 
     @Override
@@ -296,6 +367,22 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         recycler.bindViewToPosition(mStickyHeader, position);
         mStickyHeaderPosition = position;
         measureAndLayoutStickyHeader();
+
+        // If we have a pending scroll wait until the end of layout and scroll again.
+        if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
+            final ViewTreeObserver vto = mStickyHeader.getViewTreeObserver();
+            vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    vto.removeOnGlobalLayoutListener(this);
+
+                    if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
+                        scrollToPositionWithOffset(mPendingScrollPosition, mPendingScrollOffset);
+                        setPendingScroll(RecyclerView.NO_POSITION, 0);
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -439,7 +526,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             int middle = (low + high) / 2;
             if (mHeaderPositions.get(middle) > position) {
                 high = middle - 1;
-            } else if(mHeaderPositions.get(middle) < position) {
+            } else if (mHeaderPositions.get(middle) < position) {
                 low = middle + 1;
             } else {
                 return middle;
@@ -477,13 +564,18 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             int middle = (low + high) / 2;
             if (middle > 0 && mHeaderPositions.get(middle - 1) >= position) {
                 high = middle - 1;
-            } else if(mHeaderPositions.get(middle) < position) {
+            } else if (mHeaderPositions.get(middle) < position) {
                 low = middle + 1;
             } else {
                 return middle;
             }
         }
         return -1;
+    }
+
+    private void setPendingScroll(int position, int offset) {
+        mPendingScrollPosition = position;
+        mPendingScrollOffset = offset;
     }
 
     /**
@@ -514,7 +606,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             // Shift headers below down.
             int headerCount = mHeaderPositions.size();
             if (headerCount > 0) {
-                for (int i = findHeaderIndexOrNext(positionStart); i != -1 && i < headerCount;  i++) {
+                for (int i = findHeaderIndexOrNext(positionStart); i != -1 && i < headerCount; i++) {
                     mHeaderPositions.set(i, mHeaderPositions.get(i) + itemCount);
                 }
             }
@@ -602,5 +694,44 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                 mHeaderPositions.add(headerPos);
             }
         }
+    }
+
+    public static class SavedState implements Parcelable {
+        private Parcelable superState;
+        private int pendingScrollPosition;
+        private int pendingScrollOffset;
+
+        public SavedState() {
+        }
+
+        public SavedState(Parcel in) {
+            superState = in.readParcelable(SavedState.class.getClassLoader());
+            pendingScrollPosition = in.readInt();
+            pendingScrollOffset = in.readInt();
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(@NonNull Parcel dest, int flags) {
+            dest.writeParcelable(superState, flags);
+            dest.writeInt(pendingScrollPosition);
+            dest.writeInt(pendingScrollOffset);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+            @Override
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
     }
 }
