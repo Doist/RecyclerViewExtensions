@@ -158,7 +158,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
     public void scrollToPositionWithOffset(int position, int offset, boolean adjustForStickyHeader) {
         // Reset pending scroll.
-        setPendingScroll(RecyclerView.NO_POSITION, 0);
+        setPendingScroll(RecyclerView.NO_POSITION, INVALID_OFFSET);
 
         // Adjusting is disabled.
         if (!adjustForStickyHeader) {
@@ -181,7 +181,8 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
         // Current sticky header is the same as at the position. Adjust the scroll offset and reset pending scroll.
         if (mStickyHeader != null && headerIndex == findHeaderIndex(mStickyHeaderPosition)) {
-            super.scrollToPositionWithOffset(position, offset + mStickyHeader.getHeight());
+            int adjustedOffset = (offset != INVALID_OFFSET ? offset : 0) + mStickyHeader.getHeight();
+            super.scrollToPositionWithOffset(position, adjustedOffset);
             return;
         }
 
@@ -378,7 +379,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
                     if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
                         scrollToPositionWithOffset(mPendingScrollPosition, mPendingScrollOffset);
-                        setPendingScroll(RecyclerView.NO_POSITION, 0);
+                        setPendingScroll(RecyclerView.NO_POSITION, INVALID_OFFSET);
                     }
                 }
             });
