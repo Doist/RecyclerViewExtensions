@@ -436,15 +436,15 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         if (!params.isItemRemoved() && !params.isViewInvalid()) {
             if (getOrientation() == VERTICAL) {
                 if (getReverseLayout()) {
-                    return view.getTop() <= getHeight() + mTranslationY;
+                    return view.getTop() + view.getTranslationY() <= getHeight() + mTranslationY;
                 } else {
-                    return view.getBottom() >= mTranslationY;
+                    return view.getBottom() - view.getTranslationY() >= mTranslationY;
                 }
             } else {
                 if (getReverseLayout()) {
-                    return view.getLeft() <= getWidth() + mTranslationX;
+                    return view.getLeft() + view.getTranslationX() <= getWidth() + mTranslationX;
                 } else {
-                    return view.getRight() >= mTranslationX;
+                    return view.getRight() - view.getTranslationY() >= mTranslationX;
                 }
             }
         } else {
