@@ -285,21 +285,21 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                 if (isViewValidAnchor(child, params)) {
                     anchorView = child;
                     anchorIndex = i;
-                    anchorPos = params.getViewLayoutPosition();
+                    anchorPos = params.getViewAdapterPosition();
                     break;
                 }
             }
-
-            if (anchorView != null) {
+            if (anchorView != null && anchorPos != -1) {
                 int headerIndex = findHeaderIndexOrBefore(anchorPos);
                 int headerPos = headerIndex != -1 ? mHeaderPositions.get(headerIndex) : -1;
                 int nextHeaderPos = headerCount > headerIndex + 1 ? mHeaderPositions.get(headerIndex + 1) : -1;
 
                 // Show sticky header if:
-                // - there's one to show;
-                // - it's on the edge or it's not the anchor view;
-                // - isn't followed by another sticky header.
-                if (headerPos != -1 && (headerPos != anchorPos || isViewOnBoundary(anchorView))
+                // - There's one to show;
+                // - It's on the edge or it's not the anchor view;
+                // - Isn't followed by another sticky header;
+                if (headerPos != -1
+                        && (headerPos != anchorPos || isViewOnBoundary(anchorView))
                         && nextHeaderPos != headerPos + 1) {
                     // Ensure existing sticky header, if any, is of correct type.
                     if (mStickyHeader != null
