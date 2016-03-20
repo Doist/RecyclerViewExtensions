@@ -15,7 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
 /**
@@ -43,6 +43,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     private static final float SCROLL_SPEED_MAX_DP = 12;
     private static final int SETTLE_DURATION_MS = 250;
+    private static final Interpolator SETTLE_INTERPOLATOR = new DecelerateInterpolator();
 
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLayoutManager;
@@ -844,8 +845,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
         private long mStartTime = 0;
 
-        private Interpolator mInterpolator = new AccelerateDecelerateInterpolator();
-
         @Override
         public void run() {
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForAdapterPosition(mPosition);
@@ -857,7 +856,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
                 int oldBottom = mItemLocation.bottom;
 
                 View view = holder.itemView;
-                float interpolatedFraction = mInterpolator.getInterpolation(fraction);
+                float interpolatedFraction = SETTLE_INTERPOLATOR.getInterpolation(fraction);
                 int left = (int) (mStartLeft + (view.getLeft() - mStartLeft) * interpolatedFraction);
                 int top = (int) (mStartTop + (view.getTop() - mStartTop) * interpolatedFraction);
                 mItemLocation.offsetTo(left, top);
