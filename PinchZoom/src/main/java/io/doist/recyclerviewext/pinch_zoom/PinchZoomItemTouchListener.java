@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -44,7 +43,7 @@ public class PinchZoomItemTouchListener
 
     private boolean mDisallowInterceptTouchEvent;
 
-    public PinchZoomItemTouchListener(@NonNull Context context, @NonNull PinchZoomListener listener) {
+    public PinchZoomItemTouchListener(Context context, PinchZoomListener listener) {
         mScaleGestureDetector = new ScaleGestureDetector(context, this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             mScaleGestureDetector.setQuickScaleEnabled(false);
@@ -156,7 +155,7 @@ public class PinchZoomItemTouchListener
         }
 
         // Invoke listener if the gesture is valid.
-        if (getSpan(detector) - mSpan > mSpanSlop) {
+        if (mListener != null && getSpan(detector) - mSpan > mSpanSlop) {
             mListener.onPinchZoom(mPosition);
         }
 
