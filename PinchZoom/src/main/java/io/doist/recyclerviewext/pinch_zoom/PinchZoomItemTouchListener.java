@@ -105,7 +105,7 @@ public class PinchZoomItemTouchListener
         // Grab the current span and center position of the gesture.
         mSpan = getSpan(detector);
         View child = mRecyclerView.findChildViewUnder(detector.getFocusX(), detector.getFocusY());
-        mPosition = child != null ? mRecyclerView.getChildAdapterPosition(child) : RecyclerView.NO_POSITION;
+        mPosition = child != null ? mRecyclerView.getChildLayoutPosition(child) : RecyclerView.NO_POSITION;
 
         // Determine if we should intercept, based on it being a valid position.
         mIntercept = mPosition != RecyclerView.NO_POSITION;
@@ -127,7 +127,7 @@ public class PinchZoomItemTouchListener
         // Translate items around the center position.
         for (int i = 0; i < mRecyclerView.getChildCount(); i++) {
             View child = mRecyclerView.getChildAt(i);
-            int position = mRecyclerView.getChildAdapterPosition(child);
+            int position = mRecyclerView.getChildLayoutPosition(child);
             if (position != RecyclerView.NO_POSITION) {
                 float translation = Math.max(0, getSpan(detector) - mSpan) * (position < mPosition ? -0.5f : 0.5f);
                 getTranslateProperty().set(child, translation);
