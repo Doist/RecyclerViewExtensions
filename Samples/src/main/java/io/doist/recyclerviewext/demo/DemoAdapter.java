@@ -1,6 +1,5 @@
 package io.doist.recyclerviewext.demo;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,12 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.doist.recyclerviewext.R;
+import io.doist.recyclerviewext.animations.AnimatedAdapter;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.dragdrop.DragDrop;
 import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaders;
 
-public class DemoAdapter extends RecyclerView.Adapter<BindableViewHolder> implements StickyHeaders, DragDrop {
+public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements StickyHeaders, DragDrop {
     private boolean mHorizontal;
 
     private Selector mSelector;
@@ -25,13 +25,13 @@ public class DemoAdapter extends RecyclerView.Adapter<BindableViewHolder> implem
     private List<Object> mDataset;
 
     public DemoAdapter(boolean horizontal) {
-        setHasStableIds(true);
+        super();
         mHorizontal = horizontal;
     }
 
     public void setDataset(List<Object> dataset) {
         mDataset = new ArrayList<>(dataset);
-        notifyDataSetChanged();
+        animateDataSetChanged();
     }
 
     public void setSelector(Selector selector) {
@@ -65,6 +65,11 @@ public class DemoAdapter extends RecyclerView.Adapter<BindableViewHolder> implem
     @Override
     public long getItemId(int position) {
         return mDataset.get(position).hashCode();
+    }
+
+    @Override
+    public int getItemChangeHash(int position) {
+        return 0;
     }
 
     @Override

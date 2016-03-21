@@ -2,57 +2,29 @@ package io.doist.recyclerviewext.animations;
 
 import android.support.v7.widget.RecyclerView;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Adds functionality to calculate differences between data sets automatically or manually.
- *
- * Calls to {@link #animateDataSetChanged()} will analyze the data set using {@link #getItemAnimationId(int)} and
- * {@link #getItemChangeHash(int)} and calculate the necessary {@code notifyItem*} calls to go from the previous state to
- * the new state.
- *
- * If the data set is too big, this can have a significant performance impact. In those cases, it's best to use
- * {@link #prepareDataSetChanges(List, List)} on a background thread, and call {@link #animatePendingDataSetChanges()}
- * on the UI thread right after switching to the new data set.
- *
- * Note that animation ids are used to locate items in the list, while change hashes are used to detect changes in them.
+ * Adds functionality to animate differences between data sets automatically provided the ids are stable.
  */
 public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
-    private ArrayList2<Object> mAnimationIds = new ArrayList2<>(0);
-    private ArrayList2<Integer> mChangeHashes = new ArrayList2<>(0);
-
-    private List<Op> mPendingOps = new ArrayList<>();
-    private int mPendingSize = 0;
+    private Items mItems = new Items();
 
     private boolean mAnimationsEnabled = true;
     private LocalStateObserver mLocalStateObserver = new LocalStateObserver();
 
-    /**
-     * @param hasStableIds whether this {@link RecyclerView.Adapter} has stable ids. Given that a
-     *                     {@link RecyclerView.AdapterDataObserver} is registered, it must be setup up-front.
-     */
-    protected AnimatedAdapter(boolean hasStableIds) {
-        setHasStableIds(hasStableIds);
+    protected AnimatedAdapter() {
+        setHasStableIds(true);
         registerAdapterDataObserver(mLocalStateObserver);
     }
 
     /**
-     * Return the animation id for item at {@code position}. Used to animate items appearing, moving and disappearing.
-     *
-     * Must be non-null and unique across all objects in this adapter.
-     */
-    public abstract Object getItemAnimationId(int position);
-
-    /**
      * Return the change hash for item at {@code position}. Used to notify adapter of changed items.
      *
-     * Can be {@code null} if the item never changes.
+     * Can be {@code 0} if the item never changes.
      */
-    public abstract Integer getItemChangeHash(int position);
+    public abstract int getItemChangeHash(int position);
 
     /**
-     * Returns wether animations are enabled or not.
+     * Returns whether animations are enabled or not.
      */
     public final boolean areAnimationsEnabled() {
         return mAnimationsEnabled;
@@ -61,15 +33,13 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
     /**
      * Sets whether animations are enabled or not (by default they are).
      *
-     * If set to {@code false}, {@link #animateDataSetChanged()} and {@link #animatePendingDataSetChanges()} proxy to
-     * {@link #notifyDataSetChanged()}, and {@link #prepareDataSetChanges(List, List)} is a no-op.
+     * If set to {@code false}, {@link #animateDataSetChanged()} proxies to {@link #notifyDataSetChanged()}.
      */
     public final void setAnimationsEnabled(boolean enabled) {
         if (mAnimationsEnabled != enabled) {
             mAnimationsEnabled = enabled;
 
-            mAnimationIds.clear();
-            mChangeHashes.clear();
+            mItems.clear();
 
             if (mAnimationsEnabled) {
                 registerAdapterDataObserver(mLocalStateObserver);
@@ -81,169 +51,129 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
     }
 
     /**
-     * Prepare data set changes to later be applied using {@link #animatePendingDataSetChanges()}.
-     * The adapter must not change between both calls.
+     * Analyzes the data set using {@link #getItemId(int)} and {@link #getItemChangeHash(int)} and makes the necessary
+     * {@code notifyItem*} calls to go from the previous data  set to the new one.
+     *
+     * Note that ids are used to locate items in the list, while change hashes are used to detect changes in them.
      */
-    public synchronized void prepareDataSetChanges(List<Object> animationIds, List<Integer> changeHashes) {
+    public void animateDataSetChanged() {
         if (mAnimationsEnabled) {
-            mPendingOps.clear();
+            // Pause adapter monitoring to avoid double counting changes.
+            unregisterAdapterDataObserver(mLocalStateObserver);
 
-            List<Object> currentAnimationIds = new ArrayList<>(mAnimationIds);
-            List<Integer> currentChangeHashes = new ArrayList<>(mChangeHashes);
+            // Prepare adapter items.
+            int itemCount = getItemCount();
+            Items adapterItems = new Items(itemCount);
+            for (int i = 0; i < itemCount; i++) {
+                adapterItems.add(getItemId(i), getItemChangeHash(i));
+            }
 
-            mPendingSize = animationIds.size();
-
-            int removeCount = 0;
-            int insertCount = 0;
+            mItems.ensureCapacity(itemCount);
 
             // Remove all missing items up front to make positions more predictable in the second loop.
-            Op.Remove removeOp = null;
-            for (int i = 0; i < currentAnimationIds.size(); i++) {
-                Object currentAnimationId = currentAnimationIds.get(i);
-
+            int removePosition = -1;
+            int removeCount = 0;
+            for (int i = 0; i < mItems.size(); i++) {
                 // Check if the item was removed.
-                if (Utils.indexOf(animationIds, currentAnimationId, i) == -1) {
-                    currentAnimationIds.remove(i);
-                    currentChangeHashes.remove(i);
+                if (adapterItems.indexOfId(mItems.getId(i), i) == -1) {
+                    mItems.remove(i);
 
-                    if (removeOp == null) {
-                        removeOp = new Op.Remove(i, 1);
+                    if (removePosition == -1) {
+                        removePosition = i;
+                        removeCount = 1;
                     } else {
-                        removeOp.itemCount++;
+                        removeCount++;
                     }
-                    removeCount++;
 
                     i--;
-                } else if (removeOp != null) {
+                } else if (removePosition != -1) {
                     // Commit pending remove since the current is still there.
-                    mPendingOps.add(removeOp);
-                    removeOp = null;
+                    notifyItemRangeRemoved(removePosition, removeCount);
+                    removePosition = -1;
                 }
             }
-            if (removeOp != null) {
-                mPendingOps.add(removeOp);
+            if (removePosition != -1) {
+                notifyItemRangeRemoved(removePosition, removeCount);
             }
 
-            // Add, move or change items based on their animation / change id.
-            Op.Change changeOp = null;
-            Op.Insert insertOp = null;
-            for (int i = 0; i < mPendingSize; i++) {
-                Object animationId = animationIds.get(i);
-
+            // Add, change or move items based on their animation / change id.
+            int insertPosition = -1;
+            int insertCount = 0;
+            int changePosition = -1;
+            int changeCount = 0;
+            for (int i = 0; i < itemCount; i++) {
                 // Check if the item was inserted.
-                int oldPosition = Utils.indexOf(currentAnimationIds, animationId, i);
+                int oldPosition = mItems.indexOfId(adapterItems.getId(i), i);
                 if (oldPosition != -1) {
                     // Item was in the previous data set, it can have moved and / or changed.
 
                     // Commit pending insert since the current wasn't inserted and it'd conflict with the move / change.
-                    if (insertOp != null) {
-                        mPendingOps.add(insertOp);
-                        insertOp = null;
+                    if (insertPosition != -1) {
+                        notifyItemRangeInserted(insertPosition, insertCount);
+                        insertPosition = -1;
                     }
 
                     // Check if the item was moved.
                     if (oldPosition != i) {
                         // Commit pending change to avoid conflicts with the move added below.
-                        if (changeOp != null) {
-                            mPendingOps.add(changeOp);
-                            changeOp = null;
+                        if (changePosition != -1) {
+                            notifyItemRangeChanged(changePosition, changeCount);
+                            changePosition = -1;
                         }
 
-                        currentAnimationIds.add(i, currentAnimationIds.remove(oldPosition));
-                        currentChangeHashes.add(i, currentChangeHashes.remove(oldPosition));
+                        long movedId = mItems.getId(oldPosition);
+                        int movedChangeHash = mItems.getChangeHash(oldPosition);
+                        mItems.remove(oldPosition);
+                        mItems.add(i, movedId, movedChangeHash);
 
-                        mPendingOps.add(new Op.Move(oldPosition, i));
+                        notifyItemMoved(oldPosition, i);
                     }
 
                     // Check if the item was changed.
-                    if (!Utils.equals(currentChangeHashes.get(i), changeHashes.get(i))) {
-                        currentChangeHashes.set(i, changeHashes.get(i));
+                    if (mItems.getChangeHash(i) != adapterItems.getChangeHash(i)) {
+                        mItems.set(i, mItems.getId(i), adapterItems.getChangeHash(i));
 
-                        if (changeOp == null) {
-                            changeOp = new Op.Change(i, 1);
+                        if (changePosition == -1) {
+                            changePosition = i;
+                            changeCount = 1;
                         } else {
-                            changeOp.itemCount++;
+                            changeCount++;
                         }
                     } else {
                         // Commit pending change since the current didn't change.
-                        if (changeOp != null) {
-                            mPendingOps.add(changeOp);
-                            changeOp = null;
+                        if (changePosition != -1) {
+                            notifyItemRangeChanged(changePosition, changeCount);
+                            changePosition = -1;
                         }
                     }
                 } else {
                     // Item was not in the previous data set, it was added.
 
                     // Commit pending change now to avoid conflicts with the move added below.
-                    if (changeOp != null) {
-                        mPendingOps.add(changeOp);
-                        changeOp = null;
+                    if (changePosition != -1) {
+                        notifyItemRangeChanged(changePosition, changeCount);
+                        changePosition = -1;
                     }
 
-                    currentAnimationIds.add(i, animationIds.get(i));
-                    currentChangeHashes.add(i, changeHashes.get(i));
+                    mItems.add(i, adapterItems.getId(i), adapterItems.getChangeHash(i));
 
-                    if (insertOp == null) {
-                        insertOp = new Op.Insert(i, 1);
+                    if (insertPosition == -1) {
+                        insertPosition = i;
+                        insertCount = 1;
                     } else {
-                        insertOp.itemCount++;
+                        insertCount++;
                     }
-                    insertCount++;
                 }
             }
-            if (changeOp != null) {
-                mPendingOps.add(changeOp);
+            if (changePosition != -1) {
+                notifyItemRangeChanged(changePosition, changeCount);
             }
-            if (insertOp != null) {
-                mPendingOps.add(insertOp);
-            }
-
-            // Check for inconsistencies (ie. duplicate animation ids) and bail out if they exist.
-            if (mAnimationIds.size() + insertCount - removeCount != animationIds.size()) {
-                mPendingOps.clear();
-                mPendingOps.add(new Op.Unknown());
-            }
-        }
-    }
-
-    /**
-     * Applies the changes previously determined by {@link #prepareDataSetChanges(List, List)}.
-     * The adapter must not have changed between both calls.
-     */
-    private synchronized void animatePendingDataSetChanges() {
-        if (mAnimationsEnabled) {
-            // Ensure lists have the needed capacity ahead of time.
-            mAnimationIds.ensureCapacity(mPendingSize);
-            mChangeHashes.ensureCapacity(mPendingSize);
-
-            // Apply ordered operations in the adapter.
-            for (Op op : mPendingOps) {
-                op.notify(this);
-            }
-            mPendingOps.clear();
-        } else {
-            notifyDataSetChanged();
-        }
-    }
-
-    /**
-     * Animates the adapter changes based on the {@link #getItemAnimationId(int)} and {@link #getItemChangeHash(int)} of
-     * each item.
-     */
-    public synchronized void animateDataSetChanged() {
-        if (mAnimationsEnabled) {
-            // Prepare list of animation and change ids.
-            int itemCount = getItemCount();
-            List<Object> animationIds = new ArrayList<>(itemCount);
-            List<Integer> changeHashes = new ArrayList<>(itemCount);
-            for (int i = 0; i < itemCount; i++) {
-                animationIds.add(getItemAnimationId(i));
-                changeHashes.add(getItemChangeHash(i));
+            if (insertPosition != -1) {
+                notifyItemRangeInserted(insertPosition, insertCount);
             }
 
-            // Prepare changes and animate them.
-            prepareDataSetChanges(animationIds, changeHashes);
-            animatePendingDataSetChanges();
+            // Resume adapter monitoring.
+            registerAdapterDataObserver(mLocalStateObserver);
         } else {
             notifyDataSetChanged();
         }
@@ -257,86 +187,153 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
         @Override
         public void onChanged() {
             int itemCount = getItemCount();
-            mAnimationIds.clear();
-            mChangeHashes.clear();
-            mAnimationIds.ensureCapacity(itemCount);
-            mChangeHashes.ensureCapacity(itemCount);
+            mItems.clear();
+            mItems.ensureCapacity(itemCount);
             for (int i = 0; i < itemCount; i++) {
-                mAnimationIds.add(getItemAnimationId(i));
-                mChangeHashes.add(getItemChangeHash(i));
+                mItems.set(i, getItemId(i), getItemChangeHash(i));
             }
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            if (itemCount > 1) {
-                int positionEnd = positionStart + itemCount;
-                for (int i = positionStart; i < positionEnd; i++) {
-                    mChangeHashes.set(i, getItemChangeHash(i));
-                }
-            } else {
-                mChangeHashes.set(positionStart, getItemChangeHash(positionStart));
+            for (int i = positionStart; i < positionStart + itemCount; i++) {
+                mItems.set(i, mItems.getId(i), getItemChangeHash(i));
             }
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            if (itemCount > 1) {
-                List<Object> newAnimationIds = new ArrayList<>(itemCount);
-                List<Integer> newChangeHashes = new ArrayList<>(itemCount);
-                int positionEnd = positionStart + itemCount;
-                for (int i = positionStart; i < positionEnd; i++) {
-                    newAnimationIds.add(getItemAnimationId(i));
-                    newChangeHashes.add(getItemChangeHash(i));
-                }
-                mAnimationIds.addAll(positionStart, newAnimationIds);
-                mChangeHashes.addAll(positionStart, newChangeHashes);
-            } else {
-                mAnimationIds.add(positionStart, getItemAnimationId(positionStart));
-                mChangeHashes.add(positionStart, getItemChangeHash(positionStart));
+            mItems.ensureCapacity(mItems.size() + itemCount);
+            for (int i = positionStart; i < positionStart + itemCount; i++) {
+                mItems.add(i, getItemId(i), getItemChangeHash(i));
             }
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            if (itemCount > 1) {
-                int positionEnd = positionStart + itemCount;
-                mAnimationIds.removeRange(positionStart, positionEnd);
-                mChangeHashes.removeRange(positionStart, positionEnd);
-            } else {
-                mAnimationIds.remove(positionStart);
-                mChangeHashes.remove(positionStart);
-            }
+            mItems.remove(positionStart, positionStart + itemCount);
         }
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            if (itemCount > 1) {
-                int fromPositionEnd = fromPosition + itemCount;
-                int removeStart = fromPosition < toPosition ? fromPosition : fromPosition + itemCount;
-                int removeEnd = removeStart + itemCount;
-                mAnimationIds.addAll(toPosition, mAnimationIds.subList(fromPosition, fromPositionEnd));
-                mAnimationIds.removeRange(removeStart, removeEnd);
-                mChangeHashes.addAll(toPosition, mChangeHashes.subList(fromPosition, fromPositionEnd));
-                mChangeHashes.removeRange(removeStart, removeEnd);
-            } else {
-                mAnimationIds.add(toPosition, mAnimationIds.remove(fromPosition));
-                mChangeHashes.add(toPosition, mChangeHashes.remove(fromPosition));
+            for (int i = 0; i < itemCount; i++) {
+                int fromIndex = fromPosition < toPosition ? fromPosition : fromPosition + i;
+                int toIndex = fromPosition < toPosition ? toPosition : toPosition + i;
+                long id = mItems.getId(fromIndex);
+                int changeHash = mItems.getChangeHash(fromIndex);
+                mItems.remove(fromIndex);
+                mItems.add(toIndex, id, changeHash);
             }
         }
     }
 
     /**
-     * Same as {@link ArrayList}, but with a public {@link ArrayList#removeRange(int, int)}.
+     * Helper class to manage arrays of ids and change hashes.
      */
-    private static class ArrayList2<E> extends ArrayList<E> {
-        private ArrayList2(int capacity) {
-            super(capacity);
+    private static class Items {
+        private long[] mIds;
+        private int[] mChangeHashes;
+        private int mSize;
+
+        public Items() {
+            mIds = new long[0];
+            mChangeHashes = new int[0];
         }
 
-        @Override
-        protected void removeRange(int fromIndex, int toIndex) {
-            super.removeRange(fromIndex, toIndex);
+        public Items(int capacity) {
+            mIds = new long[capacity];
+            mChangeHashes = new int[capacity];
+        }
+
+        public long getId(int index) {
+            return mIds[index];
+        }
+
+        public int getChangeHash(int index) {
+            return mChangeHashes[index];
+        }
+
+        public int size() {
+            return mSize;
+        }
+
+        public void set(int index, long id, int changeHash) {
+            mIds[index] = id;
+            mChangeHashes[index] = changeHash;
+        }
+
+        public void add(long id, int changeHash) {
+            if (mSize == mIds.length) {
+                ensureCapacity(getNextSize());
+            }
+            mIds[mSize] = id;
+            mChangeHashes[mSize] = changeHash;
+            mSize++;
+        }
+
+        public void add(int index, long id, int changeHash) {
+            if (mSize == mIds.length) {
+                ensureCapacity(getNextSize());
+            }
+            System.arraycopy(mIds, index, mIds, index + 1, mSize - index);
+            System.arraycopy(mChangeHashes, index, mChangeHashes, index + 1, mSize - index);
+            mIds[index] = id;
+            mChangeHashes[index] = changeHash;
+            mSize++;
+        }
+
+        public void remove(int index) {
+            remove(index, index + 1);
+        }
+
+        public void remove(int fromIndex, int toIndex) {
+            System.arraycopy(mIds, toIndex, mIds, fromIndex, mSize - toIndex);
+            System.arraycopy(mChangeHashes, toIndex, mChangeHashes, fromIndex, mSize - toIndex);
+            mSize -= toIndex - fromIndex;
+        }
+
+        public void clear() {
+            mSize = 0;
+        }
+
+        public void ensureCapacity(int minimumCapacity) {
+            long[] ids = mIds;
+            int[] changeHashes = mChangeHashes;
+            if (ids.length < minimumCapacity) {
+                mIds = new long[minimumCapacity];
+                System.arraycopy(ids, 0, mIds, 0, mSize);
+                mChangeHashes = new int[minimumCapacity];
+                System.arraycopy(changeHashes, 0, mChangeHashes, 0, mSize);
+            }
+        }
+
+        public int indexOfId(long id, int startPosition) {
+            // Search back and forth until one of the ends is hit.
+            for (int i = startPosition, j = 0; i >= 0 && i < mSize; j++, i += j % 2 == 0 ? j : -j) {
+                if (id == mIds[i]) {
+                    return i;
+                }
+            }
+            if (startPosition < mSize / 2) {
+                // Search forward if the head was hit.
+                for (int i = Math.max(startPosition * 2 + 1, 0); i < mSize; i++) {
+                    if (id == mIds[i]) {
+                        return i;
+                    }
+                }
+            } else if (startPosition > mSize / 2) {
+                // Search backward if the tail was hit.
+                for (int i = Math.min(mSize - (mSize - startPosition) * 2 - 1, mSize - 1); i >= 0; i--) {
+                    if (id == mIds[i]) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        private int getNextSize() {
+            return mSize < 10 ? 10 : mSize + mSize / 2;
         }
     }
 }
