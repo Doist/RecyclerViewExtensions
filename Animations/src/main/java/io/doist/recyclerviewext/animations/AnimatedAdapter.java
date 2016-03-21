@@ -236,8 +236,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
         private int mSize;
 
         public Items() {
-            mIds = new long[0];
-            mChangeHashes = new int[0];
+            this(0);
         }
 
         public Items(int capacity) {
