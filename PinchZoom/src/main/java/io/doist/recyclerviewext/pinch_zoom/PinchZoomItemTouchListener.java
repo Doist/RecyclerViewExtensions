@@ -1,5 +1,7 @@
 package io.doist.recyclerviewext.pinch_zoom;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -128,11 +130,13 @@ public class PinchZoomItemTouchListener
             View child = mRecyclerView.getChildAt(i);
             int position = mRecyclerView.getChildLayoutPosition(child);
             if (position != RecyclerView.NO_POSITION) {
-                float translation = Math.max(0, getSpan(detector) - mSpan) * (position < mPosition ? -0.5f : 0.5f);
-                getTranslateProperty().set(child, translation);
-                mRecyclerView.invalidateItemDecorations(); // Redraws item decorations.
+                getTranslateProperty().set(
+                        child, Math.max(0, getSpan(detector) - mSpan) * (position < mPosition ? -0.5f : 0.5f));
             }
         }
+
+        // Redraw item decorations.
+        mRecyclerView.invalidateItemDecorations();
 
         return true;
     }
@@ -141,17 +145,30 @@ public class PinchZoomItemTouchListener
     public void onScaleEnd(ScaleGestureDetector detector) {
         // Animate items returning to their resting translations.
         for (int i = 0; i < mRecyclerView.getChildCount(); i++) {
-            View child = mRecyclerView.getChildAt(i);
+            final View child = mRecyclerView.getChildAt(i);
             ObjectAnimator animator = ObjectAnimator.ofFloat(child, getTranslateProperty(), 0);
             animator.setDuration(SETTLE_DURATION_MS);
             animator.setInterpolator(SETTLE_INTERPOLATOR);
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            animator.start();
+
+            // Prevent RV from recycling this child.
+            child.setHasTransientState(true);
+            animator.addListener(new AnimatorListenerAdapter() {
                 @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    mRecyclerView.invalidateItemDecorations(); // Redraws item decorations.
+                public void onAnimationEnd(Animator animation) {
+                    child.setHasTransientState(false);
                 }
             });
-            animator.start();
+
+            // Redraw item decorations on every frame, but only once per child.
+            if (i == 0) {
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        mRecyclerView.invalidateItemDecorations();
+                    }
+                });
+            }
         }
 
         // Invoke listener if the gesture is valid.
