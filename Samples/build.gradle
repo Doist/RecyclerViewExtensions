@@ -19,7 +19,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:22.2.1'
+    compile 'com.android.support:appcompat-v7:23.1.0'
 
     compile project(':Animations')
     compile project(':ClickListeners')
@@ -28,4 +28,5 @@ dependencies {
     compile project(':Flippers')
     compile project(':Selectors')
     compile project(':StickyHeaders')
+    compile project(':PinchZoom')
 }
