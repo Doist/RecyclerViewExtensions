@@ -190,7 +190,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
             mItems.clear();
             mItems.ensureCapacity(itemCount);
             for (int i = 0; i < itemCount; i++) {
-                mItems.set(i, getItemId(i), getItemChangeHash(i));
+                mItems.add(getItemId(i), getItemChangeHash(i));
             }
         }
 
