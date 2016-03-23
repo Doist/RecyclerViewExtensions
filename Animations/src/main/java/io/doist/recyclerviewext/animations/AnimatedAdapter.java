@@ -131,7 +131,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
 
                     // Check if the item was changed.
                     if (mItems.getChangeHash(i) != adapterItems.getChangeHash(i)) {
-                        mItems.set(i, mItems.getId(i), adapterItems.getChangeHash(i));
+                        mItems.setChangeHash(i, adapterItems.getChangeHash(i));
 
                         if (changePosition == -1) {
                             changePosition = i;
@@ -197,7 +197,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
             for (int i = positionStart; i < positionStart + itemCount; i++) {
-                mItems.set(i, mItems.getId(i), getItemChangeHash(i));
+                mItems.setChangeHash(i, getItemChangeHash(i));
             }
         }
 
@@ -256,8 +256,11 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
             return mSize;
         }
 
-        public void set(int index, long id, int changeHash) {
+        public void setId(int index, long id) {
             mIds[index] = id;
+        }
+
+        public void setChangeHash(int index, int changeHash) {
             mChangeHashes[index] = changeHash;
         }
 
