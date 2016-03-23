@@ -171,8 +171,10 @@ public class PinchZoomItemTouchListener
             }
         }
 
-        // Invoke listener if the gesture is valid.
-        if (mListener != null && getSpan(detector) - mSpan > mSpanSlop) {
+        // Invoke listener if the gesture and position are valid.
+        RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
+        if (mListener != null && getSpan(detector) - mSpan > mSpanSlop
+                && adapter != null && mPosition < adapter.getItemCount()) {
             mListener.onPinchZoom(mPosition);
         }
 
