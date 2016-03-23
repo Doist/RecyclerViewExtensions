@@ -214,6 +214,25 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
         // Restore original stack from end.
         setStackFromEndAndKeepPosition(mStackFromEnd);
 
+        // Remove item decoration as the item bitmap will no longer be drawn.
+        mRecyclerView.removeItemDecoration(this);
+
+        // Undo any changes made by the wrapper adapter or animations on the dragged item, ensuring it's returned to the
+        // view pool in a sane and usable state.
+        VH holder = (VH) mRecyclerView.findViewHolderForLayoutPosition(mDragDropAdapter.getCurrentPosition());
+        if (holder != null && !holder.isRecyclable()) {
+            mDragDropAdapter.onFailedToRecycleView(holder);
+            RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
+            if (itemAnimator != null) {
+                itemAnimator.endAnimation(holder);
+            }
+        }
+
+        // Swap wrapper adapter with the original one. The item move, if submitted, has been done in stop().
+        mRecyclerView.swapAdapter(mAdapter, false);
+        mDragDropAdapter.destroy();
+        mDragDropAdapter = null;
+
         // Clear bitmap update, if pending.
         mRecyclerView.removeCallbacks(mUpdateItemBitmapRunnable);
 
@@ -231,26 +250,6 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
             mItemBitmap.recycle();
             mItemBitmap = null;
         }
-
-        // Remove item decoration as the item bitmap will no longer be drawn.
-        mRecyclerView.removeItemDecoration(this);
-
-        final RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
-
-        // Undo any changes made by the wrapper adapter or animations on the dragged item, ensuring it's returned to the
-        // view pool in a sane and usable state.
-        VH holder = (VH) mRecyclerView.findViewHolderForLayoutPosition(mDragDropAdapter.getCurrentPosition());
-        if (holder != null && !holder.isRecyclable()) {
-            mDragDropAdapter.onFailedToRecycleView(holder);
-            if (itemAnimator != null) {
-                itemAnimator.endAnimation(holder);
-            }
-        }
-
-        // Swap wrapper adapter with the original one. The item move, if submitted, has been done in stop().
-        mRecyclerView.swapAdapter(mAdapter, false);
-        mDragDropAdapter.destroy();
-        mDragDropAdapter = null;
 
         // Reset the scroll speed.
         mScrollSpeed = 0;
