@@ -343,21 +343,23 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      * {@link #mStickyHeader}.
      */
     protected void createStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
-        mStickyHeader = recycler.getViewForPosition(position);
-        mStickyHeaderPosition = position;
+        View stickyHeader = recycler.getViewForPosition(position);
 
         // Setup sticky header if the adapter requires it.
         if (mAdapter instanceof StickyHeaders.ViewSetup) {
-            ((StickyHeaders.ViewSetup) mAdapter).setupStickyHeaderView(mStickyHeader);
+            ((StickyHeaders.ViewSetup) mAdapter).setupStickyHeaderView(stickyHeader);
         }
 
         // Add sticky header as a child view, to be detached / reattached whenever LinearLayoutManager#fill() is called,
         // which happens on layout and scroll (see overrides).
-        addView(mStickyHeader);
-        measureAndLayoutStickyHeader();
+        addView(stickyHeader);
 
         // Ignore sticky header, as it's fully managed by this LayoutManager.
-        ignoreView(mStickyHeader);
+        ignoreView(stickyHeader);
+
+        mStickyHeader = stickyHeader;
+        mStickyHeaderPosition = position;
+        measureAndLayoutStickyHeader();
     }
 
     /**
@@ -407,26 +409,27 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      * @param recycler If passed, the sticky header will be returned to the recycled view pool.
      */
     protected void scrapStickyHeader(@Nullable RecyclerView.Recycler recycler) {
+        View stickyHeader = mStickyHeader;
+        mStickyHeader = null;
+        mStickyHeaderPosition = RecyclerView.NO_POSITION;
+
         // Revert translation values.
-        mStickyHeader.setTranslationX(0);
-        mStickyHeader.setTranslationY(0);
+        stickyHeader.setTranslationX(0);
+        stickyHeader.setTranslationY(0);
 
         // Teardown holder if the adapter requires it.
         if (mAdapter instanceof StickyHeaders.ViewSetup) {
-            ((StickyHeaders.ViewSetup) mAdapter).teardownStickyHeaderView(mStickyHeader);
+            ((StickyHeaders.ViewSetup) mAdapter).teardownStickyHeaderView(stickyHeader);
         }
 
         // Stop ignoring sticky header so that it can be recycled.
-        stopIgnoringView(mStickyHeader);
+        stopIgnoringView(stickyHeader);
 
         // Remove and recycle sticky header.
-        removeView(mStickyHeader);
+        removeView(stickyHeader);
         if (recycler != null) {
-            recycler.recycleView(mStickyHeader);
+            recycler.recycleView(stickyHeader);
         }
-
-        mStickyHeader = null;
-        mStickyHeaderPosition = RecyclerView.NO_POSITION;
     }
 
     /**
