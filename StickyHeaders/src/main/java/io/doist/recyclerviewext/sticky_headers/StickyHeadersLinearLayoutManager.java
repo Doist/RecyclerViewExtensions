@@ -353,13 +353,13 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         // Add sticky header as a child view, to be detached / reattached whenever LinearLayoutManager#fill() is called,
         // which happens on layout and scroll (see overrides).
         addView(stickyHeader);
+        measureAndLayout(stickyHeader);
 
         // Ignore sticky header, as it's fully managed by this LayoutManager.
         ignoreView(stickyHeader);
 
         mStickyHeader = stickyHeader;
         mStickyHeaderPosition = position;
-        measureAndLayoutStickyHeader();
     }
 
     /**
@@ -369,7 +369,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         // Bind the sticky header.
         recycler.bindViewToPosition(mStickyHeader, position);
         mStickyHeaderPosition = position;
-        measureAndLayoutStickyHeader();
+        measureAndLayout(mStickyHeader);
 
         // If we have a pending scroll wait until the end of layout and scroll again.
         if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
@@ -389,16 +389,14 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     /**
-     * Measures and lays out {@link #mStickyHeader}.
+     * Measures and lays out {@code stickyHeader}.
      */
-    private void measureAndLayoutStickyHeader() {
-        measureChildWithMargins(mStickyHeader, 0, 0);
+    private void measureAndLayout(View stickyHeader) {
+        measureChildWithMargins(stickyHeader, 0, 0);
         if (getOrientation() == VERTICAL) {
-            mStickyHeader.layout(getPaddingLeft(), 0,
-                                 getWidth() - getPaddingRight(), mStickyHeader.getMeasuredHeight());
+            stickyHeader.layout(getPaddingLeft(), 0, getWidth() - getPaddingRight(), stickyHeader.getMeasuredHeight());
         } else {
-            mStickyHeader.layout(0, getPaddingTop(),
-                                 mStickyHeader.getMeasuredWidth(), getHeight() - getPaddingBottom());
+            stickyHeader.layout(0, getPaddingTop(), stickyHeader.getMeasuredWidth(), getHeight() - getPaddingBottom());
         }
     }
 
