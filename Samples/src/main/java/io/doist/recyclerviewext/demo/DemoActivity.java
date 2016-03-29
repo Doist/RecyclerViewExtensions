@@ -20,10 +20,10 @@ import io.doist.recyclerviewext.choice_modes.SingleSelector;
 import io.doist.recyclerviewext.dividers.DividerItemDecoration;
 import io.doist.recyclerviewext.dragdrop.DragDropManager;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
-import io.doist.recyclerviewext.pinch_zoom.PinchZoomOnItemTouchListener;
+import io.doist.recyclerviewext.pinch_zoom.PinchZoomItemTouchListener;
 import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
 
-public class DemoActivity extends AppCompatActivity implements PinchZoomOnItemTouchListener.PinchZoomListener {
+public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouchListener.PinchZoomListener {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -56,7 +56,7 @@ public class DemoActivity extends AppCompatActivity implements PinchZoomOnItemTo
         mRecyclerView.setItemAnimator(new WithLayerItemAnimator(true));
         mDragDropManager = new DragDropManager<>(mRecyclerView, mAdapter);
         mAdapter.setDragDropManager(mDragDropManager);
-        mRecyclerView.addOnItemTouchListener(new PinchZoomOnItemTouchListener(this, this));
+        mRecyclerView.addOnItemTouchListener(new PinchZoomItemTouchListener(this, this));
     }
 
     @Override
