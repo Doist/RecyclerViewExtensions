@@ -13,5 +13,5 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:recyclerview-v7:23.1.1' // Check WithLayerItemAnimator when updating.
+    compile 'com.android.support:recyclerview-v7:23.3.0' // Check WithLayerItemAnimator when updating.
 }

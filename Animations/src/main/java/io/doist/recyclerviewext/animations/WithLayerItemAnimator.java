@@ -2,6 +2,7 @@ package io.doist.recyclerviewext.animations;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.support.annotation.NonNull;
 import android.support.v4.animation.AnimatorCompatHelper;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.SimpleItemAnimator;
@@ -597,5 +598,26 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
         for (int i = viewHolders.size() - 1; i >= 0; i--) {
             viewHolders.get(i).itemView.animate().cancel();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * If the payload list is not empty, DefaultItemAnimator returns <code>true</code>.
+     * When this is the case:
+     * <ul>
+     * <li>If you override {@link #animateChange(ViewHolder, ViewHolder, int, int, int, int)}, both
+     * ViewHolder arguments will be the same instance.
+     * </li>
+     * <li>
+     * If you are not overriding {@link #animateChange(ViewHolder, ViewHolder, int, int, int, int)},
+     * then DefaultItemAnimator will call {@link #animateMove(ViewHolder, int, int, int, int)} and
+     * run a move animation instead.
+     * </li>
+     * </ul>
+     */
+    @Override
+    public boolean canReuseUpdatedViewHolder(@NonNull ViewHolder viewHolder, @NonNull List<Object> payloads) {
+        return !payloads.isEmpty() || super.canReuseUpdatedViewHolder(viewHolder, payloads);
     }
 }
