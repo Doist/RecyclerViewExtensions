@@ -85,8 +85,8 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
         super();
     }
 
-    public WithLayerItemAnimator(boolean supportsChangingAnimations) {
-        setSupportsChangeAnimations(supportsChangingAnimations);
+    public WithLayerItemAnimator(boolean supportsChangeAnimations) {
+        setSupportsChangeAnimations(supportsChangeAnimations);
     }
 
     @Override
