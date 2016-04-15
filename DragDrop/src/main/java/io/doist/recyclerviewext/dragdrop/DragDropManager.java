@@ -377,7 +377,7 @@ public class DragDropManager<VH extends RecyclerView.ViewHolder, T extends Recyc
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        outRect.set(0, 0, 0, 0);
+        outRect.setEmpty();
     }
 
     @Override
