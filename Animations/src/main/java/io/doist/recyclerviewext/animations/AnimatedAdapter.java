@@ -216,13 +216,16 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+            boolean incrementPositions = fromPosition > toPosition;
             for (int i = 0; i < itemCount; i++) {
-                int fromIndex = fromPosition < toPosition ? fromPosition : fromPosition + i;
-                int toIndex = fromPosition < toPosition ? toPosition : toPosition + i;
-                long id = mItems.getId(fromIndex);
-                int changeHash = mItems.getChangeHash(fromIndex);
-                mItems.remove(fromIndex);
-                mItems.add(toIndex, id, changeHash);
+                long id = mItems.getId(fromPosition);
+                int changeHash = mItems.getChangeHash(fromPosition);
+                mItems.remove(fromPosition);
+                mItems.add(toPosition, id, changeHash);
+                if (incrementPositions) {
+                    fromPosition++;
+                    toPosition++;
+                }
             }
         }
     }

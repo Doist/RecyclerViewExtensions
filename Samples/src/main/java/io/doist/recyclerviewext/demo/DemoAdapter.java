@@ -1,5 +1,11 @@
 package io.doist.recyclerviewext.demo;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
+import android.graphics.Color;
+import android.os.Build;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,16 +17,16 @@ import java.util.List;
 import io.doist.recyclerviewext.R;
 import io.doist.recyclerviewext.animations.AnimatedAdapter;
 import io.doist.recyclerviewext.choice_modes.Selector;
-import io.doist.recyclerviewext.dragdrop.DragDrop;
-import io.doist.recyclerviewext.dragdrop.DragDropManager;
+import io.doist.recyclerviewext.dragdrop.DragDropHelper;
 import io.doist.recyclerviewext.sticky_headers.StickyHeaders;
 
-public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements StickyHeaders, DragDrop {
+public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
+        implements StickyHeaders, DragDropHelper.Callback {
     private boolean mHorizontal;
 
     private Selector mSelector;
 
-    private DragDropManager mDragDropManager;
+    private DragDropHelper mDragDropHelper;
 
     private List<Object> mDataset;
 
@@ -38,8 +44,8 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
         mSelector = selector;
     }
 
-    public void setDragDropManager(DragDropManager dragDropManager) {
-        mDragDropManager = dragDropManager;
+    public void setDragDropHelper(DragDropHelper dragDropHelper) {
+        mDragDropHelper = dragDropHelper;
     }
 
     @Override
@@ -88,8 +94,43 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
     }
 
     @Override
-    public void moveItem(int from, int to) {
+    public void onDragStarted(final RecyclerView.ViewHolder holder) {
+        holder.itemView.setBackgroundColor(Color.WHITE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            holder.itemView.animate().translationZ(8f).setDuration(200L).setListener(new AnimatorListenerAdapter() {
+                @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    holder.itemView.setTranslationZ(8f);
+                }
+            });
+        }
+    }
+
+    @Override
+    public boolean canSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target) {
+        return true; //holder.getClass() == target.getClass();
+    }
+
+    @Override
+    public void onSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target) {
+        int from = holder.getAdapterPosition();
+        int to = target.getAdapterPosition();
         mDataset.add(to, mDataset.remove(from));
+        notifyItemMoved(from, to);
+    }
+
+    @Override
+    public void onDragStopped(final RecyclerView.ViewHolder holder) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            holder.itemView.animate().translationZ(0f).setDuration(200L).setListener(new AnimatorListenerAdapter() {
+                @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    holder.itemView.setTranslationZ(0f);
+                }
+            });
+        }
     }
 
     public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener,
@@ -121,7 +162,8 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder> implements 
 
         @Override
         public boolean onLongClick(View v) {
-            return mDragDropManager.start(getLayoutPosition());
+            mDragDropHelper.start(DemoItemViewHolder.this);
+            return true;
         }
     }
 
