@@ -101,16 +101,22 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     /**
      * Starts drag and drop for {@code holder} as soon as there is a touch even, or immediately if one is in progress.
+     *
+     * @return {@code true} if drag is starting, {@code false} if not.
      */
-    public void start(@NonNull RecyclerView.ViewHolder holder) {
+    public boolean start(@NonNull RecyclerView.ViewHolder holder) {
         // Ensure current state is valid and that no other drag is currently in progress.
         if (holder == mViewHolder) {
             Log.w(LOG_TAG, "View holder is already being dragged");
-            return;
+            return false;
         }
         if (holder.itemView.getParent() != mRecyclerView) {
             Log.w(LOG_TAG, "View holder which is not a child of this RecyclerView");
-            return;
+            return false;
+        }
+        if (holder.getAdapterPosition() == RecyclerView.NO_POSITION) {
+            Log.w(LOG_TAG, "View holder doesn't have an adapter position");
+            return false;
         }
         if (mState > STATE_NONE) {
             // Stop current drag immediately before starting new one.
@@ -121,7 +127,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         RecyclerView.LayoutManager layoutManager = mRecyclerView.getLayoutManager();
         if (!(layoutManager instanceof LinearLayoutManager)) {
             Log.w(LOG_TAG, "RecyclerView is not using LinearLayoutManager");
-            return;
+            return false;
         }
         mLayoutManager = (LinearLayoutManager) layoutManager;
 
@@ -131,6 +137,9 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
         // Notify callback that the drag has started.
         mCallback.onDragStarted(mViewHolder);
+
+        // Drag will start.
+        return true;
     }
 
     private void startInternal() {
