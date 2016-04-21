@@ -507,7 +507,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 }
             }
 
-            if (target != null) {
+            if (target != null && target.getAdapterPosition() != -1) {
                 // Prevent unintended scrolling when swapping the very first and last views, as they are used as anchor
                 // views hence hinting RV to scroll while animating.
                 int holderPosition = mViewHolder.getAdapterPosition();
