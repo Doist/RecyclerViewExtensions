@@ -69,10 +69,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private float mScrollSpeed = 0f;
     private float mScrollSpeedMax;
 
-    public DragDropHelper(@NonNull Callback callback) {
-        mCallback = callback;
-    }
-
     /**
      * Attaches {@link DragDropHelper} to {@code recyclerView}. If already attached to a {@link RecyclerView}, it first
      * detaches from the previous one. If {@code null} is provided, it detaches from the current {@link RecyclerView}.
@@ -80,23 +76,23 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
      * {@link DragDropHelper} uses {@link RecyclerView.ItemDecoration}, {@link RecyclerView.OnItemTouchListener} and
      * {@link RecyclerView.OnChildAttachStateChangeListener} internally, which are set or removed here.
      */
-    public void attachToRecyclerView(@Nullable RecyclerView recyclerView) {
-        if (mRecyclerView == recyclerView) {
-            return;
+    public void attach(@Nullable RecyclerView recyclerView, @NonNull Callback callback) {
+        if (mRecyclerView != recyclerView) {
+            if (mRecyclerView != null) {
+                mRecyclerView.removeItemDecoration(this);
+                mRecyclerView.removeOnItemTouchListener(this);
+                mRecyclerView.removeOnChildAttachStateChangeListener(this);
+            }
+            mRecyclerView = recyclerView;
+            if (mRecyclerView != null) {
+                mScrollSpeedMax = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP,
+                                                            mRecyclerView.getResources().getDisplayMetrics());
+                mRecyclerView.addItemDecoration(this, 0);
+                mRecyclerView.addOnItemTouchListener(this);
+                mRecyclerView.addOnChildAttachStateChangeListener(this);
+            }
         }
-        if (mRecyclerView != null) {
-            mRecyclerView.removeItemDecoration(this);
-            mRecyclerView.removeOnItemTouchListener(this);
-            mRecyclerView.removeOnChildAttachStateChangeListener(this);
-        }
-        mRecyclerView = recyclerView;
-        if (mRecyclerView != null) {
-            mScrollSpeedMax = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP,
-                                                        mRecyclerView.getResources().getDisplayMetrics());
-            mRecyclerView.addItemDecoration(this, 0);
-            mRecyclerView.addOnItemTouchListener(this);
-            mRecyclerView.addOnChildAttachStateChangeListener(this);
-        }
+        mCallback = callback;
     }
 
     /**
