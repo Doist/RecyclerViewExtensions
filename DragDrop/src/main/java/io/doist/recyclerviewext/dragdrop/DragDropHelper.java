@@ -569,8 +569,8 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         boolean canSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target);
 
         /**
-         * Called to swap {@code holder} to {@code target}'s adapter position and notify the {@link
-         * RecyclerView.Adapter}.
+         * Called to swap {@code holder} to {@code target}'s adapter position and notify the
+         * {@link RecyclerView.Adapter}.
          */
         void onSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target);
 
