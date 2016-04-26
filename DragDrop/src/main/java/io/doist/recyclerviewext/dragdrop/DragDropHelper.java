@@ -131,6 +131,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         mViewHolder = holder;
         mState = STATE_STARTING;
 
+        // Get the initial location.
+        mStartLeft = mViewHolder.itemView.getLeft();
+        mStartTop = mViewHolder.itemView.getTop();
+        mLocation.set(mStartLeft, mStartTop, mViewHolder.itemView.getRight(), mViewHolder.itemView.getBottom());
+
         // Notify callback that the drag has started.
         mCallback.onDragStarted(mViewHolder);
 
@@ -147,13 +152,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
         // Add this as the child drawing order callback to ensure the dragged item is always on top.
         mRecyclerView.setChildDrawingOrderCallback(this);
-
-        // Get the initial location.
-        int left = mViewHolder.itemView.getLeft();
-        int top = mViewHolder.itemView.getTop();
-        mLocation.set(left, top, mViewHolder.itemView.getRight(), mViewHolder.itemView.getBottom());
-        mStartLeft = left;
-        mStartTop = top;
 
         // Update state.
         mState = STATE_DRAGGING;
