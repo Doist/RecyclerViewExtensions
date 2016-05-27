@@ -114,7 +114,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             Log.w(LOG_TAG, "View holder doesn't have an adapter position");
             return false;
         }
-        if (mState > STATE_NONE) {
+        if (mState != STATE_NONE) {
             // Stop current drag immediately before starting new one.
             stop(true);
         }
@@ -165,7 +165,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     private void stop(boolean now) {
-        if (mState > STATE_NONE) {
+        if (mState != STATE_NONE) {
             if (!now && mState == STATE_DRAGGING) {
                 mState = STATE_RECOVERING;
                 RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
@@ -224,7 +224,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     private boolean handleMotionEvent(MotionEvent event) {
-        if (mState > STATE_NONE) {
+        if (mState != STATE_NONE) {
             int action = MotionEventCompat.getActionMasked(event);
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -235,7 +235,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 mTouchStartY = mTouchCurrentY = y;
                 return true;
             }
-            if (mState < STATE_RECOVERING && action == MotionEvent.ACTION_MOVE) {
+            if (mState != STATE_RECOVERING && action == MotionEvent.ACTION_MOVE) {
                 // Update the drag, the touch event is moving.
                 mTouchCurrentX = x;
                 mTouchCurrentY = y;
@@ -260,7 +260,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
         super.onDraw(c, parent, state);
 
-        if (mState > STATE_NONE) {
+        if (mState != STATE_NONE) {
             boolean dragging = mState == STATE_DRAGGING;
 
             if (dragging) {
