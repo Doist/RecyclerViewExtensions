@@ -96,7 +96,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     /**
-     * Starts drag and drop for {@code holder} as soon as there is a touch even, or immediately if one is in progress.
+     * Starts drag and drop for {@code holder} as soon as there is a touch event, or immediately if one is in progress.
      *
      * @return {@code true} if drag is starting, {@code false} if not.
      */
