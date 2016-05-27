@@ -510,16 +510,15 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 }
             }
 
-            if (target != null && target.getAdapterPosition() != -1) {
+            int targetPosition;
+            if (target != null && (targetPosition = target.getAdapterPosition()) != -1) {
                 // Prevent unintended scrolling when swapping the very first and last views, as they are used as anchor
                 // views hence hinting RV to scroll while animating.
-                int holderPosition = mViewHolder.getAdapterPosition();
-                int targetPosition = target.getAdapterPosition();
-                if (holderPosition == 0 || targetPosition == 0) {
+                if (position == 0 || targetPosition == 0) {
                     mLayoutManager.scrollToPosition(0);
                 } else {
                     int lastPosition = mRecyclerView.getAdapter().getItemCount() - 1;
-                    if(holderPosition == lastPosition || targetPosition == lastPosition) {
+                    if(position == lastPosition || targetPosition == lastPosition) {
                         mLayoutManager.scrollToPosition(lastPosition);
                     }
                 }
