@@ -4,9 +4,7 @@ import android.view.View;
 
 public class ClickableFocusableViewHolder extends ClickableViewHolder {
     public ClickableFocusableViewHolder(View itemView, OnItemClickListener onItemClickListener) {
-        super(itemView, onItemClickListener, null);
-
-        setFocusable(onItemClickListener, null);
+        this(itemView, onItemClickListener, null);
     }
 
     public ClickableFocusableViewHolder(View itemView, OnItemClickListener onItemClickListener,
