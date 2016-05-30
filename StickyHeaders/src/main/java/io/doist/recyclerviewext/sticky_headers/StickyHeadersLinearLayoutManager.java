@@ -445,7 +445,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                 if (getReverseLayout()) {
                     return view.getLeft() + view.getTranslationX() <= getWidth() + mTranslationX;
                 } else {
-                    return view.getRight() - view.getTranslationY() >= mTranslationX;
+                    return view.getRight() - view.getTranslationX() >= mTranslationX;
                 }
             }
         } else {
@@ -661,12 +661,12 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                     for (int i = findHeaderIndexOrNext(fromPosition); i != -1 && i < headerCount; i++) {
                         int headerPos = mHeaderPositions.get(i);
                         if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
-                            mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
+                            mHeaderPositions.set(i, headerPos - (toPosition - fromPosition));
                             sortHeaderAtIndex(i);
-                        } else if (headerPos >= fromPosition + itemCount && headerPos < toPosition) {
+                        } else if (headerPos >= fromPosition + itemCount && headerPos <= toPosition) {
                             mHeaderPositions.set(i, headerPos - itemCount);
                             sortHeaderAtIndex(i);
-                        } else if (headerPos > toPosition) {
+                        } else {
                             break;
                         }
                     }
@@ -676,10 +676,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
                         if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
                             mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
                             sortHeaderAtIndex(i);
-                        } else if (headerPos >= toPosition && headerPos < fromPosition) {
+                        } else if (headerPos >= toPosition && headerPos <= fromPosition) {
                             mHeaderPositions.set(i, headerPos + itemCount);
                             sortHeaderAtIndex(i);
-                        } else if (headerPos > toPosition) {
+                        } else {
                             break;
                         }
                     }

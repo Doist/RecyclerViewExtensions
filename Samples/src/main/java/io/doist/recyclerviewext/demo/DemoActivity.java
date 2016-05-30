@@ -18,7 +18,7 @@ import io.doist.recyclerviewext.choice_modes.MultiSelector;
 import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.choice_modes.SingleSelector;
 import io.doist.recyclerviewext.dividers.DividerItemDecoration;
-import io.doist.recyclerviewext.dragdrop.DragDropManager;
+import io.doist.recyclerviewext.dragdrop.DragDropHelper;
 import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.pinch_zoom.PinchZoomItemTouchListener;
 import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
@@ -29,7 +29,7 @@ public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouc
     private LinearLayoutManager mLinearLayoutManager;
     private DemoAdapter mAdapter;
     private ProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
-    private DragDropManager mDragDropManager;
+    private DragDropHelper mDragDropHelper;
 
     private Selector mSelector;
 
@@ -54,8 +54,9 @@ public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouc
         mProgressEmptyRecyclerFlipper.monitor(mAdapter);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setItemAnimator(new WithLayerItemAnimator(true));
-        mDragDropManager = new DragDropManager<>(mRecyclerView, mAdapter);
-        mAdapter.setDragDropManager(mDragDropManager);
+        mDragDropHelper = new DragDropHelper(mAdapter);
+        mDragDropHelper.attachToRecyclerView(mRecyclerView);
+        mAdapter.setDragDropHelper(mDragDropHelper);
         mRecyclerView.addOnItemTouchListener(new PinchZoomItemTouchListener(this, this));
     }
 
@@ -140,7 +141,7 @@ public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouc
         int orientation = mLayoutCount % 2 == 0 ? LinearLayoutManager.VERTICAL : LinearLayoutManager.HORIZONTAL;
         boolean reverse = mLayoutCount % 3 == 0;
         mAdapter = new DemoAdapter(orientation == LinearLayoutManager.HORIZONTAL);
-        mAdapter.setDragDropManager(mDragDropManager);
+        mAdapter.setDragDropHelper(mDragDropHelper);
         mAdapter.setDataset(getAdapterItems());
         if (mSelector != null) {
             mAdapter.setSelector(mSelector);
