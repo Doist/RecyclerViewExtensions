@@ -4,6 +4,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 public class ClickableViewHolder extends RecyclerView.ViewHolder {
+    public ClickableViewHolder(View itemView, OnItemClickListener onItemClickListener) {
+        this(itemView, onItemClickListener, null);
+    }
+
     public ClickableViewHolder(View itemView, OnItemClickListener onItemClickListener,
                                OnItemLongClickListener onItemLongClickListener) {
         super(itemView);
