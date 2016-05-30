@@ -11,11 +11,6 @@ public class ClickableFocusableViewHolder extends ClickableViewHolder {
                                         OnItemLongClickListener onItemLongClickListener) {
         super(itemView, onItemClickListener, onItemLongClickListener);
 
-        setFocusable(onItemClickListener, onItemLongClickListener);
-    }
-
-    private void setFocusable(OnItemClickListener onItemClickListener,
-                              OnItemLongClickListener onItemLongClickListener) {
         itemView.setFocusable(onItemClickListener != null || onItemLongClickListener != null);
     }
 }
