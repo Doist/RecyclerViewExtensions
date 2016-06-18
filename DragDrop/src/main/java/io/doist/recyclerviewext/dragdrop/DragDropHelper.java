@@ -1,7 +1,5 @@
 package io.doist.recyclerviewext.dragdrop;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
@@ -166,22 +164,32 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     private void stop(boolean now) {
         if (mState != STATE_NONE) {
-            if (!now && mState == STATE_DRAGGING) {
+            RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
+            if (!now && mState == STATE_DRAGGING && itemAnimator != null) {
                 mState = STATE_RECOVERING;
-                RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
-                long duration = itemAnimator != null ? itemAnimator.getMoveDuration() : 200L;
-                mViewHolder.setIsRecyclable(false);
-                mViewHolder.itemView.animate().translationX(0).translationY(0).setDuration(duration).setListener(
-                        new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                mViewHolder.setIsRecyclable(true);
-                                stopInternal();
-                            }
-                        });
+                // Setup preInfo with current translation values.
+                RecyclerView.ItemAnimator.ItemHolderInfo preInfo = new RecyclerView.ItemAnimator.ItemHolderInfo();
+                preInfo.left = (int) mViewHolder.itemView.getTranslationX();
+                preInfo.top = (int) mViewHolder.itemView.getTranslationY();
+
+                // Setup postInfo with all values at 0 (the default). The intent is to settle in the final position.
+                RecyclerView.ItemAnimator.ItemHolderInfo postInfo = new RecyclerView.ItemAnimator.ItemHolderInfo();
+                // Clear current translation values to prevent them from being added on top of preInfo.
+                setTranslation(0f, 0f);
+                // Animate the move, stopping internally when done.
+                if (itemAnimator.animatePersistence(mViewHolder, preInfo, postInfo)) {
+                    itemAnimator.runPendingAnimations();
+                }
+                // Stop internally after animations are done.
+                itemAnimator.isRunning(new RecyclerView.ItemAnimator.ItemAnimatorFinishedListener() {
+                    @Override
+                    public void onAnimationsFinished() {
+                        stopInternal();
+                    }
+                });
             } else {
-                if (mState == STATE_RECOVERING) {
-                    mViewHolder.itemView.animate().cancel();
+                if (mState == STATE_RECOVERING && itemAnimator != null) {
+                    itemAnimator.endAnimations();
                 } else {
                     stopInternal();
                 }
@@ -198,8 +206,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         mScrollSpeed = 0;
 
         // Teardown holder and clear it.
-        mViewHolder.itemView.setTranslationX(0f);
-        mViewHolder.itemView.setTranslationY(0f);
+        setTranslation(0f, 0f);
         mCallback.onDragStopped(mViewHolder);
         mRecyclerView.invalidate();
         mState = STATE_NONE;
@@ -268,8 +275,8 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 updateLocation();
 
                 // Offset dragged item.
-                mViewHolder.itemView.setTranslationX(mLocation.left - mViewHolder.itemView.getLeft());
-                mViewHolder.itemView.setTranslationY(mLocation.top - mViewHolder.itemView.getTop());
+                setTranslation(mLocation.left - mViewHolder.itemView.getLeft(),
+                               mLocation.top - mViewHolder.itemView.getTop());
 
                 if (mViewHolder.getAdapterPosition() != RecyclerView.NO_POSITION) {
                     // Swap with adjacent views if necessary.
@@ -280,6 +287,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             // Handle scrolling when on the edges.
             handleScroll(!dragging);
         }
+    }
+
+    private void setTranslation(float translationX, float translationY) {
+        mViewHolder.itemView.setTranslationX(translationX);
+        mViewHolder.itemView.setTranslationY(translationY);
     }
 
     /**
