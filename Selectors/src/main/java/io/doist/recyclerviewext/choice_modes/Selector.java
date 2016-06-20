@@ -1,5 +1,7 @@
 package io.doist.recyclerviewext.choice_modes;
 
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.widget.AbsListView;
@@ -11,6 +13,8 @@ import java.util.List;
  * {@link AbsListView}'s choice modes for {@link RecyclerView}.
  */
 public abstract class Selector {
+    public static final Object PAYLOAD_SELECT = new Object();
+
     private static final String KEY_SELECTOR_SELECTED_IDS = ":selector_selected_ids";
 
     protected RecyclerView mRecyclerView;
@@ -44,8 +48,21 @@ public abstract class Selector {
         mObserver = observer;
     }
 
-    public void bind(RecyclerView.ViewHolder holder) {
+    public void bind(RecyclerView.ViewHolder holder, Object payload) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
+        if (payload != PAYLOAD_SELECT) {
+            // Ensure background jumps immediately to the current state instead of animating.
+            Drawable background = holder.itemView.getBackground();
+            if (background != null) {
+                if (background instanceof LayerDrawable) {
+                    LayerDrawable backgroundLayerDrawable = (LayerDrawable) background;
+                    for (int i = 0; i < backgroundLayerDrawable.getNumberOfLayers(); ++i) {
+                        backgroundLayerDrawable.getDrawable(i).jumpToCurrentState();
+                    }
+                }
+                background.jumpToCurrentState();
+            }
+        }
     }
 
     public void onSaveInstanceState(Bundle outState) {
@@ -66,7 +83,7 @@ public abstract class Selector {
         if (holder != null) {
             int position = holder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-                mAdapter.notifyItemChanged(position);
+                mAdapter.notifyItemChanged(position, PAYLOAD_SELECT);
             }
         }
     }
