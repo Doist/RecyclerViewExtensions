@@ -48,6 +48,10 @@ public abstract class Selector {
         mObserver = observer;
     }
 
+    public void bind(RecyclerView.ViewHolder holder) {
+        bind(holder, null);
+    }
+
     public void bind(RecyclerView.ViewHolder holder, Object payload) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
         if (payload != PAYLOAD_SELECT) {
