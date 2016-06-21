@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.widget.AbsListView;
 
 import java.util.ArrayList;
@@ -52,6 +53,13 @@ public abstract class Selector {
         bind(holder, null);
     }
 
+    /**
+     * Binds the {@code holder} according to its selected state using {@link View#setActivated(boolean)}.
+     *
+     * When {@code payload} is not {@link #PAYLOAD_SELECT}, the background jumps immediately to the final state.
+     * {@link #PAYLOAD_SELECT} is the payload used when the selection changes, where it's likely that the
+     * animation (if any) should run.
+     */
     public void bind(RecyclerView.ViewHolder holder, Object payload) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
         if (payload != PAYLOAD_SELECT) {
