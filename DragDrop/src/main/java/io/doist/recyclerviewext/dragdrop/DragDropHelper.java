@@ -279,10 +279,8 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 setTranslation(mLocation.left - mViewHolder.itemView.getLeft(),
                                mLocation.top - mViewHolder.itemView.getTop());
 
-                if (mViewHolder.getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    // Swap with adjacent views if necessary.
-                    handleSwap();
-                }
+                // Swap with adjacent views if necessary.
+                handleSwap();
             }
 
             // Handle scrolling when on the edges.
@@ -499,7 +497,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
      */
     private void handleSwap() {
         int position = mViewHolder.getAdapterPosition();
-        if (position != -1) {
+        if (position != RecyclerView.NO_POSITION) {
             RecyclerView.ViewHolder target = null;
             if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
                 RecyclerView.ViewHolder left = mRecyclerView.findViewHolderForAdapterPosition(position - 1);
@@ -524,7 +522,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             }
 
             int targetPosition;
-            if (target != null && (targetPosition = target.getAdapterPosition()) != -1) {
+            if (target != null && (targetPosition = target.getAdapterPosition()) != RecyclerView.NO_POSITION) {
                 // Prevent unintended scrolling when swapping the very first and last views, as they are used as anchor
                 // views hence hinting RV to scroll while animating.
                 if (position == 0 || targetPosition == 0) {
