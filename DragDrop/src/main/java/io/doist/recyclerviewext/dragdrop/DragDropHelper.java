@@ -209,6 +209,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         setTranslation(0f, 0f);
         mCallback.onDragStopped(mViewHolder);
         mRecyclerView.invalidate();
+        mRecyclerView.invalidateItemDecorations();
         mState = STATE_NONE;
         mViewHolder = null;
     }
