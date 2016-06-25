@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.AbsListView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -124,6 +125,7 @@ public abstract class Selector {
             public void run() {
                 int selectedCount = getSelectedCount();
                 if (selectedCount > 0) {
+                    // Build list of all selected ids that are still present.
                     List<Long> selectedIds = new ArrayList<>(selectedCount);
                     for (int i = 0; i < mAdapter.getItemCount(); i++) {
                         long id = mAdapter.getItemId(i);
@@ -131,9 +133,17 @@ public abstract class Selector {
                             selectedIds.add(id);
                         }
                     }
-                    clearSelected(false);
-                    for (Long selectedId : selectedIds) {
-                        setSelected(selectedId, true);
+
+                    // Build set of missing ids.
+                    HashSet<Long> missingIds = new HashSet<>(selectedCount);
+                    for (long previouslySelectedId : getSelectedIds()) {
+                        missingIds.add(previouslySelectedId);
+                    }
+                    missingIds.removeAll(selectedIds);
+
+                    // Unselect all missing ids.
+                    for (Long missingId : missingIds) {
+                        setSelected(missingId, false);
                     }
                 }
             }
