@@ -114,7 +114,9 @@ public abstract class Selector {
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            mRecyclerView.post(mDeselectMissingIdsRunnable); // Run after all changes go through.
+            // Deselect missing ids after all changes go through.
+            mRecyclerView.removeCallbacks(mDeselectMissingIdsRunnable);
+            mRecyclerView.post(mDeselectMissingIdsRunnable);
         }
 
         private class DeselectMissingIdsRunnable implements Runnable {
