@@ -34,6 +34,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private static final int STATE_STARTING = 1;
     private static final int STATE_DRAGGING = 2;
     private static final int STATE_RECOVERING = 3;
+    private static final int STATE_STOPPING = 4;
 
     private static final Interpolator SCROLL_INTERPOLATOR = new AccelerateInterpolator();
 
@@ -112,7 +113,10 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             Log.w(LOG_TAG, "View holder doesn't have an adapter position");
             return false;
         }
-        if (mState != STATE_NONE) {
+        if (mState == STATE_STOPPING) {
+            Log.w(LOG_TAG, "A drag is currently being stopped");
+            return false;
+        } else if (mState != STATE_NONE) {
             // Stop current drag immediately before starting new one.
             stop(true);
         }
@@ -163,7 +167,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     private void stop(boolean now) {
-        if (mState != STATE_NONE) {
+        if (mState != STATE_NONE && mState != STATE_STOPPING) {
             RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
             if (!now && mState == STATE_DRAGGING && itemAnimator != null) {
                 mState = STATE_RECOVERING;
@@ -199,6 +203,18 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     @SuppressWarnings("unchecked")
     private void stopInternal() {
+        // Postpone stopping if a layout is being computed.
+        mState = STATE_STOPPING;
+        if (mRecyclerView.isComputingLayout()) {
+            mRecyclerView.post(new Runnable() {
+                @Override
+                public void run() {
+                    stopInternal();
+                }
+            });
+            return;
+        }
+
         // Remove child order drawing callback.
         mRecyclerView.setChildDrawingOrderCallback(null);
 
@@ -208,7 +224,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         // Teardown holder and clear it.
         setTranslation(0f, 0f);
         mCallback.onDragStopped(mViewHolder);
-        mRecyclerView.invalidate();
         mRecyclerView.invalidateItemDecorations();
         mState = STATE_NONE;
         mViewHolder = null;
@@ -232,7 +247,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     private boolean handleMotionEvent(MotionEvent event) {
-        if (mState != STATE_NONE) {
+        if (mState != STATE_NONE && mState != STATE_STOPPING) {
             int action = MotionEventCompat.getActionMasked(event);
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -268,7 +283,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
         super.onDraw(c, parent, state);
 
-        if (mState != STATE_NONE) {
+        if (mState != STATE_NONE && mState != STATE_STOPPING) {
             boolean dragging = mState == STATE_DRAGGING;
 
             if (dragging) {
