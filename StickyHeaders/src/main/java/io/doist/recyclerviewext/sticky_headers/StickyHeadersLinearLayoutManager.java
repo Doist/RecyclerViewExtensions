@@ -60,6 +60,13 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         requestLayout();
     }
 
+    /**
+     * Returns true if {@code view} is the current sticky header.
+     */
+    public boolean isStickyHeader(View view) {
+        return view == mStickyHeader;
+    }
+
     @Override
     public void onAttachedToWindow(RecyclerView view) {
         super.onAttachedToWindow(view);
