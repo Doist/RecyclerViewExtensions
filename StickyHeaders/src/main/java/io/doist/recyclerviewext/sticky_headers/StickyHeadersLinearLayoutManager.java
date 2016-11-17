@@ -30,7 +30,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
     // Sticky header's ViewHolder and dirty state.
-    protected View mStickyHeader;
+    private View mStickyHeader;
     private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
 
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
@@ -163,7 +163,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         scrollToPositionWithOffset(position, offset, true);
     }
 
-    public void scrollToPositionWithOffset(int position, int offset, boolean adjustForStickyHeader) {
+    private void scrollToPositionWithOffset(int position, int offset, boolean adjustForStickyHeader) {
         // Reset pending scroll.
         setPendingScroll(RecyclerView.NO_POSITION, INVALID_OFFSET);
 
@@ -349,7 +349,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      * Creates {@link RecyclerView.ViewHolder} for {@code position}, including measure / layout, and assigns it to
      * {@link #mStickyHeader}.
      */
-    protected void createStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
+    private void createStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
         View stickyHeader = recycler.getViewForPosition(position);
 
         // Setup sticky header if the adapter requires it.
@@ -372,7 +372,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     /**
      * Binds the {@link #mStickyHeader} for the given {@code position}.
      */
-    protected void bindStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
+    private void bindStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
         // Bind the sticky header.
         recycler.bindViewToPosition(mStickyHeader, position);
         mStickyHeaderPosition = position;
@@ -413,7 +413,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
      *
      * @param recycler If passed, the sticky header will be returned to the recycled view pool.
      */
-    protected void scrapStickyHeader(@Nullable RecyclerView.Recycler recycler) {
+    private void scrapStickyHeader(@Nullable RecyclerView.Recycler recycler) {
         View stickyHeader = mStickyHeader;
         mStickyHeader = null;
         mStickyHeaderPosition = RecyclerView.NO_POSITION;
