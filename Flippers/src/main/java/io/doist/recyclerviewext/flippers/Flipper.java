@@ -1,5 +1,6 @@
 package io.doist.recyclerviewext.flippers;
 
+import android.support.v4.view.ViewCompat;
 import android.view.View;
 
 /**
@@ -25,7 +26,7 @@ public class Flipper {
     }
 
     protected void replaceInternal(View outView, View inView, boolean animate) {
-        if (animate && mFlipperAnimator != null && inView.getWindowVisibility() == View.VISIBLE) {
+        if (animate && mFlipperAnimator != null && ViewCompat.isLaidOut(inView)) {
             mFlipperAnimator.animateFlip(outView, inView);
         } else {
             if (mFlipperAnimator != null && mFlipperAnimator.isAnimating()) {

@@ -26,7 +26,8 @@ class DefaultFlipperAnimator extends FlipperAnimator {
                        outView.setAlpha(1f);
                    }
                })
-               .withLayer();
+               .withLayer()
+               .start();
 
         inView.setVisibility(View.VISIBLE);
         inView.setAlpha(0f);
@@ -40,7 +41,8 @@ class DefaultFlipperAnimator extends FlipperAnimator {
                       mAnimating = false;
                   }
               })
-              .withLayer();
+              .withLayer()
+              .start();
 
         mAnimating = true;
     }
