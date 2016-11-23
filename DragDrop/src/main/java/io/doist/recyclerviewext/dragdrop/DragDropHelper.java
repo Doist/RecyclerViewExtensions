@@ -313,36 +313,39 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
      * {@link Callback#canSwap(RecyclerView.ViewHolder, RecyclerView.ViewHolder)}.
      */
     private void updateLocation() {
-        int width = mViewHolder.itemView.getWidth();
-        int height = mViewHolder.itemView.getHeight();
-        int minLeft = mRecyclerView.getPaddingLeft();
-        int maxLeft = mRecyclerView.getWidth() - mRecyclerView.getPaddingRight() - width;
-        int minTop = mRecyclerView.getPaddingTop();
-        int maxTop = mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom() - height;
+        int position = mViewHolder.getAdapterPosition();
+        if (position != RecyclerView.NO_POSITION) {
+            int width = mViewHolder.itemView.getWidth();
+            int height = mViewHolder.itemView.getHeight();
+            int minLeft = mRecyclerView.getPaddingLeft();
+            int maxLeft = mRecyclerView.getWidth() - mRecyclerView.getPaddingRight() - width;
+            int minTop = mRecyclerView.getPaddingTop();
+            int maxTop = mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom() - height;
 
-        RecyclerView.ViewHolder holderAbove =
-                mRecyclerView.findViewHolderForAdapterPosition(mViewHolder.getAdapterPosition() - 1);
-        if (holderAbove != null && !mCallback.canSwap(mViewHolder, holderAbove)) {
-            if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
-                minLeft = Math.max(minLeft, holderAbove.itemView.getRight());
-            } else {
-                minTop = Math.max(minTop, holderAbove.itemView.getBottom());
+            RecyclerView.ViewHolder holderAbove =
+                    mRecyclerView.findViewHolderForAdapterPosition(position - 1);
+            if (holderAbove != null && !mCallback.canSwap(mViewHolder, holderAbove)) {
+                if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
+                    minLeft = Math.max(minLeft, holderAbove.itemView.getRight());
+                } else {
+                    minTop = Math.max(minTop, holderAbove.itemView.getBottom());
+                }
             }
-        }
 
-        RecyclerView.ViewHolder holderBelow =
-                mRecyclerView.findViewHolderForAdapterPosition(mViewHolder.getAdapterPosition() + 1);
-        if (holderBelow != null && !mCallback.canSwap(mViewHolder, holderBelow)) {
-            if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
-                maxLeft = Math.min(maxLeft, holderBelow.itemView.getLeft() - width);
-            } else {
-                maxTop = Math.min(maxTop, holderBelow.itemView.getTop() - height);
+            RecyclerView.ViewHolder holderBelow =
+                    mRecyclerView.findViewHolderForAdapterPosition(position + 1);
+            if (holderBelow != null && !mCallback.canSwap(mViewHolder, holderBelow)) {
+                if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
+                    maxLeft = Math.min(maxLeft, holderBelow.itemView.getLeft() - width);
+                } else {
+                    maxTop = Math.min(maxTop, holderBelow.itemView.getTop() - height);
+                }
             }
-        }
 
-        int left = Math.max(minLeft, Math.min(maxLeft, mStartLeft + (mTouchCurrentX - mTouchStartX)));
-        int top = Math.max(minTop, Math.min(maxTop, mStartTop + (mTouchCurrentY - mTouchStartY)));
-        mLocation.offsetTo(left, top);
+            int left = Math.max(minLeft, Math.min(maxLeft, mStartLeft + (mTouchCurrentX - mTouchStartX)));
+            int top = Math.max(minTop, Math.min(maxTop, mStartTop + (mTouchCurrentY - mTouchStartY)));
+            mLocation.offsetTo(left, top);
+        }
     }
 
     /**
