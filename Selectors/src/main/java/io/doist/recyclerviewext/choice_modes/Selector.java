@@ -63,6 +63,7 @@ public abstract class Selector {
      */
     public void bind(RecyclerView.ViewHolder holder, Object payload) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
+        
         if (payload != PAYLOAD_SELECT) {
             // Ensure background jumps immediately to the current state instead of animating.
             Drawable background = holder.itemView.getBackground();
@@ -91,10 +92,10 @@ public abstract class Selector {
         }
     }
 
-    protected void notifyItemChangedIfVisible(long id) {
+    protected void notifyItemChanged(long id) {
         RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
         if (holder != null) {
-            int position = holder.getAdapterPosition();
+            int position = holder.getLayoutPosition();
             if (position != RecyclerView.NO_POSITION) {
                 mAdapter.notifyItemChanged(position, PAYLOAD_SELECT);
             }

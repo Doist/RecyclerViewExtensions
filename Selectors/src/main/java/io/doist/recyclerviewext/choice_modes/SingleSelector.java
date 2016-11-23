@@ -30,10 +30,10 @@ public class SingleSelector extends Selector {
 
         if(mSelected != oldSelected || oldSelectedId != mSelectedId) {
             if (oldSelected) {
-                notifyItemChangedIfVisible(oldSelectedId);
+                notifyItemChanged(oldSelectedId);
             }
             if (mSelected) {
-                notifyItemChangedIfVisible(mSelectedId);
+                notifyItemChanged(mSelectedId);
             }
 
             if (mObserver != null) {
@@ -69,7 +69,7 @@ public class SingleSelector extends Selector {
 
         if (hadSelection) {
             if (notify) {
-                notifyItemChangedIfVisible(mSelectedId);
+                notifyItemChanged(mSelectedId);
             }
             if (mObserver != null) {
                 mObserver.onSelectionChanged(this);

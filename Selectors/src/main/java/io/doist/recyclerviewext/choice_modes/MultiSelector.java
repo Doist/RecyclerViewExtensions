@@ -9,7 +9,7 @@ import java.util.Set;
 
 /**
  * Tracks multiple selections, similarly to {@link AbsListView#CHOICE_MODE_MULTIPLE}. Calls to
- * {@link RecyclerView.Adapter#notifyItemChanged(int)} are done automatically.
+ * {@link RecyclerView.Adapter#notifyItemChanged(int)} are performed automatically.
  *
  * Optionally, call {@link #bind(RecyclerView.ViewHolder)} from your
  * {@link RecyclerView.Adapter#onBindViewHolder(RecyclerView.ViewHolder, int)} to have the
@@ -31,7 +31,7 @@ public class MultiSelector extends Selector {
         }
 
         if (changed) {
-            notifyItemChangedIfVisible(id);
+            notifyItemChanged(id);
 
             if (mObserver != null) {
                 mObserver.onSelectionChanged(this);
@@ -72,7 +72,7 @@ public class MultiSelector extends Selector {
             Long selectedId = it.next();
             it.remove();
             if (notify) {
-                notifyItemChangedIfVisible(selectedId);
+                notifyItemChanged(selectedId);
             }
         }
 
