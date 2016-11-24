@@ -60,20 +60,14 @@ public class MultiSelector extends Selector {
 
     @Override
     public void clearSelected() {
-        clearSelected(true);
-    }
-
-    @Override
-    protected void clearSelected(boolean notify) {
         boolean hadSelections = mSelectedIds.size() > 0;
 
         Iterator<Long> it = mSelectedIds.iterator();
         while (it.hasNext()) {
-            Long selectedId = it.next();
+            long selectedId = it.next();
             it.remove();
-            if (notify) {
-                notifyItemChanged(selectedId);
-            }
+
+            notifyItemChanged(selectedId);
         }
 
         if (hadSelections && mObserver != null) {

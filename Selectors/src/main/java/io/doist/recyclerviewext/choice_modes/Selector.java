@@ -24,6 +24,10 @@ public abstract class Selector {
 
     protected OnSelectionChangedListener mObserver;
 
+    // Used internally to disable item change notifications.
+    // All selection changes lead to these notifications and it can be undesirable or inefficient.
+    private boolean mNotifyItemChanges = true;
+
     protected Selector(RecyclerView recyclerView, RecyclerView.Adapter adapter) {
         mRecyclerView = recyclerView;
         mAdapter = adapter;
@@ -44,8 +48,6 @@ public abstract class Selector {
 
     public abstract void clearSelected();
 
-    protected abstract void clearSelected(boolean notify);
-
     public void setOnSelectionChangedListener(OnSelectionChangedListener observer) {
         mObserver = observer;
     }
@@ -63,7 +65,7 @@ public abstract class Selector {
      */
     public void bind(RecyclerView.ViewHolder holder, Object payload) {
         holder.itemView.setActivated(isSelected(holder.getItemId()));
-        
+
         if (payload != PAYLOAD_SELECT) {
             // Ensure background jumps immediately to the current state instead of animating.
             Drawable background = holder.itemView.getBackground();
@@ -87,17 +89,21 @@ public abstract class Selector {
         long[] selectedIds = savedInstanceState.getLongArray(KEY_SELECTOR_SELECTED_IDS);
         if (selectedIds != null) {
             for (long selectedId : selectedIds) {
+                mNotifyItemChanges = false;
                 setSelected(selectedId, true);
+                mNotifyItemChanges = true;
             }
         }
     }
 
     protected void notifyItemChanged(long id) {
-        RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
-        if (holder != null) {
-            int position = holder.getLayoutPosition();
-            if (position != RecyclerView.NO_POSITION) {
-                mAdapter.notifyItemChanged(position, PAYLOAD_SELECT);
+        if (mNotifyItemChanges) {
+            RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
+            if (holder != null) {
+                int position = holder.getLayoutPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    mAdapter.notifyItemChanged(position, PAYLOAD_SELECT);
+                }
             }
         }
     }
@@ -143,9 +149,11 @@ public abstract class Selector {
                     missingIds.removeAll(selectedIds);
 
                     // Unselect all missing ids.
+                    mNotifyItemChanges = false;
                     for (Long missingId : missingIds) {
                         setSelected(missingId, false);
                     }
+                    mNotifyItemChanges = true;
                 }
             }
         }

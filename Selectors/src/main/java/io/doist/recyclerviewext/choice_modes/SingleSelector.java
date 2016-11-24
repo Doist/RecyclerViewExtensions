@@ -58,19 +58,13 @@ public class SingleSelector extends Selector {
 
     @Override
     public void clearSelected() {
-        clearSelected(true);
-    }
-
-    @Override
-    protected void clearSelected(boolean notify) {
         boolean hadSelection = mSelected;
 
         mSelected = false;
 
         if (hadSelection) {
-            if (notify) {
-                notifyItemChanged(mSelectedId);
-            }
+            notifyItemChanged(mSelectedId);
+
             if (mObserver != null) {
                 mObserver.onSelectionChanged(this);
             }
