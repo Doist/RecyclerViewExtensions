@@ -88,22 +88,39 @@ public abstract class Selector {
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         long[] selectedIds = savedInstanceState.getLongArray(KEY_SELECTOR_SELECTED_IDS);
         if (selectedIds != null) {
+            mNotifyItemChanges = false;
             for (long selectedId : selectedIds) {
-                mNotifyItemChanges = false;
                 setSelected(selectedId, true);
-                mNotifyItemChanges = true;
             }
+            mNotifyItemChanges = true;
         }
     }
 
     protected void notifyItemChanged(long id) {
         if (mNotifyItemChanges) {
+            int position = RecyclerView.NO_POSITION;
+
+            // Look up the item position using findViewHolderForItemId().
+            // This is fast and will work in most scenarious.
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
             if (holder != null) {
-                int position = holder.getLayoutPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    mAdapter.notifyItemChanged(position, PAYLOAD_SELECT);
+                position = holder.getAdapterPosition();
+            }
+
+            // RecyclerView can cache views offscreen that are not found by findViewHolderForItemId() et al,
+            // but will be reattached without being rebound, so the adapter items must be iterated.
+            // This is slower but prevents inconsistencies on the edges of the RecyclerView.
+            if (position == RecyclerView.NO_POSITION) {
+                for (int i = 0; i < mAdapter.getItemCount(); i++) {
+                    if (mAdapter.getItemId(i) == id) {
+                        position = i;
+                        break;
+                    }
                 }
+            }
+
+            if (position != RecyclerView.NO_POSITION) {
+                mAdapter.notifyItemChanged(position, PAYLOAD_SELECT);
             }
         }
     }
