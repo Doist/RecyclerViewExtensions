@@ -23,7 +23,8 @@ import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.pinch_zoom.PinchZoomItemTouchListener;
 import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
 
-public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouchListener.PinchZoomListener {
+public class DemoActivity extends AppCompatActivity
+        implements PinchZoomItemTouchListener.PinchZoomListener, DragDropHelper.Callback {
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -54,8 +55,8 @@ public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouc
         mProgressEmptyRecyclerFlipper.monitor(mAdapter);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setItemAnimator(new WithLayerItemAnimator(true));
-        mDragDropHelper = new DragDropHelper(mAdapter);
-        mDragDropHelper.attachToRecyclerView(mRecyclerView);
+        mDragDropHelper = new DragDropHelper();
+        mDragDropHelper.attach(mRecyclerView, this);
         mAdapter.setDragDropHelper(mDragDropHelper);
         mRecyclerView.addOnItemTouchListener(new PinchZoomItemTouchListener(this, this));
     }
@@ -100,6 +101,26 @@ public class DemoActivity extends AppCompatActivity implements PinchZoomItemTouc
     @Override
     public void onPinchZoom(int position) {
         Toast.makeText(this, "Pinched " + position, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDragStarted(RecyclerView.ViewHolder holder) {
+
+    }
+
+    @Override
+    public boolean canSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target) {
+        return true;
+    }
+
+    @Override
+    public void onSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target) {
+        // TODO
+    }
+
+    @Override
+    public void onDragStopped(RecyclerView.ViewHolder holder) {
+
     }
 
     private static final Object[][] ITEMS = {
