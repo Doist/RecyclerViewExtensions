@@ -106,6 +106,10 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
                 continue;
             }
 
+            if (mDrawable.isStateful()) {
+                mDrawable.setState(child.getDrawableState());
+            }
+
             RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
             int top = child.getBottom() + params.bottomMargin + Math.round(child.getTranslationY());
             int bottom = top + mDrawable.getIntrinsicHeight();
@@ -122,6 +126,10 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
             View child = parent.getChildAt(i);
             if (!hasDivider(parent, child)) {
                 continue;
+            }
+
+            if (mDrawable.isStateful()) {
+                mDrawable.setState(child.getDrawableState());
             }
 
             RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
