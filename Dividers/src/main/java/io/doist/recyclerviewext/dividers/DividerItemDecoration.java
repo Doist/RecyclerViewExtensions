@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.DrawableRes;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
@@ -52,7 +53,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     }
 
     public DividerItemDecoration(Context context, @DrawableRes int drawableId, boolean vertical, Dividers dividers) {
-        this(context.getResources().getDrawable(drawableId), vertical, dividers);
+        this(ContextCompat.getDrawable(context, drawableId), vertical, dividers);
     }
 
     public DividerItemDecoration(Drawable drawable) {
@@ -147,10 +148,14 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        if (mVertical) {
-            outRect.set(0, 0, 0, mDrawable.getIntrinsicHeight());
+        if (!hasDivider(parent, view)) {
+            outRect.set(0, 0, 0, 0);
         } else {
-            outRect.set(0, 0, mDrawable.getIntrinsicWidth(), 0);
+            if (mVertical) {
+                outRect.set(0, 0, 0, mDrawable.getIntrinsicHeight());
+            } else {
+                outRect.set(0, 0, mDrawable.getIntrinsicWidth(), 0);
+            }
         }
     }
 
