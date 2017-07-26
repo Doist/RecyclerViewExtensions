@@ -125,9 +125,10 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder> extend
                         int movedChangeHash = mItems.getChangeHash(oldPosition);
                         mItems.remove(oldPosition);
                         mItems.add(i, movedId, movedChangeHash);
-
-                        notifyItemMoved(oldPosition, i);
                     }
+                    // Even if the item wasn't moved (stayed in the same position as in the previous selection) we must
+                    // redraw it to make sure it's "compliant" with the new selection's view.
+                    notifyItemChanged(oldPosition, i);
 
                     // Check if the item was changed.
                     if (mItems.getChangeHash(i) != adapterItems.getChangeHash(i)) {
