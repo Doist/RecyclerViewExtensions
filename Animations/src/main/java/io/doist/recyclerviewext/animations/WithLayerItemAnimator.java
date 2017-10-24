@@ -2,8 +2,9 @@ package io.doist.recyclerviewext.animations;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
 import android.support.annotation.NonNull;
-import android.support.v4.animation.AnimatorCompatHelper;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.view.View;
@@ -38,6 +39,8 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
     private ArrayList<ViewHolder> mRemoveAnimations = new ArrayList<>();
     private ArrayList<ViewHolder> mChangeAnimations = new ArrayList<>();
 
+    private TimeInterpolator mDefaultInterpolator;
+
     private static class MoveInfo {
         public ViewHolder holder;
         public int fromX, fromY, toX, toY;
@@ -54,6 +57,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
     private static class ChangeInfo {
         public ViewHolder oldHolder, newHolder;
         public int fromX, fromY, toX, toY;
+
         private ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder) {
             this.oldHolder = oldHolder;
             this.newHolder = newHolder;
@@ -225,6 +229,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
                     public void onAnimationStart(Animator anim) {
                         dispatchAddStarting(holder);
                     }
+
                     @Override
                     public void onAnimationCancel(Animator anim) {
                         view.setAlpha(1);
@@ -280,6 +285,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
             public void onAnimationStart(Animator anim) {
                 dispatchMoveStarting(holder);
             }
+
             @Override
             public void onAnimationCancel(Animator anim) {
                 if (deltaX != 0) {
@@ -289,6 +295,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
                     view.setTranslationY(0);
                 }
             }
+
             @Override
             public void onAnimationEnd(Animator anim) {
                 animation.setListener(null);
@@ -366,6 +373,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
                 public void onAnimationStart(Animator anim) {
                     dispatchChangeStarting(changeInfo.newHolder, false);
                 }
+
                 @Override
                 public void onAnimationEnd(Animator anim) {
                     newViewAnimation.setListener(null);
@@ -399,6 +407,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
             endChangeAnimationIfNecessary(changeInfo, changeInfo.newHolder);
         }
     }
+
     private boolean endChangeAnimationIfNecessary(ChangeInfo changeInfo, ViewHolder item) {
         boolean oldItem = false;
         if (changeInfo.newHolder == item) {
@@ -478,8 +487,15 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
     }
 
     private void resetAnimation(ViewHolder holder) {
-        AnimatorCompatHelper.clearInterpolator(holder.itemView);
+        clearInterpolator(holder.itemView);
         endAnimation(holder);
+    }
+
+    private void clearInterpolator(View view) {
+        if (mDefaultInterpolator == null) {
+            mDefaultInterpolator = new ValueAnimator().getInterpolator();
+        }
+        view.animate().setInterpolator(mDefaultInterpolator);
     }
 
     @Override
