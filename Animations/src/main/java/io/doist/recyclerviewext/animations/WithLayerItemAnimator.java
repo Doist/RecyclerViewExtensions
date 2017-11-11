@@ -2,8 +2,9 @@ package io.doist.recyclerviewext.animations;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
 import android.support.annotation.NonNull;
-import android.support.v4.animation.AnimatorCompatHelper;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.view.View;
@@ -24,6 +25,8 @@ import java.util.List;
  * @see android.support.v7.widget.DefaultItemAnimator
  */
 public class WithLayerItemAnimator extends SimpleItemAnimator {
+    private static TimeInterpolator sDefaultInterpolator;
+
     private ArrayList<ViewHolder> mPendingRemovals = new ArrayList<>();
     private ArrayList<ViewHolder> mPendingAdditions = new ArrayList<>();
     private ArrayList<MoveInfo> mPendingMoves = new ArrayList<>();
@@ -158,6 +161,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
             mAdditionsList.add(additions);
             mPendingAdditions.clear();
             Runnable adder = new Runnable() {
+                @Override
                 public void run() {
                     for (ViewHolder holder : additions) {
                         animateAddImpl(holder);
@@ -244,8 +248,8 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
     public boolean animateMove(final ViewHolder holder, int fromX, int fromY,
                                int toX, int toY) {
         final View view = holder.itemView;
-        fromX += holder.itemView.getTranslationX();
-        fromY += holder.itemView.getTranslationY();
+        fromX += (int) holder.itemView.getTranslationX();
+        fromY += (int) holder.itemView.getTranslationY();
         resetAnimation(holder);
         int deltaX = toX - fromX;
         int deltaY = toY - fromY;
@@ -478,7 +482,10 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
     }
 
     private void resetAnimation(ViewHolder holder) {
-        AnimatorCompatHelper.clearInterpolator(holder.itemView);
+        if (sDefaultInterpolator == null) {
+            sDefaultInterpolator = new ValueAnimator().getInterpolator();
+        }
+        holder.itemView.animate().setInterpolator(sDefaultInterpolator);
         endAnimation(holder);
     }
 

@@ -43,8 +43,8 @@ public class DemoActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
 
-        mContainer = (ViewGroup) findViewById(R.id.container);
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mContainer = findViewById(R.id.container);
+        mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
         mLinearLayoutManager = new StickyHeadersLinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);

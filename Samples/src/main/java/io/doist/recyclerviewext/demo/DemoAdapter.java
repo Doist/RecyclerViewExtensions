@@ -30,21 +30,21 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
 
     private List<Object> mDataset;
 
-    public DemoAdapter(boolean horizontal) {
+    DemoAdapter(boolean horizontal) {
         super();
         mHorizontal = horizontal;
     }
 
-    public void setDataset(List<Object> dataset) {
+    void setDataset(List<Object> dataset) {
         mDataset = new ArrayList<>(dataset);
         animateDataSetChanged();
     }
 
-    public void setSelector(Selector selector) {
+    void setSelector(Selector selector) {
         mSelector = selector;
     }
 
-    public void setDragDropHelper(DragDropHelper dragDropHelper) {
+    void setDragDropHelper(DragDropHelper dragDropHelper) {
         mDragDropHelper = dragDropHelper;
     }
 
@@ -135,17 +135,17 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
 
     public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener,
                                                                           View.OnLongClickListener {
-        public TextView textView1;
-        public TextView textView2;
+        TextView textView1;
+        TextView textView2;
 
-        public DemoItemViewHolder(View itemView) {
+        DemoItemViewHolder(View itemView) {
             super(itemView);
 
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
 
-            this.textView1 = (TextView) itemView.findViewById(android.R.id.text1);
-            this.textView2 = (TextView) itemView.findViewById(android.R.id.text2);
+            this.textView1 = itemView.findViewById(android.R.id.text1);
+            this.textView2 = itemView.findViewById(android.R.id.text2);
         }
 
         @Override
@@ -168,13 +168,13 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     public class DemoSectionViewHolder extends BindableViewHolder implements View.OnClickListener {
-        public TextView textView;
+        TextView textView;
 
-        public DemoSectionViewHolder(View itemView) {
+        DemoSectionViewHolder(View itemView) {
             super(itemView);
 
             itemView.setOnClickListener(this);
-            textView = (TextView) itemView.findViewById(android.R.id.text1);
+            textView = itemView.findViewById(android.R.id.text1);
         }
 
         @Override

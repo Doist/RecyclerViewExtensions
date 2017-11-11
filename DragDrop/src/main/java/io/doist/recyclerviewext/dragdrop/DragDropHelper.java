@@ -69,7 +69,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private float mScrollSpeedMax;
 
     /**
-     * Attaches {@link DragDropHelper} to {@code recyclerView}. If already attached to a {@link RecyclerView}, it first
+     * Attaches {@link DragDropHelper} to {@code recyclerView}. If already attached to a {@link RecyclerView}, it
      * detaches from the previous one. If {@code null} is provided, it detaches from the current {@link RecyclerView}.
      *
      * {@link DragDropHelper} uses {@link RecyclerView.ItemDecoration}, {@link RecyclerView.OnItemTouchListener} and
