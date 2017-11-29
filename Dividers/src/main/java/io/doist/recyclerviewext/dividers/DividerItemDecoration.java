@@ -160,7 +160,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     }
 
     private boolean hasDivider(RecyclerView parent, View child) {
-        int position = parent.getChildLayoutPosition(child);
+        int position = parent.getChildAdapterPosition(child);
         return position == RecyclerView.NO_POSITION || mDividers == null || mDividers.hasDivider(position);
     }
 }
