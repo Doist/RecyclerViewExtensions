@@ -13,5 +13,5 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support:recyclerview-v7:27.0.1' // Check DragDropHelper when updating.
+    implementation 'com.android.support:recyclerview-v7:27.0.2' // Check DragDropHelper when updating.
 }
