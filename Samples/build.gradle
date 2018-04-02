@@ -21,12 +21,12 @@ android {
 dependencies {
     implementation 'com.android.support:appcompat-v7:27.0.2'
 
-    compile project(':Animations')
-    compile project(':ClickListeners')
-    compile project(':Dividers')
-    compile project(':DragDrop')
-    compile project(':Flippers')
-    compile project(':Selectors')
-    compile project(':StickyHeaders')
-    compile project(':PinchZoom')
+    implementation project(':Animations')
+    implementation project(':ClickListeners')
+    implementation project(':Dividers')
+    implementation project(':DragDrop')
+    implementation project(':Flippers')
+    implementation project(':Selectors')
+    implementation project(':StickyHeaders')
+    implementation project(':PinchZoom')
 }
