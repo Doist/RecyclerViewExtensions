@@ -1,7 +1,6 @@
 package io.doist.recyclerviewext.choice_modes;
 
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -52,8 +51,8 @@ public abstract class Selector {
         mObserver = observer;
     }
 
-    public void bind(RecyclerView.ViewHolder holder) {
-        bind(holder, null);
+    public boolean bind(RecyclerView.ViewHolder holder) {
+        return bind(holder, null);
     }
 
     /**
@@ -63,22 +62,19 @@ public abstract class Selector {
      * {@link #PAYLOAD_SELECT} is the payload used when the selection changes, where it's likely that the
      * animation (if any) should run.
      */
-    public void bind(RecyclerView.ViewHolder holder, Object payload) {
-        holder.itemView.setActivated(isSelected(holder.getItemId()));
+    public boolean bind(RecyclerView.ViewHolder holder, Object payload) {
+        boolean isSelected = isSelected(holder.getItemId());
+        holder.itemView.setActivated(isSelected);
 
         if (payload != PAYLOAD_SELECT) {
             // Ensure background jumps immediately to the current state instead of animating.
             Drawable background = holder.itemView.getBackground();
             if (background != null) {
-                if (background instanceof LayerDrawable) {
-                    LayerDrawable backgroundLayerDrawable = (LayerDrawable) background;
-                    for (int i = 0; i < backgroundLayerDrawable.getNumberOfLayers(); ++i) {
-                        backgroundLayerDrawable.getDrawable(i).jumpToCurrentState();
-                    }
-                }
                 background.jumpToCurrentState();
             }
         }
+
+        return isSelected;
     }
 
     public void onSaveInstanceState(Bundle outState) {
