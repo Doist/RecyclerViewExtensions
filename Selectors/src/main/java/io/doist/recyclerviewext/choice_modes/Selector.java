@@ -82,13 +82,15 @@ public abstract class Selector {
     }
 
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-        long[] selectedIds = savedInstanceState.getLongArray(KEY_SELECTOR_SELECTED_IDS);
-        if (selectedIds != null) {
-            mNotifyItemChanges = false;
-            for (long selectedId : selectedIds) {
-                setSelected(selectedId, true);
+        if (savedInstanceState != null) {
+            long[] selectedIds = savedInstanceState.getLongArray(KEY_SELECTOR_SELECTED_IDS);
+            if (selectedIds != null) {
+                mNotifyItemChanges = false;
+                for (long selectedId : selectedIds) {
+                    setSelected(selectedId, true);
+                }
+                mNotifyItemChanges = true;
             }
-            mNotifyItemChanges = true;
         }
     }
 
