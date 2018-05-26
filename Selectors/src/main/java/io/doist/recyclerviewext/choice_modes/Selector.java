@@ -2,6 +2,8 @@ package io.doist.recyclerviewext.choice_modes;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.AbsListView;
@@ -27,7 +29,7 @@ public abstract class Selector {
     // All selection changes lead to these notifications and it can be undesirable or inefficient.
     private boolean mNotifyItemChanges = true;
 
-    protected Selector(RecyclerView recyclerView, RecyclerView.Adapter adapter) {
+    protected Selector(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.Adapter adapter) {
         mRecyclerView = recyclerView;
         mAdapter = adapter;
         mAdapter.registerAdapterDataObserver(new SelectorAdapterDataObserver());
@@ -47,27 +49,23 @@ public abstract class Selector {
 
     public abstract void clearSelected();
 
-    public void setOnSelectionChangedListener(OnSelectionChangedListener observer) {
+    public void setOnSelectionChangedListener(@Nullable OnSelectionChangedListener observer) {
         mObserver = observer;
-    }
-
-    public boolean bind(RecyclerView.ViewHolder holder) {
-        return bind(holder, null);
     }
 
     /**
      * Binds the {@code holder} according to its selected state using {@link View#setActivated(boolean)}.
      *
-     * When {@code payload} is not {@link #PAYLOAD_SELECT}, the background jumps immediately to the final state.
-     * {@link #PAYLOAD_SELECT} is the payload used when the selection changes, where it's likely that the
-     * animation (if any) should run.
+     * @param jumpToCurrentState When set, the background will have its {@link Drawable#jumpToCurrentState()} called.
+     *                           In general, this should be true for full binds, and false for partial binds that
+     *                           contain {@link #PAYLOAD_SELECT}.
      */
-    public boolean bind(RecyclerView.ViewHolder holder, Object payload) {
+    public boolean bind(@NonNull RecyclerView.ViewHolder holder, boolean jumpToCurrentState) {
         boolean isSelected = isSelected(holder.getItemId());
         holder.itemView.setActivated(isSelected);
 
-        if (payload != PAYLOAD_SELECT) {
-            // Ensure background jumps immediately to the current state instead of animating.
+        if (jumpToCurrentState) {
+            // Ensure background jumps immediately to the current state.
             Drawable background = holder.itemView.getBackground();
             if (background != null) {
                 background.jumpToCurrentState();
@@ -77,11 +75,11 @@ public abstract class Selector {
         return isSelected;
     }
 
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putLongArray(KEY_SELECTOR_SELECTED_IDS, getSelectedIds());
     }
 
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
+    public void onRestoreInstanceState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             long[] selectedIds = savedInstanceState.getLongArray(KEY_SELECTOR_SELECTED_IDS);
             if (selectedIds != null) {

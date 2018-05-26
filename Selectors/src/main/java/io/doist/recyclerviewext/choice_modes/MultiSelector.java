@@ -1,5 +1,6 @@
 package io.doist.recyclerviewext.choice_modes;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.widget.AbsListView;
 
@@ -11,14 +12,14 @@ import java.util.Set;
  * Tracks multiple selections, similarly to {@link AbsListView#CHOICE_MODE_MULTIPLE}. Calls to
  * {@link RecyclerView.Adapter#notifyItemChanged(int)} are performed automatically.
  *
- * Optionally, call {@link #bind(RecyclerView.ViewHolder)} from your
+ * Optionally, call {@link #bind(RecyclerView.ViewHolder, boolean)} from your
  * {@link RecyclerView.Adapter#onBindViewHolder(RecyclerView.ViewHolder, int)} to have the
  * {@link android.R.attr#state_activated} reflect the selected state.
  */
 public class MultiSelector extends Selector {
     private Set<Long> mSelectedIds = new LinkedHashSet<>();
 
-    public MultiSelector(RecyclerView recyclerView, RecyclerView.Adapter adapter) {
+    public MultiSelector(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.Adapter adapter) {
         super(recyclerView, adapter);
     }
 
