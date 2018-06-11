@@ -21,7 +21,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder>
     /**
      * @see DataSetDiffer.Callback#getItemContentHash(int)
      */
-    public abstract int getItemContentHash(int position);
+    public abstract long getItemContentHash(int position);
 
     /**
      * Returns whether animations are enabled or not.

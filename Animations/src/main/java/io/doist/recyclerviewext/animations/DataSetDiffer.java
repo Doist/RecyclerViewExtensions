@@ -107,7 +107,7 @@ public class DataSetDiffer {
                     }
 
                     long movedId = items.getId(oldPosition);
-                    int movedChangeHash = items.getContentHash(oldPosition);
+                    long movedChangeHash = items.getContentHash(oldPosition);
                     items.remove(oldPosition);
                     items.add(i, movedId, movedChangeHash);
 
@@ -180,6 +180,6 @@ public class DataSetDiffer {
         /**
          * Return a content hash of this item, which is used to detect changes in it.
          */
-        int getItemContentHash(int position);
+        long getItemContentHash(int position);
     }
 }

@@ -1,11 +1,11 @@
 package io.doist.recyclerviewext.animations;
 
 /**
- * Helper class to store and manage arrays of ids and content hashes as efficiently as possible.
+ * Helper class to store and manage arrays of ids and content hashes as efficiently as possible, by storing them
+ * contiguously in a single array in the format [id1, contenthash1, id2, contenthash2, ...].
  */
 class Items {
-    private long[] ids;
-    private int[] contentHashes;
+    private long[] items;
     private int size;
 
     public Items() {
@@ -13,16 +13,15 @@ class Items {
     }
 
     public Items(int capacity) {
-        ids = new long[capacity];
-        contentHashes = new int[capacity];
+        items = new long[capacity*2];
     }
 
     public long getId(int index) {
-        return ids[index];
+        return items[index * 2];
     }
 
-    public int getContentHash(int index) {
-        return contentHashes[index];
+    public long getContentHash(int index) {
+        return items[index * 2 + 1];
     }
 
     public int size() {
@@ -30,30 +29,29 @@ class Items {
     }
 
     public void setId(int index, long id) {
-        ids[index] = id;
+        items[index * 2] = id;
     }
 
-    public void setContentHash(int index, int contentHash) {
-        this.contentHashes[index] = contentHash;
+    public void setContentHash(int index, long contentHash) {
+        items[index * 2 + 1] = contentHash;
     }
 
-    public void add(long id, int contentHash) {
-        if (size == ids.length) {
+    public void add(long id, long contentHash) {
+        if (size * 2 == items.length) {
             ensureCapacity(getNextSize());
         }
-        ids[size] = id;
-        this.contentHashes[size] = contentHash;
+        items[size * 2] = id;
+        items[size * 2 + 1] = contentHash;
         size++;
     }
 
-    public void add(int index, long id, int contentHash) {
-        if (size == ids.length) {
+    public void add(int index, long id, long contentHash) {
+        if (size * 2 == items.length) {
             ensureCapacity(getNextSize());
         }
-        System.arraycopy(ids, index, ids, index + 1, size - index);
-        System.arraycopy(contentHashes, index, contentHashes, index + 1, size - index);
-        ids[index] = id;
-        this.contentHashes[index] = contentHash;
+        System.arraycopy(items, index * 2, items, (index + 1) * 2, (size - index) * 2);
+        items[index * 2] = id;
+        items[index * 2 + 1] = contentHash;
         size++;
     }
 
@@ -62,8 +60,7 @@ class Items {
     }
 
     public void remove(int fromIndex, int toIndex) {
-        System.arraycopy(ids, toIndex, ids, fromIndex, size - toIndex);
-        System.arraycopy(contentHashes, toIndex, contentHashes, fromIndex, size - toIndex);
+        System.arraycopy(items, toIndex * 2, items, fromIndex * 2, (size - toIndex) * 2);
         size -= toIndex - fromIndex;
     }
 
@@ -72,34 +69,31 @@ class Items {
     }
 
     public void ensureCapacity(int minimumCapacity) {
-        if (ids.length < minimumCapacity) {
-            long[] ids = this.ids;
-            this.ids = new long[minimumCapacity];
-            System.arraycopy(ids, 0, this.ids, 0, size);
-            int[] contentHashes = this.contentHashes;
-            this.contentHashes = new int[minimumCapacity];
-            System.arraycopy(contentHashes, 0, this.contentHashes, 0, size);
+        if (minimumCapacity * 2 > items.length) {
+            long[] items = this.items;
+            this.items = new long[minimumCapacity * 2];
+            System.arraycopy(items, 0, this.items, 0, size * 2);
         }
     }
 
     public int indexOfId(long id, int startPosition) {
         // Search back and forth until one of the ends is hit.
         for (int i = startPosition, j = 0; i >= 0 && i < size; j++, i += j % 2 == 0 ? j : -j) {
-            if (id == ids[i]) {
+            if (id == items[i * 2]) {
                 return i;
             }
         }
         if (startPosition < size / 2) {
             // Search forward if the head was hit.
             for (int i = Math.max(startPosition * 2 + 1, 0); i < size; i++) {
-                if (id == ids[i]) {
+                if (id == items[i * 2]) {
                     return i;
                 }
             }
         } else if (startPosition > size / 2) {
             // Search backward if the tail was hit.
             for (int i = Math.min(size - (size - startPosition) * 2 - 1, size - 1); i >= 0; i--) {
-                if (id == ids[i]) {
+                if (id == items[i * 2]) {
                     return i;
                 }
             }

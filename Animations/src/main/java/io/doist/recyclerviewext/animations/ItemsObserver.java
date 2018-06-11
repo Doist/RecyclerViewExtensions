@@ -50,7 +50,7 @@ class ItemsObserver extends RecyclerView.AdapterDataObserver {
         boolean incrementPositions = fromPosition > toPosition;
         for (int i = 0; i < itemCount; i++) {
             long id = items.getId(fromPosition);
-            int changeHash = items.getContentHash(fromPosition);
+            long changeHash = items.getContentHash(fromPosition);
             items.remove(fromPosition);
             items.add(toPosition, id, changeHash);
             if (incrementPositions) {
