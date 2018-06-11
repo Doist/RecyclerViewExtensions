@@ -74,7 +74,7 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     @Override
-    public int getItemChangeHash(int position) {
+    public int getItemContentHash(int position) {
         return 0;
     }
 
