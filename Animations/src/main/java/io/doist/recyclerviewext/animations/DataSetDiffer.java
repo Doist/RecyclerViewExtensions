@@ -28,6 +28,7 @@ public class DataSetDiffer {
         this.callback = callback;
         this.itemsObserver = new ItemsObserver(items, callback);
         this.adapterNotifyDiffHandler = new AdapterNotifyDiffHandler(adapter);
+        startObservingItems();
     }
 
     /**

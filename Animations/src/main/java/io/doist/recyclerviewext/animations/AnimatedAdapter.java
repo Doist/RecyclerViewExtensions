@@ -38,7 +38,6 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder>
     public final void setAnimationsEnabled(boolean enabled) {
         if (enabled && dataSetDiffer == null) {
             dataSetDiffer = new DataSetDiffer(this, this);
-            dataSetDiffer.startObservingItems();
         } else if (!enabled && dataSetDiffer != null) {
             dataSetDiffer.stopObservingItems();
             dataSetDiffer = null;
