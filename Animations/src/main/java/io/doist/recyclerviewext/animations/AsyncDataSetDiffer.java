@@ -34,6 +34,7 @@ public class AsyncDataSetDiffer {
         }
         this.adapter = adapter;
         dataSetDiffer = new DataSetDiffer(adapter, callback);
+        dataSetDiffer.startObservingItems();
         handler = new Handler(Looper.getMainLooper());
         executor = new ThreadPoolExecutor(
                 0, 1, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1),
