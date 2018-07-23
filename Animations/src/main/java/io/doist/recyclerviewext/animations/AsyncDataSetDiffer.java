@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class AsyncDataSetDiffer {
     private RecyclerView.Adapter adapter;
     private DataSetDiffer dataSetDiffer;
+    private int runningDiffCount = 0;
 
     private Handler handler;
     private ThreadPoolExecutor executor;
@@ -51,7 +52,12 @@ public class AsyncDataSetDiffer {
      */
     public void diffDataSet(final AsyncCallback callback) {
         // Pause adapter monitoring to avoid double counting changes.
-        dataSetDiffer.stopObservingItems();
+        if (runningDiffCount == 0) {
+            dataSetDiffer.stopObservingItems();
+        }
+        // Ensure stop / start observing items only happens on the first / last (respectively) call to this method.
+        // Note that between the original call and the runnable below runs, other calls to this method might happen.
+        runningDiffCount++;
 
         // Diff data set in the background, apply the changes and notify in the UI thread.
         executor.execute(new Runnable() {
@@ -66,7 +72,10 @@ public class AsyncDataSetDiffer {
                         opDiffHandler.notify(adapter);
 
                         // Resume adapter monitoring.
-                        dataSetDiffer.startObservingItems();
+                        if (runningDiffCount == 1) {
+                            dataSetDiffer.startObservingItems();
+                        }
+                        runningDiffCount--;
                     }
                 });
             }

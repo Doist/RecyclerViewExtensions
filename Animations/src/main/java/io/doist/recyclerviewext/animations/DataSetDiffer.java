@@ -158,12 +158,12 @@ public class DataSetDiffer {
         }
     }
 
-    void stopObservingItems() {
-        adapter.unregisterAdapterDataObserver(itemsObserver);
-    }
-
     void startObservingItems() {
         adapter.registerAdapterDataObserver(itemsObserver);
+    }
+
+    void stopObservingItems() {
+        adapter.unregisterAdapterDataObserver(itemsObserver);
     }
 
     /**
