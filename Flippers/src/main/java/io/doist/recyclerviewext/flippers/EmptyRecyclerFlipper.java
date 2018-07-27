@@ -79,20 +79,21 @@ public class EmptyRecyclerFlipper extends Flipper {
     private class EmptyAdapterDataObserver extends RecyclerView.AdapterDataObserver {
         @Override
         public void onChanged() {
-            checkCount(mAdapter.getItemCount());
+            checkCount();
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            checkCount(mCount + itemCount);
+            checkCount();
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            checkCount(mCount - itemCount);
+            checkCount();
         }
 
-        private void checkCount(int count) {
+        private void checkCount() {
+            int count = mAdapter.getItemCount();
             if (count == 0 && mCount > 0) {
                 replace(mRecyclerView, mEmptyView);
             } else if(count > 0 && mCount == 0) {
