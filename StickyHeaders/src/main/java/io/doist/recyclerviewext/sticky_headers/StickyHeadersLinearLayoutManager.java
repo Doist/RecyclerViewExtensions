@@ -1,7 +1,6 @@
 package io.doist.recyclerviewext.sticky_headers;
 
 import android.content.Context;
-import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -196,71 +195,6 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         // Remember this position and offset and scroll to it to trigger creating the sticky header.
         setPendingScroll(position, offset);
         super.scrollToPositionWithOffset(position, offset);
-    }
-
-    @Override
-    public int computeVerticalScrollExtent(RecyclerView.State state) {
-        detachStickyHeader();
-        int extent = super.computeVerticalScrollExtent(state);
-        attachStickyHeader();
-        return extent;
-    }
-
-    @Override
-    public int computeVerticalScrollOffset(RecyclerView.State state) {
-        detachStickyHeader();
-        int offset = super.computeVerticalScrollOffset(state);
-        attachStickyHeader();
-        return offset;
-    }
-
-    @Override
-    public int computeVerticalScrollRange(RecyclerView.State state) {
-        detachStickyHeader();
-        int range = super.computeVerticalScrollRange(state);
-        attachStickyHeader();
-        return range;
-    }
-
-    @Override
-    public int computeHorizontalScrollExtent(RecyclerView.State state) {
-        detachStickyHeader();
-        int extent = super.computeHorizontalScrollExtent(state);
-        attachStickyHeader();
-        return extent;
-    }
-
-    @Override
-    public int computeHorizontalScrollOffset(RecyclerView.State state) {
-        detachStickyHeader();
-        int offset = super.computeHorizontalScrollOffset(state);
-        attachStickyHeader();
-        return offset;
-    }
-
-    @Override
-    public int computeHorizontalScrollRange(RecyclerView.State state) {
-        detachStickyHeader();
-        int range = super.computeHorizontalScrollRange(state);
-        attachStickyHeader();
-        return range;
-    }
-
-    @Override
-    public PointF computeScrollVectorForPosition(int targetPosition) {
-        detachStickyHeader();
-        PointF vector = super.computeScrollVectorForPosition(targetPosition);
-        attachStickyHeader();
-        return vector;
-    }
-
-    @Override
-    public View onFocusSearchFailed(View focused, int focusDirection, RecyclerView.Recycler recycler,
-                                    RecyclerView.State state) {
-        detachStickyHeader();
-        View view = super.onFocusSearchFailed(focused, focusDirection, recycler, state);
-        attachStickyHeader();
-        return view;
     }
 
     private void detachStickyHeader() {
