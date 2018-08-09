@@ -97,7 +97,7 @@ public abstract class Selector {
             int position = RecyclerView.NO_POSITION;
 
             // Look up the item position using findViewHolderForItemId().
-            // This is fast and will work in most scenarious.
+            // This is fast and will work in most scenarios.
             RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
             if (holder != null) {
                 position = holder.getAdapterPosition();
@@ -105,7 +105,7 @@ public abstract class Selector {
 
             // RecyclerView can cache views offscreen that are not found by findViewHolderForItemId() et al,
             // but will be reattached without being rebound, so the adapter items must be iterated.
-            // This is slower but prevents inconsistencies on the edges of the RecyclerView.
+            // This is slower but prevents inconsistencies at the edges of the RecyclerView.
             if (position == RecyclerView.NO_POSITION) {
                 for (int i = 0; i < mAdapter.getItemCount(); i++) {
                     if (mAdapter.getItemId(i) == id) {
