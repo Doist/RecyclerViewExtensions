@@ -26,7 +26,12 @@ class ItemsObserver extends RecyclerView.AdapterDataObserver {
     }
 
     @Override
-    public void onItemRangeChanged(int positionStart, int itemCount) {
+    public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
+        if (payload != null) {
+            // It's uncertain if all specific changes were handled. Better to bind twice than not bind at all.
+            return;
+        }
+
         for (int i = positionStart; i < positionStart + itemCount; i++) {
             items.setContentHash(i, callback.getItemContentHash(i));
         }
