@@ -5,9 +5,7 @@ import android.os.Looper;
 import android.support.annotation.UiThread;
 import android.support.v7.widget.RecyclerView;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executor;
 
 /**
  * Adds functionality to animate differences between an adapter's data set and a new one.
@@ -19,12 +17,12 @@ import java.util.concurrent.TimeUnit;
  * @see DataSetDiffer
  */
 public class AsyncDataSetDiffer {
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Executor executor = new LatestTaskAsyncTaskExecutor();
+
     private RecyclerView.Adapter adapter;
     private DataSetDiffer dataSetDiffer;
     private int runningDiffCount = 0;
-
-    private Handler handler;
-    private ThreadPoolExecutor executor;
 
     /**
      * @param adapter  Adapter with which this data set differ is associated.
@@ -36,11 +34,6 @@ public class AsyncDataSetDiffer {
         }
         this.adapter = adapter;
         dataSetDiffer = new DataSetDiffer(adapter, callback);
-        handler = new Handler(Looper.getMainLooper());
-        executor = new ThreadPoolExecutor(
-                0, 1, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1),
-                new ThreadPoolExecutor.DiscardOldestPolicy());
-        executor.allowCoreThreadTimeOut(true);
     }
 
     /**
