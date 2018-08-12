@@ -1,5 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
+import android.support.annotation.UiThread;
 import android.support.v7.widget.RecyclerView;
 
 /**
@@ -34,6 +35,7 @@ public class DataSetDiffer {
     /**
      * Analyzes the data set using the supplied {@link Callback} and triggers all necessary {@code notify*} calls.
      */
+    @UiThread
     public void diffDataSet() {
         // Pause adapter monitoring to avoid double counting changes.
         stopObservingItems();

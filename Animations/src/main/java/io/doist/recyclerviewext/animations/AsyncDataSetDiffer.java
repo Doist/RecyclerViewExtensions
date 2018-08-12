@@ -2,6 +2,7 @@ package io.doist.recyclerviewext.animations;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.UiThread;
 import android.support.v7.widget.RecyclerView;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -50,6 +51,7 @@ public class AsyncDataSetDiffer {
      * @param callback Callback that provides information about the items *to be set* in the adapter.
      *                 Note the difference between this callback and the one passed in the constructor.
      */
+    @UiThread
     public void diffDataSet(final AsyncCallback callback) {
         // Pause adapter monitoring to avoid double counting changes.
         if (runningDiffCount == 0) {
