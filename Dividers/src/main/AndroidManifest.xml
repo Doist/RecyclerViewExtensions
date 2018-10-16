@@ -1,5 +1,1 @@
-<manifest package="io.doist.recyclerviewext.dividers">
-
-    <application />
-
-</manifest>
+<manifest package="io.doist.recyclerviewext.dividers" />

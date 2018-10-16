@@ -1,11 +1,11 @@
 package io.doist.recyclerviewext.flippers;
 
 import android.app.ListActivity;
-import android.support.annotation.IdRes;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import androidx.annotation.IdRes;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Handles a {@link RecyclerView}'s empty view, similar to the automatic control provided by {@link ListActivity} for

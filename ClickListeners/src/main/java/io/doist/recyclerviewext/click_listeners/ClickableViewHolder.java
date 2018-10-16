@@ -1,7 +1,7 @@
 package io.doist.recyclerviewext.click_listeners;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class ClickableViewHolder extends RecyclerView.ViewHolder {
     public ClickableViewHolder(View itemView, OnItemClickListener onItemClickListener) {

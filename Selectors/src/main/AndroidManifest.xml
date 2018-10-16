@@ -1,5 +1,1 @@
-<manifest package="io.doist.recyclerviewext.choice_modes">
-
-    <application />
-
-</manifest>
+<manifest package="io.doist.recyclerviewext.choice_modes" />

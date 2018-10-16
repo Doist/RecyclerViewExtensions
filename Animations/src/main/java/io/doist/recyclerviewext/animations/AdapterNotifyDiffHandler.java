@@ -1,6 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Diff handler that works directly with the adapter, calling the corresponding {@code notify*} method for each change.

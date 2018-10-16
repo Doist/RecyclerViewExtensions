@@ -1,7 +1,7 @@
 package io.doist.recyclerviewext.animations;
 
-import android.support.annotation.UiThread;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.UiThread;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Adds functionality to animate differences between an adapter's data set and a new one.

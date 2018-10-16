@@ -1,5 +1,1 @@
-<manifest package="io.doist.recyclerviewext.click_listeners">
-
-    <application />
-
-</manifest>
+<manifest package="io.doist.recyclerviewext.click_listeners" />

@@ -1,5 +1,1 @@
-<manifest package="io.doist.recyclerviewext.animations">
-
-    <application />
-
-</manifest>
+<manifest package="io.doist.recyclerviewext.animations" />

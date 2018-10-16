@@ -1,5 +1,1 @@
-<manifest package="io.doist.recyclerviewext.dragdrop">
-
-    <application />
-
-</manifest>
+<manifest package="io.doist.recyclerviewext.dragdrop" />

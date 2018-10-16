@@ -1,5 +1,1 @@
-<manifest package="io.doist.recyclerviewext.flippers">
-
-    <application />
-
-</manifest>
+<manifest package="io.doist.recyclerviewext.flippers" />

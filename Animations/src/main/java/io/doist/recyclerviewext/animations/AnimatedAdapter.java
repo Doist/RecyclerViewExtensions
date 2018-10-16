@@ -1,6 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Wrapper around {@link DataSetDiffer}, which adds functionality to animate between data sets.

@@ -1,6 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.LinkedList;
 import java.util.List;
