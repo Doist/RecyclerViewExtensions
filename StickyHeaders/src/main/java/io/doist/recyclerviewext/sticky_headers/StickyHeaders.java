@@ -1,7 +1,8 @@
 package io.doist.recyclerviewext.sticky_headers;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Adds sticky headers capabilities to the {@link RecyclerView.Adapter}. Should return {@code true} for all

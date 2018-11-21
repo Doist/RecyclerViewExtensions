@@ -4,17 +4,18 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView.ViewHolder;
-import android.support.v7.widget.SimpleItemAnimator;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
+import androidx.recyclerview.widget.SimpleItemAnimator;
+
 /**
- * Clone of {@link android.support.v7.widget.DefaultItemAnimator}, with the following differences:
+ * Clone of {@link androidx.recyclerview.widget.DefaultItemAnimator}, with the following differences:
  * <ul>
  * <li>All animations run in a hardware layer (via {@link ViewPropertyAnimator#withLayer()}) which makes them smoother;
  * <li>Added constructor parameter which sets {@link #setSupportsChangeAnimations(boolean)} automatically;
@@ -22,7 +23,7 @@ import java.util.List;
  * <li>All debug code removed.
  * </ul>
  *
- * @see android.support.v7.widget.DefaultItemAnimator
+ * @see androidx.recyclerview.widget.DefaultItemAnimator
  */
 public class WithLayerItemAnimator extends SimpleItemAnimator {
     private static TimeInterpolator sDefaultInterpolator;

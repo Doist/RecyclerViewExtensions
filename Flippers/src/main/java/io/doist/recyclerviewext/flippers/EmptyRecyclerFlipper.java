@@ -1,11 +1,12 @@
 package io.doist.recyclerviewext.flippers;
 
 import android.app.ListActivity;
-import android.support.annotation.IdRes;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+
+import androidx.annotation.IdRes;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Handles a {@link RecyclerView}'s empty view, similar to the automatic control provided by {@link ListActivity} for
@@ -57,7 +58,7 @@ public class EmptyRecyclerFlipper extends Flipper {
     private void disableItemAnimatorForRecyclerInAnimation() {
         final RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
         FlipperAnimator flipperAnimator = getFlipperAnimator();
-        if(itemAnimator != null && flipperAnimator != null) {
+        if (itemAnimator != null && flipperAnimator != null) {
             mRecyclerView.setItemAnimator(null);
             mRecyclerView.postDelayed(new Runnable() {
                 @Override
@@ -96,7 +97,7 @@ public class EmptyRecyclerFlipper extends Flipper {
             int count = mAdapter.getItemCount();
             if (count == 0 && mCount > 0) {
                 replace(mRecyclerView, mEmptyView);
-            } else if(count > 0 && mCount == 0) {
+            } else if (count > 0 && mCount == 0) {
                 replace(mEmptyView, mRecyclerView);
             }
             mCount = count;

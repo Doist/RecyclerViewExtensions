@@ -6,9 +6,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.os.Build;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Property;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -17,6 +14,10 @@ import android.view.ViewConfiguration;
 import android.view.ViewParent;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
+
+import androidx.core.view.MotionEventCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Adds pinch to zoom support to your {@link RecyclerView}, provided it uses a {@link LinearLayoutManager}.

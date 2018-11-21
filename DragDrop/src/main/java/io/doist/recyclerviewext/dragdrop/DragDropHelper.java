@@ -2,11 +2,6 @@ package io.doist.recyclerviewext.dragdrop;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -14,6 +9,12 @@ import android.view.View;
 import android.view.ViewParent;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Interpolator;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.MotionEventCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Utility class for adding drag & drop to {@link RecyclerView}.
@@ -547,7 +548,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                     mLayoutManager.scrollToPosition(0);
                 } else {
                     int lastPosition = mRecyclerView.getAdapter().getItemCount() - 1;
-                    if(position == lastPosition || targetPosition == lastPosition) {
+                    if (position == lastPosition || targetPosition == lastPosition) {
                         mLayoutManager.scrollToPosition(lastPosition);
                     }
                 }

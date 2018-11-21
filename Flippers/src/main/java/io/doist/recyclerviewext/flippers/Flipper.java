@@ -1,7 +1,8 @@
 package io.doist.recyclerviewext.flippers;
 
-import android.support.v4.view.ViewCompat;
 import android.view.View;
+
+import androidx.core.view.ViewCompat;
 
 /**
  * Flips between views with a common ancestor using a {@link FlipperAnimator}.

@@ -1,6 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Keeps track of animation ids and change ids so that calculating operations between two lists (old and new) is

@@ -1,12 +1,13 @@
 package io.doist.recyclerviewext.choice_modes;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.widget.AbsListView;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Tracks multiple selections, similarly to {@link AbsListView#CHOICE_MODE_MULTIPLE}. Calls to
