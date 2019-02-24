@@ -65,7 +65,7 @@ public class EmptyRecyclerFlipper extends Flipper {
                 public void run() {
                     mRecyclerView.setItemAnimator(itemAnimator);
                 }
-            }, flipperAnimator.getFlipDuration());
+            }, flipperAnimator.getDuration());
         }
     }
 

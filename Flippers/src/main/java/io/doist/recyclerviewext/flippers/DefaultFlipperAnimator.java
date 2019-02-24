@@ -18,7 +18,7 @@ class DefaultFlipperAnimator extends FlipperAnimator {
         outView.setAlpha(1f);
         outView.animate()
                .alpha(0f)
-               .setDuration(getFlipDuration())
+               .setDuration(getDuration())
                .setListener(new AnimatorListenerAdapter() {
                    @Override
                    public void onAnimationEnd(Animator animation) {
@@ -33,7 +33,7 @@ class DefaultFlipperAnimator extends FlipperAnimator {
         inView.setAlpha(0f);
         inView.animate()
               .alpha(1f)
-              .setDuration(getFlipDuration())
+              .setDuration(getDuration())
               .setListener(new AnimatorListenerAdapter() {
                   @Override
                   public void onAnimationEnd(Animator animation) {
