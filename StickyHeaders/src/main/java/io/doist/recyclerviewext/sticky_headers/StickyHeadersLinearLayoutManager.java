@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
@@ -426,9 +427,17 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             }
             if (nextHeaderView != null) {
                 if (getReverseLayout()) {
-                    y = Math.max(nextHeaderView.getBottom(), y);
+                    int bottomMargin = 0;
+                    if (nextHeaderView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        bottomMargin = ((ViewGroup.MarginLayoutParams) nextHeaderView.getLayoutParams()).bottomMargin;
+                    }
+                    y = Math.max(nextHeaderView.getBottom() + bottomMargin, y);
                 } else {
-                    y = Math.min(nextHeaderView.getTop() - headerView.getHeight(), y);
+                    int topMargin = 0;
+                    if (nextHeaderView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        topMargin = ((ViewGroup.MarginLayoutParams) nextHeaderView.getLayoutParams()).topMargin;
+                    }
+                    y = Math.min(nextHeaderView.getTop() - topMargin - headerView.getHeight(), y);
                 }
             }
             return y;
@@ -449,9 +458,17 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             }
             if (nextHeaderView != null) {
                 if (getReverseLayout()) {
-                    x = Math.max(nextHeaderView.getRight(), x);
+                    int rightMargin = 0;
+                    if (nextHeaderView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        rightMargin = ((ViewGroup.MarginLayoutParams) nextHeaderView.getLayoutParams()).rightMargin;
+                    }
+                    x = Math.max(nextHeaderView.getRight() + rightMargin, x);
                 } else {
-                    x = Math.min(nextHeaderView.getLeft() - headerView.getWidth(), x);
+                    int leftMargin = 0;
+                    if (nextHeaderView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                        leftMargin = ((ViewGroup.MarginLayoutParams) nextHeaderView.getLayoutParams()).leftMargin;
+                    }
+                    x = Math.min(nextHeaderView.getLeft() - leftMargin - headerView.getWidth(), x);
                 }
             }
             return x;
