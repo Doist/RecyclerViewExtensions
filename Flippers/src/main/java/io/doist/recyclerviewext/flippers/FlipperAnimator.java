@@ -6,7 +6,7 @@ import android.view.View;
  * Animates transitions between views with the same parent.
  */
 public abstract class FlipperAnimator {
-    public static long DEFAULT_DURATION = 250;
+    public static final long DEFAULT_DURATION = 250;
 
     private long mDuration = DEFAULT_DURATION;
 

@@ -18,11 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
  * @see DataSetDiffer
  */
 public class AsyncDataSetDiffer {
-    private Handler handler = new Handler(Looper.getMainLooper());
-    private Executor executor = new LatestTaskAsyncTaskExecutor();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Executor executor = new LatestTaskAsyncTaskExecutor();
 
-    private RecyclerView.Adapter adapter;
-    private DataSetDiffer dataSetDiffer;
+    private final RecyclerView.Adapter adapter;
+    private final DataSetDiffer dataSetDiffer;
     private int runningDiffCount = 0;
 
     /**

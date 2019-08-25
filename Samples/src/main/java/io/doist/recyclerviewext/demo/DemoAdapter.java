@@ -13,6 +13,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import io.doist.recyclerviewext.R;
 import io.doist.recyclerviewext.animations.AnimatedAdapter;
@@ -22,7 +23,8 @@ import io.doist.recyclerviewext.sticky_headers.StickyHeaders;
 
 public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
         implements StickyHeaders, DragDropHelper.Callback {
-    private boolean mHorizontal;
+    @RecyclerView.Orientation
+    private final int mOrientation;
 
     private Selector mSelector;
 
@@ -30,9 +32,9 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
 
     private List<Object> mDataset;
 
-    DemoAdapter(boolean horizontal) {
+    DemoAdapter(int orientation) {
         super();
-        mHorizontal = horizontal;
+        mOrientation = orientation;
     }
 
     void setDataset(List<Object> dataset) {
@@ -48,20 +50,23 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
         mDragDropHelper = dragDropHelper;
     }
 
+    @NonNull
     @Override
     public BindableViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (viewType == 0) {
-            return new DemoItemViewHolder(
-                    inflater.inflate(mHorizontal ? R.layout.item_horizontal : R.layout.item, parent, false));
+            return new DemoItemViewHolder(inflater.inflate(
+                    mOrientation == RecyclerView.VERTICAL ?
+                    R.layout.item : R.layout.item_horizontal, parent, false));
         } else {
-            return new DemoSectionViewHolder(
-                    inflater.inflate(mHorizontal ? R.layout.section_horizontal : R.layout.section, parent, false));
+            return new DemoSectionViewHolder(inflater.inflate(
+                    mOrientation == RecyclerView.VERTICAL ?
+                    R.layout.section : R.layout.section_horizontal, parent, false));
         }
     }
 
     @Override
-    public void onBindViewHolder(BindableViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull BindableViewHolder holder, int position) {
         if (mSelector != null) {
             mSelector.bind(holder, true);
         }
@@ -128,15 +133,18 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     holder.itemView.setTranslationZ(0f);
+                    holder.itemView.setBackground(null);
                 }
             });
+        } else {
+            holder.itemView.setBackground(null);
         }
     }
 
     public class DemoItemViewHolder extends BindableViewHolder implements View.OnClickListener,
                                                                           View.OnLongClickListener {
-        TextView textView1;
-        TextView textView2;
+        final TextView textView1;
+        final TextView textView2;
 
         DemoItemViewHolder(View itemView) {
             super(itemView);
@@ -168,7 +176,7 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     public class DemoSectionViewHolder extends BindableViewHolder implements View.OnClickListener {
-        TextView textView;
+        final TextView textView;
 
         DemoSectionViewHolder(View itemView) {
             super(itemView);

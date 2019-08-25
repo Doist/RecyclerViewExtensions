@@ -12,7 +12,6 @@ import android.view.animation.Interpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.MotionEventCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -57,7 +56,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     /**
      * Dragged item's location on screen.
      */
-    private Rect mLocation = new Rect();
+    private final Rect mLocation = new Rect();
     private int mStartLeft;
     private int mStartTop;
 
@@ -202,7 +201,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void stopInternal() {
         // Postpone stopping if a layout is being computed.
         mState = STATE_STOPPING;
@@ -231,12 +229,12 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     @Override
-    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+    public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
         return handleMotionEvent(e);
     }
 
     @Override
-    public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+    public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
         handleMotionEvent(e);
     }
 
@@ -249,7 +247,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     private boolean handleMotionEvent(MotionEvent event) {
         if (mState != STATE_NONE && mState != STATE_STOPPING) {
-            int action = MotionEventCompat.getActionMasked(event);
+            int action = event.getActionMasked();
             int x = (int) event.getX();
             int y = (int) event.getY();
             if (mState == STATE_STARTING && (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE)) {
@@ -276,14 +274,13 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     @Override
-    public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+    public void getItemOffsets(
+            Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         outRect.setEmpty();
     }
 
     @Override
-    public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
-        super.onDraw(c, parent, state);
-
+    public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (mState != STATE_NONE && mState != STATE_STOPPING) {
             boolean dragging = mState == STATE_DRAGGING;
 
@@ -441,7 +438,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                     return true;
                 }
             } else {
-                holder = mRecyclerView.findViewHolderForAdapterPosition(mRecyclerView.getAdapter().getItemCount() - 1);
+                holder = mRecyclerView.findViewHolderForAdapterPosition(getItemCount() - 1);
                 if (holder != null) {
                     int maxBottom = Integer.MIN_VALUE;
                     for (int i = 0; i < childCount; i++) {
@@ -476,7 +473,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                     return true;
                 }
             } else {
-                holder = mRecyclerView.findViewHolderForAdapterPosition(mRecyclerView.getAdapter().getItemCount() - 1);
+                holder = mRecyclerView.findViewHolderForAdapterPosition(getItemCount() - 1);
                 if (holder != null) {
                     int maxRight = Integer.MIN_VALUE;
                     for (int i = 0; i < childCount; i++) {
@@ -547,7 +544,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 if (position == 0 || targetPosition == 0) {
                     mLayoutManager.scrollToPosition(0);
                 } else {
-                    int lastPosition = mRecyclerView.getAdapter().getItemCount() - 1;
+                    int lastPosition = getItemCount() - 1;
                     if (position == lastPosition || targetPosition == lastPosition) {
                         mLayoutManager.scrollToPosition(lastPosition);
                     }
@@ -555,6 +552,15 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
                 mCallback.onSwap(mViewHolder, target);
             }
+        }
+    }
+
+    private int getItemCount() {
+        RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
+        if (adapter != null) {
+            return adapter.getItemCount();
+        } else {
+            return 0;
         }
     }
 
@@ -569,11 +575,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     @Override
-    public void onChildViewAttachedToWindow(View view) {
+    public void onChildViewAttachedToWindow(@NonNull View view) {
     }
 
     @Override
-    public void onChildViewDetachedFromWindow(View view) {
+    public void onChildViewDetachedFromWindow(@NonNull View view) {
         RecyclerView.ViewHolder holder = mRecyclerView.getChildViewHolder(view);
         if (holder == null) {
             return;

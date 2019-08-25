@@ -15,7 +15,7 @@ import android.view.ViewParent;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
-import androidx.core.view.MotionEventCompat;
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,9 +30,9 @@ public class PinchZoomItemTouchListener
     private static final int SETTLE_DURATION_MS = 250;
     private static final Interpolator SETTLE_INTERPOLATOR = new DecelerateInterpolator();
 
-    private ScaleGestureDetector mScaleGestureDetector;
-    private int mSpanSlop;
-    private PinchZoomListener mListener;
+    private final ScaleGestureDetector mScaleGestureDetector;
+    private final int mSpanSlop;
+    private final PinchZoomListener mListener;
 
     private boolean mEnabled = true;
 
@@ -60,14 +60,15 @@ public class PinchZoomItemTouchListener
     }
 
     @Override
-    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+    public boolean onInterceptTouchEvent(
+            @NonNull RecyclerView recyclerView, @NonNull MotionEvent event) {
         if (!mEnabled) {
             return false;
         }
 
         // Bail out when onRequestDisallowInterceptTouchEvent is called and the motion event has started.
         if (mDisallowInterceptTouchEvent) {
-            switch (MotionEventCompat.getActionMasked(e)) {
+            switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     mDisallowInterceptTouchEvent = false;
                     break; // Continue handling since down event should always be handled.
@@ -80,21 +81,21 @@ public class PinchZoomItemTouchListener
         }
 
         // Grab RV reference and current orientation.
-        mRecyclerView = rv;
-        if (rv.getLayoutManager() instanceof LinearLayoutManager) {
-            mOrientation = ((LinearLayoutManager) rv.getLayoutManager()).getOrientation();
+        mRecyclerView = recyclerView;
+        if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
+            mOrientation = ((LinearLayoutManager) recyclerView.getLayoutManager()).getOrientation();
         } else {
             throw new IllegalStateException("PinchZoomItemTouchListener only supports LinearLayoutManager");
         }
 
-        // Proxy the call to ScaleGestureDetector. Its onScaleBegin() method sets mIntercept when called.
-        mScaleGestureDetector.onTouchEvent(e);
+        // Proxy to ScaleGestureDetector. Its onScaleBegin() method sets mIntercept when called.
+        mScaleGestureDetector.onTouchEvent(event);
         return mIntercept;
     }
 
     @Override
-    public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-        mScaleGestureDetector.onTouchEvent(e);
+    public void onTouchEvent(@NonNull RecyclerView recyclerView, @NonNull MotionEvent event) {
+        mScaleGestureDetector.onTouchEvent(event);
     }
 
     @Override

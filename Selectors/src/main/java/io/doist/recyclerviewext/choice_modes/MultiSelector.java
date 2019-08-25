@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * {@link android.R.attr#state_activated} reflect the selected state.
  */
 public class MultiSelector extends Selector {
-    protected Set<Long> mSelectedIds = new LinkedHashSet<>();
+    private final Set<Long> mSelectedIds = new LinkedHashSet<>();
 
     public MultiSelector(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.Adapter adapter) {
         super(recyclerView, adapter);

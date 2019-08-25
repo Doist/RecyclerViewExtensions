@@ -28,8 +28,8 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private float mTranslationY;
 
     // Header positions for the currently displayed list and their observer.
-    private List<Integer> mHeaderPositions = new ArrayList<>(0);
-    private RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
+    private final List<Integer> mHeaderPositions = new ArrayList<>(0);
+    private final RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
     // Sticky header's ViewHolder and dirty state.
     private View mStickyHeader;
@@ -42,7 +42,8 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         super(context);
     }
 
-    public StickyHeadersLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
+    public StickyHeadersLinearLayoutManager(
+            Context context, @RecyclerView.Orientation int orientation, boolean reverseLayout) {
         super(context, orientation, reverseLayout);
     }
 

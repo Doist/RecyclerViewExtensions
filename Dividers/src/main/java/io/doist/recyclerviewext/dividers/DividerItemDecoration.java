@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.view.View;
 
 import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -89,7 +90,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     }
 
     @Override
-    public void onDraw(Canvas canvas, RecyclerView parent, RecyclerView.State state) {
+    public void onDraw(@NonNull Canvas canvas, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (mVertical) {
             drawVertical(canvas, parent);
         } else {
@@ -148,7 +149,9 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     }
 
     @Override
-    public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+    public void getItemOffsets(
+            @NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent,
+            @NonNull RecyclerView.State state) {
         if (!hasDivider(parent, view)) {
             outRect.set(0, 0, 0, 0);
         } else {

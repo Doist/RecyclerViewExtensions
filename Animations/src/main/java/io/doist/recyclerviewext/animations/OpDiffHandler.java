@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * Diff handler that keeps track of necessary operations to change the old data set into the new data set.
  */
 class OpDiffHandler implements DiffHandler {
-    private List<Op> ops = new LinkedList<>();
+    private final List<Op> ops = new LinkedList<>();
 
     public List<Op> getOps() {
         return ops;
@@ -46,8 +46,8 @@ class OpDiffHandler implements DiffHandler {
         public abstract void notify(RecyclerView.Adapter adapter);
 
         static class Change extends Op {
-            private int positionStart;
-            private int itemCount;
+            private final int positionStart;
+            private final int itemCount;
 
             Change(int positionStart, int itemCount) {
                 this.positionStart = positionStart;
@@ -61,8 +61,8 @@ class OpDiffHandler implements DiffHandler {
         }
 
         static class Insert extends Op {
-            private int positionStart;
-            private int itemCount;
+            private final int positionStart;
+            private final int itemCount;
 
             Insert(int positionStart, int itemCount) {
                 this.positionStart = positionStart;
@@ -76,8 +76,8 @@ class OpDiffHandler implements DiffHandler {
         }
 
         static class Remove extends Op {
-            private int positionStart;
-            private int itemCount;
+            private final int positionStart;
+            private final int itemCount;
 
             Remove(int positionStart, int itemCount) {
                 this.positionStart = positionStart;
@@ -91,8 +91,8 @@ class OpDiffHandler implements DiffHandler {
         }
 
         static class Move extends Op {
-            private int fromPosition;
-            private int toPosition;
+            private final int fromPosition;
+            private final int toPosition;
 
             Move(int fromPosition, int toPosition) {
                 this.fromPosition = fromPosition;

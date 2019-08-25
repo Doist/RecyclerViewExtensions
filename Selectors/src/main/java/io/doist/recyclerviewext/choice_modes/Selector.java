@@ -21,8 +21,8 @@ public abstract class Selector {
 
     private static final String KEY_SELECTOR_SELECTED_IDS = ":selector_selected_ids";
 
-    protected RecyclerView mRecyclerView;
-    protected RecyclerView.Adapter mAdapter;
+    protected final RecyclerView mRecyclerView;
+    protected final RecyclerView.Adapter mAdapter;
 
     protected OnSelectionChangedListener mObserver;
 
@@ -127,7 +127,7 @@ public abstract class Selector {
     }
 
     private class SelectorAdapterDataObserver extends RecyclerView.AdapterDataObserver {
-        private DeselectMissingIdsRunnable mDeselectMissingIdsRunnable = new DeselectMissingIdsRunnable();
+        private final DeselectMissingIdsRunnable mDeselectMissingIdsRunnable = new DeselectMissingIdsRunnable();
 
         @Override
         public void onChanged() {

@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
  * {@link ListView}.
  */
 public class EmptyRecyclerFlipper extends Flipper {
-    protected RecyclerView mRecyclerView;
-    protected View mEmptyView;
+    private final RecyclerView mRecyclerView;
+    private final View mEmptyView;
 
     private RecyclerView.Adapter mAdapter;
     private int mCount;

@@ -28,23 +28,26 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 public class WithLayerItemAnimator extends SimpleItemAnimator {
     private static TimeInterpolator sDefaultInterpolator;
 
-    private ArrayList<ViewHolder> mPendingRemovals = new ArrayList<>();
-    private ArrayList<ViewHolder> mPendingAdditions = new ArrayList<>();
-    private ArrayList<MoveInfo> mPendingMoves = new ArrayList<>();
-    private ArrayList<ChangeInfo> mPendingChanges = new ArrayList<>();
+    private final ArrayList<ViewHolder> mPendingRemovals = new ArrayList<>();
+    private final ArrayList<ViewHolder> mPendingAdditions = new ArrayList<>();
+    private final ArrayList<MoveInfo> mPendingMoves = new ArrayList<>();
+    private final ArrayList<ChangeInfo> mPendingChanges = new ArrayList<>();
 
-    private ArrayList<ArrayList<ViewHolder>> mAdditionsList = new ArrayList<>();
-    private ArrayList<ArrayList<MoveInfo>> mMovesList = new ArrayList<>();
-    private ArrayList<ArrayList<ChangeInfo>> mChangesList = new ArrayList<>();
+    private final ArrayList<ArrayList<ViewHolder>> mAdditionsList = new ArrayList<>();
+    private final ArrayList<ArrayList<MoveInfo>> mMovesList = new ArrayList<>();
+    private final ArrayList<ArrayList<ChangeInfo>> mChangesList = new ArrayList<>();
 
-    private ArrayList<ViewHolder> mAddAnimations = new ArrayList<>();
-    private ArrayList<ViewHolder> mMoveAnimations = new ArrayList<>();
-    private ArrayList<ViewHolder> mRemoveAnimations = new ArrayList<>();
-    private ArrayList<ViewHolder> mChangeAnimations = new ArrayList<>();
+    private final ArrayList<ViewHolder> mAddAnimations = new ArrayList<>();
+    private final ArrayList<ViewHolder> mMoveAnimations = new ArrayList<>();
+    private final ArrayList<ViewHolder> mRemoveAnimations = new ArrayList<>();
+    private final ArrayList<ViewHolder> mChangeAnimations = new ArrayList<>();
 
     private static class MoveInfo {
-        public ViewHolder holder;
-        public int fromX, fromY, toX, toY;
+        public final ViewHolder holder;
+        public final int fromX;
+        public final int fromY;
+        public final int toX;
+        public final int toY;
 
         private MoveInfo(ViewHolder holder, int fromX, int fromY, int toX, int toY) {
             this.holder = holder;
@@ -72,6 +75,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
             this.toY = toY;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "ChangeInfo{" +
@@ -110,8 +114,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
         mPendingRemovals.clear();
         // Next, move stuff
         if (movesPending) {
-            final ArrayList<MoveInfo> moves = new ArrayList<>();
-            moves.addAll(mPendingMoves);
+            final ArrayList<MoveInfo> moves = new ArrayList<>(mPendingMoves);
             mMovesList.add(moves);
             mPendingMoves.clear();
             Runnable mover = new Runnable() {
@@ -134,8 +137,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
         }
         // Next, change stuff, to run in parallel with move animations
         if (changesPending) {
-            final ArrayList<ChangeInfo> changes = new ArrayList<>();
-            changes.addAll(mPendingChanges);
+            final ArrayList<ChangeInfo> changes = new ArrayList<>(mPendingChanges);
             mChangesList.add(changes);
             mPendingChanges.clear();
             Runnable changer = new Runnable() {
@@ -157,8 +159,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
         }
         // Next, add stuff
         if (additionsPending) {
-            final ArrayList<ViewHolder> additions = new ArrayList<>();
-            additions.addAll(mPendingAdditions);
+            final ArrayList<ViewHolder> additions = new ArrayList<>(mPendingAdditions);
             mAdditionsList.add(additions);
             mPendingAdditions.clear();
             Runnable adder = new Runnable() {
