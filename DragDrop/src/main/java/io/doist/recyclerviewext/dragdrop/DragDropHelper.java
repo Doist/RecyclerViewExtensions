@@ -30,11 +30,36 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     private static final float SCROLL_SPEED_MAX_DP = 12;
 
+    /**
+     * No drag is ongoing.
+     * Next state is {@link #STATE_STARTING}.
+     */
     private static final int STATE_NONE = 0;
+    /**
+     * A drag is starting as soon as a touch event is received.
+     * Next state is {@link #STATE_TRACKING} or {@link #STATE_DRAGGING}.
+     */
     private static final int STATE_STARTING = 1;
-    private static final int STATE_DRAGGING = 2;
-    private static final int STATE_RECOVERING = 3;
-    private static final int STATE_STOPPING = 4;
+    /**
+     * A drag is ongoing without visual changes (ie. no translation, scrolling, position swap, etc).
+     * Next state is {@link #STATE_RECOVERING} or {@link #STATE_DRAGGING}.
+     */
+    private static final int STATE_TRACKING = 2;
+    /**
+     * A drag is ongoing.
+     * Next state is {@link #STATE_RECOVERING} or {@link #STATE_TRACKING}.
+     */
+    private static final int STATE_DRAGGING = 3;
+    /**
+     * A drag has ended and the state is recovering, ending animations are running.
+     * Next state is {@link #STATE_STOPPING}.
+     */
+    private static final int STATE_RECOVERING = 4;
+    /**
+     * A drag has ended and all ending animations have run.
+     * Next state is {@link #STATE_NONE}.
+     */
+    private static final int STATE_STOPPING = 5;
 
     private static final Interpolator SCROLL_INTERPOLATOR = new AccelerateInterpolator();
 
@@ -48,8 +73,9 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private RecyclerView.ViewHolder mViewHolder;
 
     /**
-     * Current state. Can be {@link #STATE_NONE}, {@link #STATE_STARTING}, {@link #STATE_DRAGGING} or
-     * {@link #STATE_RECOVERING}. For any of these except the first, {@link #mViewHolder} is not null.
+     * Current state. Can be {@link #STATE_NONE}, {@link #STATE_STARTING}, {@link #STATE_TRACKING},
+     * {@link #STATE_DRAGGING} or {@link #STATE_RECOVERING}. For any of these except the first,
+     * {@link #mViewHolder} is not null.
      */
     private int mState = STATE_NONE;
 
@@ -84,8 +110,9 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             }
             mRecyclerView = recyclerView;
             if (mRecyclerView != null) {
-                mScrollSpeedMax = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP,
-                                                            mRecyclerView.getResources().getDisplayMetrics());
+                mScrollSpeedMax = TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP,
+                        mRecyclerView.getResources().getDisplayMetrics());
                 mRecyclerView.addItemDecoration(this, 0);
                 mRecyclerView.addOnItemTouchListener(this);
                 mRecyclerView.addOnChildAttachStateChangeListener(this);
@@ -139,7 +166,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         mLocation.set(mStartLeft, mStartTop, mViewHolder.itemView.getRight(), mViewHolder.itemView.getBottom());
 
         // Notify callback that the drag has started.
-        mCallback.onDragStarted(mViewHolder);
+        mCallback.onDragStarted(mViewHolder, true);
 
         // Drag will start.
         return true;
@@ -156,7 +183,18 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         mRecyclerView.setChildDrawingOrderCallback(this);
 
         // Update state.
-        mState = STATE_DRAGGING;
+        mState = STATE_TRACKING;
+    }
+
+    private void moveInternal(int x, int y) {
+        int state = mCallback.onDragMoved(mViewHolder, x, y) ? STATE_DRAGGING : STATE_TRACKING;
+        if (mState == STATE_DRAGGING && state == STATE_TRACKING) {
+            recoverInternal(mRecyclerView.getItemAnimator());
+            mCallback.onDragStopped(mViewHolder, false);
+        } else if (mState == STATE_TRACKING && state == STATE_DRAGGING) {
+            mCallback.onDragStarted(mViewHolder, false);
+        }
+        mState = state;
     }
 
     /**
@@ -170,20 +208,8 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         if (mState != STATE_NONE && mState != STATE_STOPPING) {
             RecyclerView.ItemAnimator itemAnimator = mRecyclerView.getItemAnimator();
             if (!now && mState == STATE_DRAGGING && itemAnimator != null) {
-                mState = STATE_RECOVERING;
-                // Setup preInfo with current translation values.
-                RecyclerView.ItemAnimator.ItemHolderInfo preInfo = new RecyclerView.ItemAnimator.ItemHolderInfo();
-                preInfo.left = (int) mViewHolder.itemView.getTranslationX();
-                preInfo.top = (int) mViewHolder.itemView.getTranslationY();
+                recoverInternal(itemAnimator);
 
-                // Setup postInfo with all values at 0 (the default). The intent is to settle in the final position.
-                RecyclerView.ItemAnimator.ItemHolderInfo postInfo = new RecyclerView.ItemAnimator.ItemHolderInfo();
-                // Clear current translation values to prevent them from being added on top of preInfo.
-                setTranslation(0f, 0f);
-                // Animate the move, stopping internally when done.
-                if (itemAnimator.animatePersistence(mViewHolder, preInfo, postInfo)) {
-                    itemAnimator.runPendingAnimations();
-                }
                 // Stop internally after animations are done.
                 itemAnimator.isRunning(new RecyclerView.ItemAnimator.ItemAnimatorFinishedListener() {
                     @Override
@@ -222,10 +248,30 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
         // Teardown holder and clear it.
         setTranslation(0f, 0f);
-        mCallback.onDragStopped(mViewHolder);
+        mCallback.onDragStopped(mViewHolder, true);
         mRecyclerView.invalidateItemDecorations();
         mState = STATE_NONE;
         mViewHolder = null;
+    }
+
+    private void recoverInternal(@Nullable RecyclerView.ItemAnimator itemAnimator) {
+        mState = STATE_RECOVERING;
+
+        // Setup preInfo with current translation values.
+        RecyclerView.ItemAnimator.ItemHolderInfo preInfo = new RecyclerView.ItemAnimator.ItemHolderInfo();
+        preInfo.left = (int) mViewHolder.itemView.getTranslationX();
+        preInfo.top = (int) mViewHolder.itemView.getTranslationY();
+
+        // Setup postInfo with all values at 0 (the default). The intent is to settle in the final position.
+        RecyclerView.ItemAnimator.ItemHolderInfo postInfo = new RecyclerView.ItemAnimator.ItemHolderInfo();
+
+        // Clear current translation values to prevent them from being added on top of preInfo.
+        setTranslation(0f, 0f);
+
+        // Animate the move, stopping internally when done.
+        if (itemAnimator != null && itemAnimator.animatePersistence(mViewHolder, preInfo, postInfo)) {
+            itemAnimator.runPendingAnimations();
+        }
     }
 
     @Override
@@ -258,6 +304,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 return true;
             }
             if (mState != STATE_RECOVERING && action == MotionEvent.ACTION_MOVE) {
+                moveInternal(x, y);
                 // Update the drag, the touch event is moving.
                 mTouchCurrentX = x;
                 mTouchCurrentY = y;
@@ -282,22 +329,23 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     @Override
     public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (mState != STATE_NONE && mState != STATE_STOPPING) {
-            boolean dragging = mState == STATE_DRAGGING;
-
-            if (dragging) {
+            if (mState == STATE_TRACKING || mState == STATE_DRAGGING) {
                 // Update location.
                 updateLocation();
+            }
 
+            if (mState == STATE_DRAGGING) {
                 // Offset dragged item.
-                setTranslation(mLocation.left - mViewHolder.itemView.getLeft(),
-                               mLocation.top - mViewHolder.itemView.getTop());
+                setTranslation(
+                        mLocation.left - mViewHolder.itemView.getLeft(),
+                        mLocation.top - mViewHolder.itemView.getTop());
 
                 // Swap with adjacent views if necessary.
                 handleSwap();
             }
 
             // Handle scrolling when on the edges.
-            handleScroll(!dragging);
+            handleScroll(mState == STATE_DRAGGING);
         }
     }
 
@@ -379,11 +427,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                         updateScrollSpeedDecelerating();
                     }
                 }
-                scrollByX = (int) mScrollSpeed;
             } else if (mScrollSpeed > 0) {
-                scrollByX = (int) mScrollSpeed; // One last scroll to show edge glow.
-                mScrollSpeed = 0;
+                // Slow down scroll to show the edge glow.
+                updateScrollSpeedDecelerating();
             }
+            scrollByX = (int) mScrollSpeed;
         } else {
             float itemCenterY = (mLocation.top + mLocation.bottom) / 2f;
             direction = itemCenterY < mRecyclerView.getHeight() / 2f ? -1 : 1;
@@ -406,11 +454,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                         updateScrollSpeedDecelerating();
                     }
                 }
-                scrollByY = (int) mScrollSpeed;
             } else if (mScrollSpeed > 0) {
-                scrollByY = (int) mScrollSpeed; // One last scroll to show edge glow.
-                mScrollSpeed = 0;
+                // Slow down scroll to show the edge glow.
+                updateScrollSpeedDecelerating();
             }
+            scrollByY = (int) mScrollSpeed;
         }
 
         if (scrollByX > 0 || scrollByY > 0) {
@@ -591,25 +639,41 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     public interface Callback {
         /**
-         * Called when a drag has started for {@link RecyclerView.ViewHolder}.
+         * A drag has started for {@code holder}. It can be the very start of the drag, or a resume as
+         * signalled by the result of {@link #onDragMoved(RecyclerView.ViewHolder, int, int)}.
+         *
+         * @param create true when the drag has just started, false when its being resumed (eg. re-entered bounds).
          */
-        void onDragStarted(RecyclerView.ViewHolder holder);
+        void onDragStarted(@NonNull RecyclerView.ViewHolder holder, boolean create);
+
+        /**
+         * A drag has moved. The callback determines whether the drag should continue on screen (return true), simply
+         * be tracked to be resumed later (return false), or stopped (call {@link #stop()}).
+         *
+         * @param x x-coordinate of the drag, in the parent's coordinates.
+         * @param y y-coordinate of the drag, in the parent's coordinates.
+         * @return true to have the {@code holder} track the drag on screen.
+         */
+        boolean onDragMoved(@NonNull RecyclerView.ViewHolder holder, int x, int y);
 
         /**
          * Called to determine whether {@code holder} can be swapped with {@code target}.
-         * If true, {@link #onSwap(RecyclerView.ViewHolder, RecyclerView.ViewHolder)} might be called in the future.
+         * {@link #onSwap(RecyclerView.ViewHolder, RecyclerView.ViewHolder)} might be called later on
+         * if true.
          */
-        boolean canSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target);
+        boolean canSwap(@NonNull RecyclerView.ViewHolder holder, @NonNull RecyclerView.ViewHolder target);
 
         /**
-         * Called to swap {@code holder} to {@code target}'s adapter position and notify the
-         * {@link RecyclerView.Adapter}.
+         * Swap {@code holder} to {@code target}'s adapter position and notify the {@link RecyclerView.Adapter}.
          */
-        void onSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target);
+        void onSwap(@NonNull RecyclerView.ViewHolder holder, @NonNull RecyclerView.ViewHolder target);
 
         /**
-         * Called when a drag has ended for {@link RecyclerView.ViewHolder}, after any recovery animations end.
+         * A drag has stopped for {@code holder}. It can be the final ending of the drag, or a pause as
+         * signalled by the result of {@link #onDragMoved(RecyclerView.ViewHolder, int, int)}.
+         *
+         * @param destroy true when the drag is ending, false when it's pausing (eg. exited bounds).
          */
-        void onDragStopped(RecyclerView.ViewHolder holder);
+        void onDragStopped(@NonNull RecyclerView.ViewHolder holder, boolean destroy);
     }
 }

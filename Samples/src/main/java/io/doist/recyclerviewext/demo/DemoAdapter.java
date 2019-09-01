@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -99,7 +100,7 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     @Override
-    public void onDragStarted(final RecyclerView.ViewHolder holder) {
+    public void onDragStarted(final RecyclerView.ViewHolder holder, boolean create) {
         holder.itemView.setBackgroundColor(Color.WHITE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             holder.itemView.animate().translationZ(8f).setDuration(200L).setListener(new AnimatorListenerAdapter() {
@@ -113,7 +114,14 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     @Override
-    public boolean canSwap(RecyclerView.ViewHolder holder, RecyclerView.ViewHolder target) {
+    public boolean onDragMoved(@NonNull RecyclerView.ViewHolder holder, int x, int y) {
+        Rect rect = new Rect();
+        ((View) holder.itemView.getParent()).getDrawingRect(rect);
+        return rect.contains(x, y);
+    }
+
+    @Override
+    public boolean canSwap(@NonNull RecyclerView.ViewHolder holder, @NonNull RecyclerView.ViewHolder target) {
         return true; //holder.getClass() == target.getClass();
     }
 
@@ -126,7 +134,7 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     @Override
-    public void onDragStopped(final RecyclerView.ViewHolder holder) {
+    public void onDragStopped(@NonNull final RecyclerView.ViewHolder holder, boolean destroy) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             holder.itemView.animate().translationZ(0f).setDuration(200L).setListener(new AnimatorListenerAdapter() {
                 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
