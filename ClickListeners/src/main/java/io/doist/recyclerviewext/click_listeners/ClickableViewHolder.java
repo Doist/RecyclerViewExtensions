@@ -2,22 +2,23 @@ package io.doist.recyclerviewext.click_listeners;
 
 import android.view.View;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ClickableViewHolder extends RecyclerView.ViewHolder {
-    public ClickableViewHolder(View itemView, OnItemClickListener onItemClickListener) {
+    public ClickableViewHolder(View itemView, @Nullable OnItemClickListener onItemClickListener) {
         this(itemView, onItemClickListener, null);
     }
 
-    public ClickableViewHolder(View itemView, OnItemClickListener onItemClickListener,
-                               OnItemLongClickListener onItemLongClickListener) {
+    public ClickableViewHolder(View itemView, @Nullable OnItemClickListener onItemClickListener,
+                               @Nullable OnItemLongClickListener onItemLongClickListener) {
         super(itemView);
 
         setClickListeners(onItemClickListener, onItemLongClickListener);
     }
 
-    private void setClickListeners(final OnItemClickListener onItemClickListener,
-                                   final OnItemLongClickListener onItemLongClickListener) {
+    private void setClickListeners(@Nullable final OnItemClickListener onItemClickListener,
+                                   @Nullable final OnItemLongClickListener onItemLongClickListener) {
         if (onItemClickListener != null) {
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
