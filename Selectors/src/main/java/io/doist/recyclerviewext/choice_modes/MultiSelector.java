@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * {@link android.R.attr#state_activated} reflect the selected state.
  */
 public class MultiSelector extends Selector {
-    private Set<Long> mSelectedIds = new LinkedHashSet<>();
+    protected Set<Long> mSelectedIds = new LinkedHashSet<>();
 
     public MultiSelector(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.Adapter adapter) {
         super(recyclerView, adapter);
@@ -26,6 +26,7 @@ public class MultiSelector extends Selector {
 
     public void setSelected(long id, boolean selected) {
         boolean changed;
+        long[] previousSelectedIds = getSelectedIds();
         if (selected) {
             changed = mSelectedIds.add(id);
         } else {
@@ -36,7 +37,7 @@ public class MultiSelector extends Selector {
             notifyItemChanged(id);
 
             if (mObserver != null) {
-                mObserver.onSelectionChanged(this);
+                mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
             }
         }
     }
@@ -62,7 +63,8 @@ public class MultiSelector extends Selector {
 
     @Override
     public void clearSelected() {
-        boolean hadSelections = mSelectedIds.size() > 0;
+        long[] previousSelectedIds = getSelectedIds();
+        boolean hadSelections = getSelectedCount() > 0;
 
         Iterator<Long> it = mSelectedIds.iterator();
         while (it.hasNext()) {
@@ -73,7 +75,7 @@ public class MultiSelector extends Selector {
         }
 
         if (hadSelections && mObserver != null) {
-            mObserver.onSelectionChanged(this);
+            mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
         }
     }
 }

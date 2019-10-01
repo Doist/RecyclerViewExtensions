@@ -123,7 +123,7 @@ public abstract class Selector {
     }
 
     public interface OnSelectionChangedListener {
-        void onSelectionChanged(Selector selector);
+        void onSelectionChanged(long[] selectedIds, long[] previousSelectedIds);
     }
 
     private class SelectorAdapterDataObserver extends RecyclerView.AdapterDataObserver {
