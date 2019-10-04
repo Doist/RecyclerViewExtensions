@@ -22,6 +22,7 @@ public class SingleSelector extends Selector {
     }
 
     public void setSelected(long id, boolean selected) {
+        long[] previousSelectedIds = getSelectedIds();
         boolean oldSelected = mSelected;
         long oldSelectedId = mSelectedId;
 
@@ -39,7 +40,7 @@ public class SingleSelector extends Selector {
             }
 
             if (mObserver != null) {
-                mObserver.onSelectionChanged(this);
+                mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
             }
         }
     }
@@ -60,6 +61,7 @@ public class SingleSelector extends Selector {
 
     @Override
     public void clearSelected() {
+        long[] previousSelectedIds = getSelectedIds();
         boolean hadSelection = mSelected;
 
         mSelected = false;
@@ -68,7 +70,7 @@ public class SingleSelector extends Selector {
             notifyItemChanged(mSelectedId);
 
             if (mObserver != null) {
-                mObserver.onSelectionChanged(this);
+                mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
             }
         }
     }
