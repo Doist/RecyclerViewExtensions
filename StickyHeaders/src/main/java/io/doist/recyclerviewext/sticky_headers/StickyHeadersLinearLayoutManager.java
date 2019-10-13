@@ -31,12 +31,15 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private final List<Integer> mHeaderPositions = new ArrayList<>(0);
     private final RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
-    // Sticky header's ViewHolder and dirty state.
+    // ViewHolder and dirty state.
     private View mStickyHeader;
     private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
 
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
+
+    // Attach count, to ensure the sticky header is only attached and detached when expected.
+    private int mStickyHeaderAttachCount = 0;
 
     public StickyHeadersLinearLayoutManager(Context context) {
         super(context);
@@ -267,13 +270,13 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     private void detachStickyHeader() {
-        if (mStickyHeader != null) {
+        if (--mStickyHeaderAttachCount == 0 && mStickyHeader != null) {
             detachView(mStickyHeader);
         }
     }
 
     private void attachStickyHeader() {
-        if (mStickyHeader != null) {
+        if (++mStickyHeaderAttachCount == 1 && mStickyHeader != null) {
             attachView(mStickyHeader);
         }
     }
@@ -370,6 +373,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
         mStickyHeader = stickyHeader;
         mStickyHeaderPosition = position;
+        mStickyHeaderAttachCount = 1;
     }
 
     /**
