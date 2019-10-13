@@ -261,8 +261,40 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     @Override
-    public View onFocusSearchFailed(View focused, int focusDirection, RecyclerView.Recycler recycler,
-                                    RecyclerView.State state) {
+    public int findFirstVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findFirstVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public int findFirstCompletelyVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findFirstCompletelyVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public int findLastVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findLastVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public int findLastCompletelyVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findLastCompletelyVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public View onFocusSearchFailed(
+            View focused, int focusDirection, RecyclerView.Recycler recycler, RecyclerView.State state) {
         detachStickyHeader();
         View view = super.onFocusSearchFailed(focused, focusDirection, recycler, state);
         attachStickyHeader();
