@@ -19,7 +19,8 @@
         android:paddingBottom="24dip"
         android:paddingLeft="16dip"
         android:paddingRight="16dip"
-        android:paddingTop="24dip" />
+        android:paddingTop="24dip"
+        android:scrollbars="horizontal|vertical"/>
 
     <TextView
         android:id="@+id/empty"

@@ -3,5 +3,6 @@
     <color name="section">#eee</color>
     <color name="section_pressed">#ccc</color>
 
+    <color name="item">#fff</color>
     <color name="item_activated">#eee</color>
 </resources>
