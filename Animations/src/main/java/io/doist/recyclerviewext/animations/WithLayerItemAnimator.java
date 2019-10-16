@@ -279,7 +279,7 @@ public class WithLayerItemAnimator extends SimpleItemAnimator {
         if (deltaY != 0) {
             view.animate().withLayer().translationY(0);
         }
-        final ViewPropertyAnimator animation = view.animate().withLayer();
+        final ViewPropertyAnimator animation = view.animate();
         mMoveAnimations.add(holder);
         animation.setDuration(getMoveDuration()).setListener(new AnimatorListenerAdapter() {
             @Override
