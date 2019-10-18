@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * It is expected that the associated data set changes have already been submitted.
  */
 class AdapterNotifyDiffHandler implements DiffHandler {
-    private RecyclerView.Adapter adapter;
+    private final RecyclerView.Adapter adapter;
 
     AdapterNotifyDiffHandler(RecyclerView.Adapter adapter) {
         this.adapter = adapter;

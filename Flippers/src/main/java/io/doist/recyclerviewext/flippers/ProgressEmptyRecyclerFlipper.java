@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * Similar to {@link EmptyRecyclerFlipper}, but also handles a progress view through {@link #setLoading(boolean)}.
  */
 public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
-    private View mProgressView;
+    private final View mProgressView;
     private View mCurrentView;
     private boolean mLoading;
 

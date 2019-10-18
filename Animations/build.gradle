@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    buildToolsVersion "29.0.2"
 
     defaultConfig {
         minSdkVersion 16
@@ -13,5 +13,6 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.recyclerview:recyclerview:1.0.0' // Check WithLayerItemAnimator when updating.
+    // Check WithLayerItemAnimator when updating.
+    implementation "androidx.recyclerview:recyclerview:1.0.0"
 }

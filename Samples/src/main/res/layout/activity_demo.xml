@@ -1,10 +1,11 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fff"
-    android:padding="8dip">
+    android:paddingLeft="@dimen/horizontal_padding"
+    android:paddingStart="@dimen/horizontal_padding"
+    android:paddingRight="@dimen/horizontal_padding"
+    android:paddingEnd="@dimen/horizontal_padding">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
@@ -18,7 +19,8 @@
         android:paddingBottom="24dip"
         android:paddingLeft="16dip"
         android:paddingRight="16dip"
-        android:paddingTop="24dip" />
+        android:paddingTop="24dip"
+        android:scrollbars="horizontal|vertical"/>
 
     <TextView
         android:id="@+id/empty"

@@ -28,21 +28,25 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private float mTranslationY;
 
     // Header positions for the currently displayed list and their observer.
-    private List<Integer> mHeaderPositions = new ArrayList<>(0);
-    private RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
+    private final List<Integer> mHeaderPositions = new ArrayList<>(0);
+    private final RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
-    // Sticky header's ViewHolder and dirty state.
+    // ViewHolder and dirty state.
     private View mStickyHeader;
     private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
 
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
 
+    // Attach count, to ensure the sticky header is only attached and detached when expected.
+    private int mStickyHeaderAttachCount = 0;
+
     public StickyHeadersLinearLayoutManager(Context context) {
         super(context);
     }
 
-    public StickyHeadersLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
+    public StickyHeadersLinearLayoutManager(
+            Context context, @RecyclerView.Orientation int orientation, boolean reverseLayout) {
         super(context, orientation, reverseLayout);
     }
 
@@ -257,8 +261,40 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     @Override
-    public View onFocusSearchFailed(View focused, int focusDirection, RecyclerView.Recycler recycler,
-                                    RecyclerView.State state) {
+    public int findFirstVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findFirstVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public int findFirstCompletelyVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findFirstCompletelyVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public int findLastVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findLastVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public int findLastCompletelyVisibleItemPosition() {
+        detachStickyHeader();
+        int position = super.findLastCompletelyVisibleItemPosition();
+        attachStickyHeader();
+        return position;
+    }
+
+    @Override
+    public View onFocusSearchFailed(
+            View focused, int focusDirection, RecyclerView.Recycler recycler, RecyclerView.State state) {
         detachStickyHeader();
         View view = super.onFocusSearchFailed(focused, focusDirection, recycler, state);
         attachStickyHeader();
@@ -266,13 +302,13 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     private void detachStickyHeader() {
-        if (mStickyHeader != null) {
+        if (--mStickyHeaderAttachCount == 0 && mStickyHeader != null) {
             detachView(mStickyHeader);
         }
     }
 
     private void attachStickyHeader() {
-        if (mStickyHeader != null) {
+        if (++mStickyHeaderAttachCount == 1 && mStickyHeader != null) {
             attachView(mStickyHeader);
         }
     }
@@ -369,6 +405,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
         mStickyHeader = stickyHeader;
         mStickyHeaderPosition = position;
+        mStickyHeaderAttachCount = 1;
     }
 
     /**
@@ -679,34 +716,29 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
             // Shift moved headers by toPosition - fromPosition.
-            // Shift headers in-between by -itemCount (reverse if upwards).
+            // Shift headers in-between by itemCount (reverse if downwards).
             int headerCount = mHeaderPositions.size();
             if (headerCount > 0) {
-                if (fromPosition < toPosition) {
-                    for (int i = findHeaderIndexOrNext(fromPosition); i != -1 && i < headerCount; i++) {
-                        int headerPos = mHeaderPositions.get(i);
-                        if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
-                            mHeaderPositions.set(i, headerPos - (toPosition - fromPosition));
-                            sortHeaderAtIndex(i);
-                        } else if (headerPos >= fromPosition + itemCount && headerPos <= toPosition) {
-                            mHeaderPositions.set(i, headerPos - itemCount);
-                            sortHeaderAtIndex(i);
-                        } else {
-                            break;
-                        }
+                int topPosition = Math.min(fromPosition, toPosition);
+                for (int i = findHeaderIndexOrNext(topPosition); i != -1 && i < headerCount; i++) {
+                    int headerPos = mHeaderPositions.get(i);
+                    int newHeaderPos = headerPos;
+                    if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
+                        newHeaderPos += toPosition - fromPosition;
+                    } else if (fromPosition < toPosition
+                            && headerPos >= fromPosition + itemCount && headerPos <= toPosition) {
+                        newHeaderPos -= itemCount;
+                    } else if (fromPosition > toPosition
+                            && headerPos >= toPosition && headerPos <= fromPosition) {
+                        newHeaderPos += itemCount;
+                    } else {
+                        break;
                     }
-                } else {
-                    for (int i = findHeaderIndexOrNext(toPosition); i != -1 && i < headerCount; i++) {
-                        int headerPos = mHeaderPositions.get(i);
-                        if (headerPos >= fromPosition && headerPos < fromPosition + itemCount) {
-                            mHeaderPositions.set(i, headerPos + (toPosition - fromPosition));
-                            sortHeaderAtIndex(i);
-                        } else if (headerPos >= toPosition && headerPos <= fromPosition) {
-                            mHeaderPositions.set(i, headerPos + itemCount);
-                            sortHeaderAtIndex(i);
-                        } else {
-                            break;
-                        }
+                    if (newHeaderPos != headerPos) {
+                        mHeaderPositions.set(i, newHeaderPos);
+                        sortHeaderAtIndex(i);
+                    } else {
+                        break;
                     }
                 }
             }
