@@ -699,9 +699,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         }
 
         private void teardownViewHolder(boolean destroy) {
-            setTranslation(viewHolder, 0f, 0f);
-            mCallback.onDragStopped(viewHolder, destroy);
-            viewHolder = null;
+            if (viewHolder != null) {
+                setTranslation(viewHolder, 0f, 0f);
+                mCallback.onDragStopped(viewHolder, destroy);
+                viewHolder = null;
+            }
         }
 
         @Override
