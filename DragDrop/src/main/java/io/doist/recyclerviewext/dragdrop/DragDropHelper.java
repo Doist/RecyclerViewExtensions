@@ -748,7 +748,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                     startTop = viewHolder.itemView.getTop();
                 }
             }
-            if (viewHolder == null && !mRecyclerView.isLayoutRequested()) {
+            if (viewHolder == null && !mRecyclerView.hasPendingAdapterUpdates() && !mRecyclerView.isLayoutRequested()) {
                 mRecyclerView.scrollToPosition(position);
             }
             return viewHolder;
