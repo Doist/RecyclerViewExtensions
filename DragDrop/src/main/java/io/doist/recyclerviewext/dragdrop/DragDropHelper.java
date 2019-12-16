@@ -2,6 +2,7 @@ package io.doist.recyclerviewext.dragdrop;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -27,8 +28,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         implements RecyclerView.OnItemTouchListener, RecyclerView.ChildDrawingOrderCallback {
     public static final String LOG_TAG = DragDropHelper.class.getSimpleName();
 
-    private static final float SCROLL_SPEED_MAX_DP = 16;
-
     /**
      * No drag is ongoing.
      * Next state is {@link #STATE_STARTING}.
@@ -36,29 +35,41 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private static final int STATE_NONE = 0;
     /**
      * A drag is starting as soon as a touch event is received.
-     * Next state is {@link #STATE_TRACKING} or {@link #STATE_DRAGGING}.
+     * Next state is {@link #STATE_DRAGGING}.
      */
     private static final int STATE_STARTING = 1;
     /**
-     * A drag is ongoing without visual changes (ie. no translation, scrolling, position swap, etc).
-     * Next state is {@link #STATE_RECOVERING} or {@link #STATE_DRAGGING}.
+     * A drag is ongoing. Touch translation, view swapping and edge scrolling will happen if enabled.
+     * Next state is {@link #STATE_RECOVERING}.
      */
-    private static final int STATE_TRACKING = 2;
-    /**
-     * A drag is ongoing.
-     * Next state is {@link #STATE_RECOVERING} or {@link #STATE_TRACKING}.
-     */
-    private static final int STATE_DRAGGING = 3;
+    private static final int STATE_DRAGGING = 2;
     /**
      * A drag has ended and the state is recovering, ending animations are running.
      * Next state is {@link #STATE_STOPPING}.
      */
-    private static final int STATE_RECOVERING = 4;
+    private static final int STATE_RECOVERING = 3;
     /**
      * A drag has ended and all ending animations have run.
      * Next state is {@link #STATE_NONE}.
      */
-    private static final int STATE_STOPPING = 5;
+    private static final int STATE_STOPPING = 4;
+
+    /**
+     * Maximum scroll speed, in dips per frame.
+     */
+    private static final float SCROLL_SPEED_MAX_DP = 16;
+
+    /**
+     * Edge margin from which to start scrolling.
+     */
+    private static final float SCROLL_MARGIN_DP = 128;
+
+    /**
+     * Flags that control which features are enabled during the drag.
+     */
+    private boolean mTranslateEnabled = true;
+    private boolean mSwapEnabled = true;
+    private boolean mScrollEnabled = true;
 
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLayoutManager;
@@ -66,23 +77,15 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private Callback mCallback;
 
     /**
-     * The position/view holder currently being dragged.
-     */
-    private Tracker mTracker;
-
-    /**
      * Current state.
-     * Can be {@link #STATE_NONE}, {@link #STATE_STARTING}, {@link #STATE_TRACKING}, {@link #STATE_DRAGGING}
-     * or {@link #STATE_RECOVERING}.
+     * Can be {@link #STATE_NONE}, {@link #STATE_STARTING}, {@link #STATE_DRAGGING} or {@link #STATE_RECOVERING}.
      */
     private int mState = STATE_NONE;
 
     /**
-     * Dragged item's location on screen.
+     * The position/view holder currently being dragged.
      */
-    private final Rect mLocation = new Rect();
-    private int mStartLeft;
-    private int mStartTop;
+    private Tracker mTracker;
 
     /**
      * Starting coordinates for the touch event.
@@ -97,8 +100,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     private int mTouchCurrentY;
 
     /**
-     * Pivot coordinates for the touch event,
-     * updated when the touch wanders more than {@link #mTouchSlop} in a direction.
+     * Pivot coordinates for the touch event, updated when the touch wanders over {@link #mTouchSlop} in a direction.
      */
     private int mTouchPivotX;
     private int mTouchPivotY;
@@ -113,6 +115,77 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     private float mScrollSpeed;
     private float mScrollSpeedMax;
+    private float mScrollMargin;
+
+    /**
+     * Gets whether the dragged view follows the ongoing touch event. Defaults to true.
+     */
+    public boolean isTranslateEnabled() {
+        return mTranslateEnabled;
+    }
+
+    /**
+     * Sets whether the dragged view follows the ongoing touch event.
+     */
+    public void setTranslateEnabled(boolean translateEnabled) {
+        if (mTranslateEnabled != translateEnabled) {
+            mTranslateEnabled = translateEnabled;
+            RecyclerView.ViewHolder viewHolder;
+            if (mState == STATE_DRAGGING && (viewHolder = mTracker.getViewHolder()) != null) {
+                if (translateEnabled) {
+                    handleTranslation(viewHolder, mTracker.getStartLeft(), mTracker.getStartTop());
+                } else {
+                    recoverInternal(viewHolder, mRecyclerView.getItemAnimator());
+                    // Continue dragging after recovering, albeit without translation.
+                    mState = STATE_DRAGGING;
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets whether the dragged view is swapped with others when it overlaps. Defaults to true.
+     */
+    public boolean isSwapEnabled() {
+        return mSwapEnabled;
+    }
+
+    /**
+     * Sets whether the dragged view is swapped with others when it overlaps.
+     *
+     * @see Callback#onDragTo(RecyclerView.ViewHolder, int)
+     */
+    public void setSwapEnabled(boolean swapEnabled) {
+        if (mSwapEnabled != swapEnabled) {
+            mSwapEnabled = swapEnabled;
+            RecyclerView.ViewHolder viewHolder;
+            if (mState == STATE_DRAGGING && (viewHolder = mTracker.getViewHolder()) != null) {
+                if (swapEnabled) {
+                    handleSwap(viewHolder);
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets whether the {@link RecyclerView} scrolls when the dragged view is close to the edges. Defaults to true.
+     */
+    public boolean isScrollEnabled() {
+        return mScrollEnabled;
+    }
+
+    /**
+     * Sets whether the {@link RecyclerView} scrolls when the dragged view is close to the edges.
+     */
+    public void setScrollEnabled(boolean scrollEnabled) {
+        if (mScrollEnabled != scrollEnabled) {
+            mScrollEnabled = scrollEnabled;
+            RecyclerView.ViewHolder viewHolder;
+            if (mState == STATE_DRAGGING && (viewHolder = mTracker.getViewHolder()) != null) {
+                handleScroll(viewHolder, !scrollEnabled);
+            }
+        }
+    }
 
     /**
      * Attaches {@link DragDropHelper} to {@code recyclerView}. If already attached to a {@link RecyclerView}, it
@@ -129,10 +202,10 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             }
             mRecyclerView = recyclerView;
             if (mRecyclerView != null) {
-                mScrollSpeedMax = TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP,
-                        mRecyclerView.getResources().getDisplayMetrics());
                 mTouchSlop = ViewConfiguration.get(recyclerView.getContext()).getScaledTouchSlop();
+                DisplayMetrics dm = mRecyclerView.getResources().getDisplayMetrics();
+                mScrollSpeedMax = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP, dm);
+                mScrollMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_MARGIN_DP, dm);
                 mRecyclerView.addItemDecoration(this, 0);
                 mRecyclerView.addOnItemTouchListener(this);
             }
@@ -151,11 +224,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             Log.w(LOG_TAG, "Position is already being dragged");
             return false;
         }
-        RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForAdapterPosition(position);
-        if (holder == null) {
-            Log.w(LOG_TAG, "Can't find view holder for position");
-            return false;
-        }
         RecyclerView.LayoutManager layoutManager = mRecyclerView.getLayoutManager();
         if (!(layoutManager instanceof LinearLayoutManager)) {
             Log.w(LOG_TAG, "RecyclerView is not using LinearLayoutManager");
@@ -166,7 +234,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             Log.w(LOG_TAG, "RecyclerView has no adapter");
             return false;
         }
-
         if (mState == STATE_STOPPING) {
             Log.w(LOG_TAG, "A drag is currently being stopped");
             return false;
@@ -181,12 +248,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         // Grab position and holder.
         mTracker = new Tracker(position);
         mAdapter.registerAdapterDataObserver(mTracker);
-        RecyclerView.ViewHolder viewHolder = mTracker.createViewHolder();
-
-        // Get the initial location.
-        mStartLeft = viewHolder.itemView.getLeft();
-        mStartTop = viewHolder.itemView.getTop();
-        mLocation.set(mStartLeft, mStartTop, viewHolder.itemView.getRight(), viewHolder.itemView.getBottom());
+        mTracker.getViewHolder();
 
         // Drag will start.
         mState = STATE_STARTING;
@@ -204,22 +266,14 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         mRecyclerView.setChildDrawingOrderCallback(this);
 
         // Update state.
-        mState = STATE_TRACKING;
+        mState = STATE_DRAGGING;
     }
 
     private void moveInternal(int x, int y) {
         RecyclerView.ViewHolder viewHolder = mTracker.getViewHolder();
-        if (viewHolder == null) {
-            return;
+        if (viewHolder != null) {
+            mCallback.onDragMoved(viewHolder, x, y);
         }
-        int state = mCallback.onDragMoved(viewHolder, x, y) ? STATE_DRAGGING : STATE_TRACKING;
-        if (mState == STATE_DRAGGING && state == STATE_TRACKING) {
-            recoverInternal(viewHolder, mRecyclerView.getItemAnimator());
-            mCallback.onDragStopped(viewHolder, false);
-        } else if (mState == STATE_TRACKING && state == STATE_DRAGGING) {
-            mCallback.onDragStarted(viewHolder, false);
-        }
-        mState = state;
     }
 
     /**
@@ -244,8 +298,10 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                     }
                 });
             } else {
-                if (mState == STATE_RECOVERING && viewHolder != null && itemAnimator != null) {
-                    itemAnimator.endAnimations();
+                if (mState == STATE_RECOVERING) {
+                    if (itemAnimator != null) {
+                        itemAnimator.endAnimations();
+                    }
                 } else {
                     stopInternal();
                 }
@@ -329,9 +385,10 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 startInternal();
                 mTouchStartX = mTouchCurrentX = mTouchPivotX = x;
                 mTouchStartY = mTouchCurrentY = mTouchPivotY = y;
+                mTouchDirectionX = mTouchDirectionY = 0f;
                 return true;
             }
-            if (mState != STATE_RECOVERING && action == MotionEvent.ACTION_MOVE) {
+            if (mState == STATE_DRAGGING && action == MotionEvent.ACTION_MOVE) {
                 // Update the drag, the touch event is moving.
                 moveInternal(x, y);
                 mTouchCurrentX = x;
@@ -366,28 +423,37 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (mState != STATE_NONE && mState != STATE_STOPPING) {
             RecyclerView.ViewHolder viewHolder = mTracker.getViewHolder();
-
-            if (mState == STATE_TRACKING || mState == STATE_DRAGGING) {
-                // Update location.
-                updateLocation(viewHolder);
-            }
-
             if (viewHolder != null) {
                 if (mState == STATE_DRAGGING) {
-                    // Offset dragged item.
-                    setTranslation(
-                            viewHolder,
-                            mLocation.left - viewHolder.itemView.getLeft(),
-                            mLocation.top - viewHolder.itemView.getTop());
+                    // Offset based on location.
+                    if (isTranslateEnabled()) {
+                        handleTranslation(viewHolder, mTracker.getStartLeft(), mTracker.getStartTop());
+                    }
 
                     // Swap with adjacent views if necessary.
-                    handleSwap(viewHolder);
+                    if (isSwapEnabled()) {
+                        handleSwap(viewHolder);
+                    }
                 }
 
-                // Handle scrolling when on the edges.
-                handleScroll(viewHolder, mState != STATE_DRAGGING);
+                handleScroll(viewHolder, mState != STATE_DRAGGING || !isScrollEnabled());
             }
         }
+    }
+
+    /**
+     * Offsets the dragged view based on the touch position, clamping its location to the parent.
+     */
+    private void handleTranslation(@NonNull RecyclerView.ViewHolder viewHolder, int startLeft, int startTop) {
+        int width = viewHolder.itemView.getWidth();
+        int height = viewHolder.itemView.getHeight();
+        int maxLeft = mRecyclerView.getWidth() - width;
+        int maxTop = mRecyclerView.getHeight() - height;
+
+        int left = MathUtils.clamp(startLeft + (mTouchCurrentX - mTouchStartX), 0, maxLeft);
+        int top = MathUtils.clamp(startTop + (mTouchCurrentY - mTouchStartY), 0, maxTop);
+
+        setTranslation(viewHolder, left - viewHolder.itemView.getLeft(), top - viewHolder.itemView.getTop());
     }
 
     private void setTranslation(@NonNull RecyclerView.ViewHolder viewHolder, float translationX, float translationY) {
@@ -396,93 +462,117 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
     }
 
     /**
-     * Updates the location using the touch position relative to start.
+     * Swaps {@code viewHolder} whenever it overlaps the boundaries of another {@link RecyclerView.ViewHolder}.
      */
-    private void updateLocation(@Nullable RecyclerView.ViewHolder viewHolder) {
-        int left = mStartLeft + (mTouchCurrentX - mTouchStartX);
-        int top = mStartTop + (mTouchCurrentY - mTouchStartY);
-
-        if (viewHolder != null) {
-            int width = viewHolder.itemView.getWidth();
-            int height = viewHolder.itemView.getHeight();
-            int minLeft = mRecyclerView.getPaddingLeft();
-            int maxLeft = mRecyclerView.getWidth() - mRecyclerView.getPaddingRight() - width;
-            int minTop = mRecyclerView.getPaddingTop();
-            int maxTop = mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom() - height;
-
-            left = MathUtils.clamp(left, minLeft, maxLeft);
-            top = MathUtils.clamp(top, minTop, maxTop);
+    private void handleSwap(@NonNull RecyclerView.ViewHolder viewHolder) {
+        int targetPosition = RecyclerView.NO_POSITION;
+        int position = mTracker.getPosition();
+        if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
+            if (mTouchDirectionX <= 0f) {
+                RecyclerView.ViewHolder left = mRecyclerView.findViewHolderForAdapterPosition(position - 1);
+                if (left != null && mTouchCurrentX < getViewCenterX(left.itemView)) {
+                    targetPosition = left.getAdapterPosition();
+                }
+            }
+            if (targetPosition == RecyclerView.NO_POSITION && mTouchDirectionX >= 0f) {
+                RecyclerView.ViewHolder right = mRecyclerView.findViewHolderForAdapterPosition(position + 1);
+                if (right != null && mTouchCurrentX > getViewCenterX(right.itemView)) {
+                    targetPosition = right.getAdapterPosition();
+                }
+            }
+        } else {
+            if (mTouchDirectionY <= 0f) {
+                RecyclerView.ViewHolder top = mRecyclerView.findViewHolderForAdapterPosition(position - 1);
+                if (top != null && mTouchCurrentY < getViewCenterY(top.itemView)) {
+                    targetPosition = top.getAdapterPosition();
+                }
+            }
+            if (targetPosition == RecyclerView.NO_POSITION && mTouchDirectionY >= 0f) {
+                RecyclerView.ViewHolder bottom = mRecyclerView.findViewHolderForAdapterPosition(position + 1);
+                if (bottom != null && mTouchCurrentY > getViewCenterY(bottom.itemView)) {
+                    targetPosition = bottom.getAdapterPosition();
+                }
+            }
         }
-
-        mLocation.offsetTo(left, top);
+        if (targetPosition != RecyclerView.NO_POSITION) {
+            int newPosition = mCallback.onDragTo(viewHolder, targetPosition);
+            if (newPosition != position) {
+                // Prevent unintended scrolling when swapping the very first and last views,
+                // when they act as anchor views. Not doing so triggers unintended scrolling.
+                if (mLayoutManager.getReverseLayout()) {
+                    int lastPosition = getItemCount() - 1;
+                    if (position == lastPosition || newPosition == lastPosition) {
+                        mLayoutManager.scrollToPosition(lastPosition);
+                    }
+                } else if (position == 0 || newPosition == 0) {
+                    mLayoutManager.scrollToPosition(0);
+                }
+            }
+        }
     }
 
     /**
-     * Scrolls the {@link RecyclerView} when close to the edges and swapping views. Scrolling starts when the
-     * {@link androidx.recyclerview.widget.RecyclerView.ViewHolder} is width / height away from the edge,
-     * and accelerates from there.
+     * Scrolls the {@link RecyclerView} when the touch is close to the edges. Scrolling starts when the touch is
+     * width / height (of the {@link androidx.recyclerview.widget.RecyclerView.ViewHolder}) away from the edge,
+     * and accelerates from there. Besides the touch event, the view itself needs to be on the correct "half" of the
+     * screen for scroll to start and accelerate.
      *
-     * @param decelerate if {@code true}, the scroll is decelerated regardless of the proximity to the edges.
+     * @param forceDecelerate if {@code true}, the scroll is decelerated regardless of the proximity to the edges.
      */
-    private void handleScroll(@NonNull RecyclerView.ViewHolder viewHolder, boolean decelerate) {
-        int scrollByX = 0;
-        int scrollByY = 0;
+    private void handleScroll(@NonNull RecyclerView.ViewHolder viewHolder, boolean forceDecelerate) {
+        float accelerateFraction = 0f;
         int direction;
-
+        View view = viewHolder.itemView;
         if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
-            direction = mLocation.centerX() < mRecyclerView.getWidth() / 2f ? -1 : 1;
-            if (!decelerate && canScrollHorizontally(direction)
-                    && Math.abs(viewHolder.itemView.getTranslationX()) < mRecyclerView.getWidth() / 2f) {
+            direction = mTouchCurrentX < mRecyclerView.getWidth() / 2f ? -1 : 1;
+            if (!forceDecelerate && canScrollHorizontally(direction)) {
                 if (direction == -1) {
-                    int left = mRecyclerView.getPaddingLeft();
-                    float boundaryLeft = left + mLocation.width();
-                    if (mLocation.left <= boundaryLeft) {
-                        updateScrollSpeedAccelerating(1 - ((mLocation.left - left) / (boundaryLeft - left)));
-                    } else {
-                        updateScrollSpeedDecelerating();
+                    float boundaryLeft = mScrollMargin;
+                    if (mTouchCurrentX <= boundaryLeft
+                            && getViewCenterX(view) < mRecyclerView.getWidth() / 2
+                            && mTouchDirectionX <= 0f) {
+                        accelerateFraction = -((mTouchCurrentX - boundaryLeft) / mScrollMargin);
                     }
                 } else {
-                    int right = mRecyclerView.getWidth() - mRecyclerView.getPaddingRight();
-                    float boundaryRight = right - mLocation.width();
-                    if (mLocation.right >= boundaryRight) {
-                        updateScrollSpeedAccelerating(1 - ((right - mLocation.right) / (right - boundaryRight)));
-                    } else {
-                        updateScrollSpeedDecelerating();
+                    float boundaryRight = mRecyclerView.getWidth() - mScrollMargin;
+                    if (mTouchCurrentX >= boundaryRight
+                            && getViewCenterX(view) > mRecyclerView.getWidth() / 2
+                            && mTouchDirectionX >= 0f) {
+                        accelerateFraction = (mTouchCurrentX - boundaryRight) / mScrollMargin;
                     }
                 }
-            } else {
-                updateScrollSpeedDecelerating();
             }
-            scrollByX = (int) mScrollSpeed;
         } else {
-            direction = mLocation.centerY() < mRecyclerView.getHeight() / 2f ? -1 : 1;
-            if (!decelerate && canScrollVertically(direction)
-                    && Math.abs(viewHolder.itemView.getTranslationY()) < mRecyclerView.getHeight() / 2f) {
+            direction = mTouchCurrentY < mRecyclerView.getHeight() / 2f ? -1 : 1;
+            if (!forceDecelerate && canScrollVertically(direction)) {
                 if (direction == -1) {
-                    int top = mRecyclerView.getPaddingTop();
-                    float boundaryTop = top + mLocation.height();
-                    if (mLocation.top <= boundaryTop) {
-                        updateScrollSpeedAccelerating(1 - ((mLocation.top - top) / (boundaryTop - top)));
-                    } else {
-                        updateScrollSpeedDecelerating();
+                    float boundaryTop = mScrollMargin;
+                    if (mTouchCurrentY <= boundaryTop
+                            && getViewCenterY(view) < mRecyclerView.getHeight() / 2
+                            && mTouchDirectionY <= 0f) {
+                        accelerateFraction = -((mTouchCurrentY - boundaryTop) / mScrollMargin);
                     }
                 } else {
-                    int bottom = mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom();
-                    float boundaryBottom = bottom - mLocation.height();
-                    if (mLocation.bottom >= boundaryBottom) {
-                        updateScrollSpeedAccelerating(1 - ((bottom - mLocation.bottom) / (bottom - boundaryBottom)));
-                    } else {
-                        updateScrollSpeedDecelerating();
+                    float boundaryBottom = mRecyclerView.getHeight() - mScrollMargin;
+                    if (mTouchCurrentY >= boundaryBottom
+                            && getViewCenterY(view) > mRecyclerView.getHeight() / 2
+                            && mTouchDirectionY >= 0f) {
+                        accelerateFraction = (mTouchCurrentY - boundaryBottom) / mScrollMargin;
                     }
                 }
-            } else {
-                updateScrollSpeedDecelerating();
             }
-            scrollByY = (int) mScrollSpeed;
         }
-
-        if (scrollByX > 0 || scrollByY > 0) {
-            mRecyclerView.scrollBy(scrollByX * direction, scrollByY * direction);
+        if (accelerateFraction > 0f) {
+            updateScrollSpeedAccelerating(accelerateFraction);
+        } else {
+            updateScrollSpeedDecelerating();
+        }
+        if (mScrollSpeed > 0f) {
+            if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
+                mRecyclerView.scrollBy((int) mScrollSpeed * direction, 0);
+            } else {
+                mRecyclerView.scrollBy(0, (int) mScrollSpeed * direction);
+            }
         }
     }
 
@@ -560,7 +650,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
      * Updates the scroll speed for an accelerating motion, up to {@code mScrollSpeedMax}.
      */
     private void updateScrollSpeedAccelerating(float fraction) {
-        mScrollSpeed = Math.min(mScrollSpeed * 1.04f, mScrollSpeedMax * fraction);
+        mScrollSpeed = Math.min(mScrollSpeed * 1.03f, mScrollSpeedMax * Math.min(fraction, 1f));
         mScrollSpeed = Math.max(mScrollSpeed, 1f);
     }
 
@@ -569,55 +659,6 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
      */
     private void updateScrollSpeedDecelerating() {
         mScrollSpeed = mScrollSpeed > 1f ? mScrollSpeed / 1.18f : 0f;
-    }
-
-    /**
-     * Swaps {@code viewHolder} whenever it overlaps the boundaries of another {@link RecyclerView.ViewHolder}.
-     */
-    private void handleSwap(@NonNull RecyclerView.ViewHolder viewHolder) {
-        RecyclerView.ViewHolder target = null;
-        int position = mTracker.getPosition();
-        if (mLayoutManager.getOrientation() == LinearLayoutManager.HORIZONTAL) {
-            if (mTouchDirectionX < 0) {
-                RecyclerView.ViewHolder left = mRecyclerView.findViewHolderForAdapterPosition(position - 1);
-                if (left != null && left.itemView.getLeft() >= mLocation.left) {
-                    target = left;
-                }
-            } else if (mTouchDirectionX > 0) {
-                RecyclerView.ViewHolder right = mRecyclerView.findViewHolderForAdapterPosition(position + 1);
-                if (right != null && right.itemView.getRight() <= mLocation.right) {
-                    target = right;
-                }
-            }
-        } else {
-            if (mTouchDirectionY < 0) {
-                RecyclerView.ViewHolder top = mRecyclerView.findViewHolderForAdapterPosition(position - 1);
-                if (top != null && top.itemView.getTop() >= mLocation.top) {
-                    target = top;
-                }
-            } else if (mTouchDirectionY > 0) {
-                RecyclerView.ViewHolder bottom = mRecyclerView.findViewHolderForAdapterPosition(position + 1);
-                if (bottom != null && bottom.itemView.getBottom() <= mLocation.bottom) {
-                    target = bottom;
-                }
-            }
-        }
-        int targetPosition;
-        if (target != null && (targetPosition = target.getAdapterPosition()) != RecyclerView.NO_POSITION) {
-            int newPosition = mCallback.onDragTo(viewHolder, targetPosition);
-            if (newPosition != position) {
-                // Prevent unintended scrolling when swapping the very first and last views,
-                // when they act as anchor views. Not doing so triggers unintended scrolling.
-                if (mLayoutManager.getReverseLayout()) {
-                    int lastPosition = getItemCount() - 1;
-                    if (position == lastPosition || newPosition == lastPosition) {
-                        mLayoutManager.scrollToPosition(lastPosition);
-                    }
-                } else if (position == 0 || newPosition == 0) {
-                    mLayoutManager.scrollToPosition(0);
-                }
-            }
-        }
     }
 
     @Override
@@ -648,12 +689,24 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         }
     }
 
+    private int getViewCenterX(View view) {
+        return view.getLeft() + view.getWidth() / 2 + (int) view.getTranslationX();
+    }
+
+    private int getViewCenterY(View view) {
+        return view.getTop() + view.getHeight() / 2 + (int) view.getTranslationY();
+    }
+
     /**
      * Keeps track of the drag & drop position and holder across swaps, scrolls and adapter changes.
      */
     private class Tracker extends RecyclerView.AdapterDataObserver {
         private int position;
         private RecyclerView.ViewHolder viewHolder;
+
+        boolean created = false;
+        int startLeft;
+        int startTop;
 
         Tracker(int position) {
             this.position = position;
@@ -667,6 +720,20 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         }
 
         /**
+         * @return the view's left when it was setup for the first time.
+         */
+        int getStartLeft() {
+            return startLeft;
+        }
+
+        /**
+         * @return the view's top when it was setup for the first time.
+         */
+        int getStartTop() {
+            return startTop;
+        }
+
+        /**
          * @return the view holder being dragged, updated automatically through adapter changes, swaps, scrolls, etc.
          */
         RecyclerView.ViewHolder getViewHolder() {
@@ -674,40 +741,43 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 teardownViewHolder(false);
             }
             if (viewHolder == null) {
-                setupViewHolder(false);
+                boolean wasCreated = created;
+                setupViewHolder(!created);
+                if (!wasCreated && created) {
+                    startLeft = viewHolder.itemView.getLeft();
+                    startTop = viewHolder.itemView.getTop();
+                }
             }
-            if (viewHolder == null && !mRecyclerView.isLayoutRequested()) {
+            if (viewHolder == null && !mRecyclerView.hasPendingAdapterUpdates() && !mRecyclerView.isLayoutRequested()) {
                 mRecyclerView.scrollToPosition(position);
             }
             return viewHolder;
-        }
-
-        RecyclerView.ViewHolder createViewHolder() {
-            return setupViewHolder(true);
         }
 
         void destroyViewHolder() {
             teardownViewHolder(true);
         }
 
-        private RecyclerView.ViewHolder setupViewHolder(boolean create) {
+        private void setupViewHolder(boolean create) {
             viewHolder = mRecyclerView.findViewHolderForAdapterPosition(position);
             if (viewHolder != null) {
                 mCallback.onDragStarted(viewHolder, create);
+                created |= create;
             }
-            return viewHolder;
         }
 
         private void teardownViewHolder(boolean destroy) {
             if (viewHolder != null) {
                 setTranslation(viewHolder, 0f, 0f);
                 mCallback.onDragStopped(viewHolder, destroy);
+                created &= !destroy;
                 viewHolder = null;
             }
         }
 
         @Override
         public void onChanged() {
+            Log.w(LOG_TAG, "Drag and drop cancelled due to unknown position following notifyDataSetChanged() call");
             stop(true);
         }
 
@@ -721,6 +791,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
             if (position >= positionStart && position < positionStart + itemCount) {
+                Log.w(LOG_TAG, "Drag and drop cancelled due to dragged position being removed");
                 stop(true);
             } else if (positionStart < position) {
                 position -= itemCount;
@@ -753,18 +824,15 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
         void onDragStarted(@NonNull RecyclerView.ViewHolder holder, boolean create);
 
         /**
-         * A drag has moved. The callback determines whether the drag should visually continue on screen
-         * (return {@code true}), simply be tracked (return {@code false}), or stopped (call {@link #stop()}).
+         * A drag has moved. Implementations can trigger certain behaviors or workflows based off of the coordinates.
          *
-         * Most implementations should simply return {@code true}. This becomes useful when implementations want to
-         * trigger certain behaviors or workflows based off of dragging coordinates. Examples include indenting while
-         * reordering, handing off control to Android's native drag & drop when dragging out of bounds, etc.
+         * Examples include adjusting the translation, swap or scroll flags, indenting while reordering,
+         * handing off control to Android's native drag & drop when dragging out of bounds, etc.
          *
          * @param x x-coordinate of the drag, in the parent's coordinates.
          * @param y y-coordinate of the drag, in the parent's coordinates.
-         * @return {@code true} for the {@code holder} to drag on screen, {@code false} to track without visual changes.
          */
-        boolean onDragMoved(@NonNull RecyclerView.ViewHolder holder, int x, int y);
+        void onDragMoved(@NonNull RecyclerView.ViewHolder holder, int x, int y);
 
         /**
          * Move {@code holder} to {@code adapterPosition} and notify the {@link RecyclerView.Adapter}.

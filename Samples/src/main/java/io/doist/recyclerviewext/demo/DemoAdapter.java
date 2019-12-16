@@ -29,9 +29,11 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
 
     private Selector mSelector;
 
+    private List<Object> mDataset;
+
     private DragDropHelper mDragDropHelper;
 
-    private List<Object> mDataset;
+    private Rect mParentBoundsRect = new Rect();
 
     DemoAdapter(int orientation) {
         super();
@@ -117,10 +119,12 @@ public class DemoAdapter extends AnimatedAdapter<BindableViewHolder>
     }
 
     @Override
-    public boolean onDragMoved(@NonNull RecyclerView.ViewHolder holder, int x, int y) {
-        Rect rect = new Rect();
-        ((View) holder.itemView.getParent()).getDrawingRect(rect);
-        return rect.contains(x, y);
+    public void onDragMoved(@NonNull RecyclerView.ViewHolder holder, int x, int y) {
+        ((View) holder.itemView.getParent()).getDrawingRect(mParentBoundsRect);
+        boolean outOfBounds = !mParentBoundsRect.contains(x, y);
+        mDragDropHelper.setTranslateEnabled(!outOfBounds);
+        mDragDropHelper.setSwapEnabled(!outOfBounds);
+        mDragDropHelper.setScrollEnabled(!outOfBounds);
     }
 
     @Override
