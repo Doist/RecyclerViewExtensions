@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * Tracks multiple selections, similarly to {@link AbsListView#CHOICE_MODE_SINGLE}. Calls to
+ * Tracks a single selection, similarly to {@link AbsListView#CHOICE_MODE_SINGLE}. Calls to
  * {@link RecyclerView.Adapter#notifyItemChanged(int)} are done automatically.
  *
  * Optionally, call {@link #bind(RecyclerView.ViewHolder, boolean)} from your
