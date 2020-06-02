@@ -6,9 +6,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * Tracks a single selection, similarly to {@link AbsListView#CHOICE_MODE_SINGLE}. Calls to
+ * Tracks multiple selections, similarly to {@link AbsListView#CHOICE_MODE_SINGLE}. Calls to
  * {@link RecyclerView.Adapter#notifyItemChanged(int)} are done automatically.
- *
+ * <p>
  * Optionally, call {@link #bind(RecyclerView.ViewHolder, boolean)} from your
  * {@link RecyclerView.Adapter#onBindViewHolder(RecyclerView.ViewHolder, int)} to have the
  * {@link android.R.attr#state_activated} reflect the selected state.
@@ -17,7 +17,8 @@ public class SingleSelector extends Selector {
     private long mSelectedId;
     private boolean mSelected;
 
-    public SingleSelector(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.Adapter adapter) {
+    public SingleSelector(@NonNull RecyclerView recyclerView,
+                          @NonNull RecyclerView.Adapter adapter) {
         super(recyclerView, adapter);
     }
 
@@ -39,9 +40,7 @@ public class SingleSelector extends Selector {
                 notifyItemChanged(mSelectedId);
             }
 
-            if (mObserver != null) {
-                mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
-            }
+            onSelectionChanged(getSelectedIds(), previousSelectedIds);
         }
     }
 
@@ -69,9 +68,7 @@ public class SingleSelector extends Selector {
         if (hadSelection) {
             notifyItemChanged(mSelectedId);
 
-            if (mObserver != null) {
-                mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
-            }
+            onSelectionChanged(getSelectedIds(), previousSelectedIds);
         }
     }
 }

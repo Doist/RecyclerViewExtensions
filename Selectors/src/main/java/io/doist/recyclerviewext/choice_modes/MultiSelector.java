@@ -36,9 +36,7 @@ public class MultiSelector extends Selector {
         if (changed) {
             notifyItemChanged(id);
 
-            if (mObserver != null) {
-                mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
-            }
+            onSelectionChanged(getSelectedIds(), previousSelectedIds);
         }
     }
 
@@ -74,8 +72,6 @@ public class MultiSelector extends Selector {
             notifyItemChanged(selectedId);
         }
 
-        if (hadSelections && mObserver != null) {
-            mObserver.onSelectionChanged(getSelectedIds(), previousSelectedIds);
-        }
+        onSelectionChanged(getSelectedIds(), previousSelectedIds);
     }
 }

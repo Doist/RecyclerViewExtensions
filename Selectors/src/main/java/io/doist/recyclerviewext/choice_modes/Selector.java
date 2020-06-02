@@ -24,7 +24,7 @@ public abstract class Selector {
     protected final RecyclerView mRecyclerView;
     protected final RecyclerView.Adapter mAdapter;
 
-    protected OnSelectionChangedListener mObserver;
+    private List<OnSelectionChangedListener> mObservers = new ArrayList<>();
 
     // Used internally to disable item change notifications.
     // All selection changes lead to these notifications and it can be undesirable or inefficient.
@@ -50,16 +50,32 @@ public abstract class Selector {
 
     public abstract void clearSelected();
 
-    public void setOnSelectionChangedListener(@Nullable OnSelectionChangedListener observer) {
-        mObserver = observer;
+    public void addOnSelectionChangedListener(@NonNull OnSelectionChangedListener observer) {
+        mObservers.add(observer);
+    }
+
+    public void removeOnSelectionChangedListener(@NonNull OnSelectionChangedListener observer) {
+        mObservers.remove(observer);
+    }
+
+    public void removeAllOnSelectionChangedListeners() {
+        mObservers.clear();
+    }
+
+    protected void onSelectionChanged(long[] selectedIds, long[] previousSelectedIds) {
+        for (int i = 0; i < mObservers.size(); i++) {
+            mObservers.get(i).onSelectionChanged(selectedIds, previousSelectedIds);
+        }
     }
 
     /**
-     * Binds the {@code holder} according to its selected state using {@link View#setActivated(boolean)}.
+     * Binds the {@code holder} according to its selected state using
+     * {@link View#setActivated(boolean)}.
      *
-     * @param jumpToCurrentState When set, the background will have its {@link Drawable#jumpToCurrentState()} called.
-     *                           In general, this should be true for full binds, and false for partial binds that
-     *                           contain {@link #PAYLOAD_SELECT}.
+     * @param jumpToCurrentState When set, the background will have its {@link
+     *                           Drawable#jumpToCurrentState()} called. In general, this should be
+     *                           true for full binds, and false for partial binds that contain
+     *                           {@link #PAYLOAD_SELECT}.
      */
     public boolean bind(@NonNull RecyclerView.ViewHolder holder, boolean jumpToCurrentState) {
         boolean isSelected = isSelected(holder.getItemId());
@@ -127,7 +143,8 @@ public abstract class Selector {
     }
 
     private class SelectorAdapterDataObserver extends RecyclerView.AdapterDataObserver {
-        private final DeselectMissingIdsRunnable mDeselectMissingIdsRunnable = new DeselectMissingIdsRunnable();
+        private final DeselectMissingIdsRunnable mDeselectMissingIdsRunnable =
+                new DeselectMissingIdsRunnable();
 
         @Override
         public void onChanged() {
