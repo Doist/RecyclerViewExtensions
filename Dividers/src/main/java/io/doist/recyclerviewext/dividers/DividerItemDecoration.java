@@ -19,9 +19,9 @@ import androidx.recyclerview.widget.RecyclerView;
  * the navigation drawer, pass in a {@link Dividers} implementation.
  */
 public class DividerItemDecoration extends RecyclerView.ItemDecoration {
-    private Drawable mDrawable;
+    protected Drawable mDrawable;
+    protected Dividers mDividers;
     private boolean mVertical;
-    private Dividers mDividers;
 
     public DividerItemDecoration(Context context) {
         this(context, true);
@@ -142,7 +142,8 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         }
     }
 
-    private void drawDivider(Canvas canvas, int left, int top, int right, int bottom, float alpha) {
+    protected void drawDivider(Canvas canvas, int left, int top, int right, int bottom,
+                               float alpha) {
         mDrawable.setAlpha((int) (alpha * 255 + 0.5f));
         mDrawable.setBounds(left, top, right, bottom);
         mDrawable.draw(canvas);
@@ -163,7 +164,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         }
     }
 
-    private boolean hasDivider(RecyclerView parent, View child) {
+    protected boolean hasDivider(RecyclerView parent, View child) {
         int position = parent.getChildLayoutPosition(child);
         return position != RecyclerView.NO_POSITION && (mDividers == null || mDividers.hasDivider(position));
     }
