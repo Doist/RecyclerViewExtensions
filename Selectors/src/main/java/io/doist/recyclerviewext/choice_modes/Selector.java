@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 public abstract class Selector {
     public static final Object PAYLOAD_SELECT = new Object();
 
-    private static final String KEY_SELECTOR_SELECTED_IDS = ":selector_selected_ids";
+    public static final String KEY_SELECTOR_SELECTED_IDS = ":selector_selected_ids";
 
     protected final RecyclerView mRecyclerView;
     protected final RecyclerView.Adapter mAdapter;
