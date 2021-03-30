@@ -1,2 +1,3 @@
-include ':Animations', ':Dividers', ':DragDrop', ':ClickListeners', ':Flippers', ':Selectors', ':StickyHeaders', ':PinchZoom'
+include ':Animations', ':Dividers', ':DragDrop', ':ClickListeners', ':Flippers',
+        ':FlippersDelayed', ':Selectors', ':StickyHeaders', ':PinchZoom'
 include ':Samples'
