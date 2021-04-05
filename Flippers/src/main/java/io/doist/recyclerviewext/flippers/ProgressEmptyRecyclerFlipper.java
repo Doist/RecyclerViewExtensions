@@ -7,7 +7,8 @@ import androidx.annotation.IdRes;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * Similar to {@link EmptyRecyclerFlipper}, but also handles a progress view through {@link #setLoading(boolean)}.
+ * Similar to {@link EmptyRecyclerFlipper}, but also handles a progress view through {@link
+ * #setLoading(boolean)}.
  */
 public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
     private final View mProgressView;
@@ -22,36 +23,43 @@ public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
         this(container, android.R.id.list, android.R.id.empty, progressViewId);
     }
 
-    public ProgressEmptyRecyclerFlipper(ViewGroup container, @IdRes int recyclerViewId, @IdRes int emptyViewId,
+    public ProgressEmptyRecyclerFlipper(ViewGroup container,
+                                        @IdRes int recyclerViewId,
+                                        @IdRes int emptyViewId,
+                                        @IdRes int progressViewId,
+                                        Flipper flipper) {
+        this((RecyclerView) container.findViewById(recyclerViewId),
+             container.findViewById(emptyViewId),
+             container.findViewById(progressViewId),
+             flipper
+            );
+    }
+
+    public ProgressEmptyRecyclerFlipper(ViewGroup container,
+                                        @IdRes int recyclerViewId,
+                                        @IdRes int emptyViewId,
                                         @IdRes int progressViewId) {
         this((RecyclerView) container.findViewById(recyclerViewId),
              container.findViewById(emptyViewId),
-             container.findViewById(progressViewId));
+             container.findViewById(progressViewId),
+             new Flipper()
+            );
     }
 
-    public ProgressEmptyRecyclerFlipper(RecyclerView recyclerView, View emptyView, View progressView) {
-        super(recyclerView, emptyView);
+    public ProgressEmptyRecyclerFlipper(RecyclerView recyclerView,
+                                        View emptyView,
+                                        View progressView) {
+        this(recyclerView, emptyView, progressView, new Flipper());
+    }
+
+    public ProgressEmptyRecyclerFlipper(RecyclerView recyclerView,
+                                        View emptyView,
+                                        View progressView,
+                                        Flipper flipper) {
+        super(recyclerView, emptyView, flipper);
+
         mProgressView = progressView;
         mCurrentView = recyclerView.getVisibility() == View.VISIBLE ? recyclerView : emptyView;
-    }
-
-    public void setLoading(boolean loading) {
-        setLoading(loading, true);
-    }
-
-    public void setLoadingNoAnimation(boolean loading) {
-        setLoading(loading, false);
-    }
-
-    private void setLoading(boolean loading, boolean animate) {
-        if (mLoading != loading) {
-            mLoading = loading;
-            if (mLoading) {
-                super.replaceInternal(mCurrentView, mProgressView, animate);
-            } else {
-                super.replaceInternal(mProgressView, mCurrentView, animate);
-            }
-        }
     }
 
     @Override
@@ -61,14 +69,91 @@ public class ProgressEmptyRecyclerFlipper extends EmptyRecyclerFlipper {
             mProgressView.setVisibility(View.GONE);
             mLoading = false;
         }
+
         return monitored;
     }
 
+    public void setLoading(boolean isLoading) {
+        setLoading(isLoading, true);
+    }
+
+    public void setLoadingNoAnimation(boolean isLoading) {
+        setLoading(isLoading, false);
+    }
+
     @Override
-    protected void replaceInternal(View outView, View inView, boolean animate) {
+    protected void onFlipCompleted(View outView, View inView, boolean animate) {
         if (!mLoading) {
-            super.replaceInternal(outView, inView, animate);
+            super.onFlipCompleted(outView, inView, animate);
         }
         mCurrentView = inView;
+    }
+
+    protected void onLoadingFlipped(View outView, View inView, boolean animate) {
+        super.onFlipCompleted(outView, inView, animate);
+
+        if (mCurrentView != getRecyclerView()) {
+            getRecyclerView().setVisibility(View.GONE);
+        }
+        if (mCurrentView != getEmptyView()) {
+            getEmptyView().setVisibility(View.GONE);
+        }
+    }
+
+    protected View getProgressView() {
+        return mProgressView;
+    }
+
+    protected View getCurrentView() {
+        return mCurrentView;
+    }
+
+    protected void setCurrentView(View currentView) {
+        mCurrentView = currentView;
+    }
+
+    protected void setLoadingVisible(boolean isLoading) {
+        mLoading = isLoading;
+    }
+
+    protected boolean isLoadingVisible() {
+        return mLoading;
+    }
+
+    private void setLoading(boolean loading, boolean animate) {
+        if (mLoading != loading) {
+            mLoading = loading;
+            if (mLoading) {
+                showLoading(animate);
+            } else {
+                hideLoading(animate);
+            }
+        }
+    }
+
+    private void showLoading(final boolean animate) {
+        flipLoading(mCurrentView, mProgressView, animate);
+    }
+
+    private void hideLoading(final boolean animate) {
+        flipLoading(mProgressView, mCurrentView, animate);
+    }
+
+    private void flipLoading(final View outView, final View inView, final boolean animate) {
+        if (animate) {
+            getFlipper().replace(outView, inView, new Runnable() {
+                @Override
+                public void run() {
+                    onLoadingFlipped(outView, inView, true);
+                }
+            });
+        } else {
+            getFlipper().replaceNoAnimation(outView, inView, new Runnable() {
+                @Override
+                public void run() {
+                    onLoadingFlipped(outView, inView, false);
+                }
+            });
+        }
     }
 }

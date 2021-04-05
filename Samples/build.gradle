@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 30
 
     defaultConfig {
         applicationId "io.doist.recyclerviewext"
         minSdkVersion 16
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
     }
@@ -20,14 +19,16 @@ android {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:1.0.2"
-    implementation "androidx.recyclerview:recyclerview:1.0.0"
+    implementation "androidx.appcompat:appcompat:1.2.0"
+    implementation "androidx.recyclerview:recyclerview:1.1.0"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
 
     implementation project(':Animations')
     implementation project(':ClickListeners')
     implementation project(':Dividers')
     implementation project(':DragDrop')
     implementation project(':Flippers')
+    implementation project(':FlippersDelayed')
     implementation project(':Selectors')
     implementation project(':StickyHeaders')
     implementation project(':PinchZoom')

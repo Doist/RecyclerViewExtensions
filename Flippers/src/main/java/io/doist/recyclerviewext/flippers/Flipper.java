@@ -19,11 +19,26 @@ public class Flipper {
     }
 
     public void replace(View outView, View inView) {
+        replace(outView, inView, null);
+    }
+
+    public void replace(View outView, View inView, Runnable afterReplaceAction) {
         replaceInternal(outView, inView, true);
+        if (afterReplaceAction != null) {
+            afterReplaceAction.run();
+        }
     }
 
     public void replaceNoAnimation(View outView, View inView) {
+        replaceNoAnimation(outView, inView, null);
+    }
+
+    public void replaceNoAnimation(View outView, View inView,
+                                   Runnable afterReplaceAction) {
         replaceInternal(outView, inView, false);
+        if (afterReplaceAction != null) {
+            afterReplaceAction.run();
+        }
     }
 
     protected void replaceInternal(View outView, View inView, boolean animate) {

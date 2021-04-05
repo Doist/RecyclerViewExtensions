@@ -19,7 +19,7 @@ import io.doist.recyclerviewext.choice_modes.Selector;
 import io.doist.recyclerviewext.choice_modes.SingleSelector;
 import io.doist.recyclerviewext.dividers.DividerItemDecoration;
 import io.doist.recyclerviewext.dragdrop.DragDropHelper;
-import io.doist.recyclerviewext.flippers.ProgressEmptyRecyclerFlipper;
+import io.doist.recyclerviewext.flippers.DelayedProgressEmptyRecyclerFlipper;
 import io.doist.recyclerviewext.pinch_zoom.PinchZoomItemTouchListener;
 import io.doist.recyclerviewext.sticky_headers.StickyHeadersLinearLayoutManager;
 
@@ -28,7 +28,7 @@ public class DemoActivity extends AppCompatActivity
     private ViewGroup mContainer;
     private RecyclerView mRecyclerView;
     private DemoAdapter mAdapter;
-    private ProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
+    private DelayedProgressEmptyRecyclerFlipper mProgressEmptyRecyclerFlipper;
     private DragDropHelper mDragDropHelper;
 
     private Selector mSelector;
@@ -40,17 +40,24 @@ public class DemoActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_demo);
 
         mContainer = findViewById(R.id.container);
         mRecyclerView = findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemAnimator(new WithLayerItemAnimator(true));
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, R.drawable.divider_light, true));
-        mRecyclerView.addOnItemTouchListener(new PinchZoomItemTouchListener(this, this));
+        mRecyclerView.addItemDecoration(
+                new DividerItemDecoration(this, R.drawable.divider_light, true));
+        mRecyclerView.addOnItemTouchListener(
+                new PinchZoomItemTouchListener(this, this));
 
-        mProgressEmptyRecyclerFlipper =
-                new ProgressEmptyRecyclerFlipper(mContainer, R.id.recycler_view, R.id.empty, R.id.loading);
+        mProgressEmptyRecyclerFlipper = new DelayedProgressEmptyRecyclerFlipper(
+                mContainer,
+                R.id.recycler_view,
+                R.id.empty,
+                R.id.loading,
+                this);
         mDragDropHelper = new DragDropHelper();
 
         setLayout(mLayoutCount);
@@ -67,7 +74,7 @@ public class DemoActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_load:
-                mProgressEmptyRecyclerFlipper.setLoading(true);
+                mProgressEmptyRecyclerFlipper.setDelayedLoading(true);
                 mContainer.postDelayed(new Runnable() {
                     @Override
                     public void run() {

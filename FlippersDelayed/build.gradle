@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 30
@@ -12,6 +13,8 @@ android {
 }
 
 dependencies {
-    // Check DragDropHelper when updating.
     implementation "androidx.recyclerview:recyclerview:1.1.0"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
+
+    implementation project(':Flippers')
 }
