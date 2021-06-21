@@ -73,6 +73,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         return view == mStickyHeader;
     }
 
+    public boolean hasStickyHeader() {
+        return mStickyHeader != null;
+    }
+
     @Override
     public void onAttachedToWindow(RecyclerView view) {
         super.onAttachedToWindow(view);
