@@ -783,7 +783,7 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            if (positionStart < position) {
+            if (positionStart <= position) {
                 position += itemCount;
             }
         }
