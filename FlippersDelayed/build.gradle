@@ -14,7 +14,7 @@ android {
 
 dependencies {
     implementation "androidx.recyclerview:recyclerview:1.2.1"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
 
     implementation project(':Flippers')
 }
