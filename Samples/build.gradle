@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "io.doist.recyclerviewext"
@@ -21,7 +21,7 @@ android {
 dependencies {
     implementation "androidx.appcompat:appcompat:1.3.0"
     implementation "androidx.recyclerview:recyclerview:1.2.1"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
 
     implementation project(':Animations')
     implementation project(':ClickListeners')
