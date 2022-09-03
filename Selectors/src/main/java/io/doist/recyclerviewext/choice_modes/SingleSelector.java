@@ -2,6 +2,8 @@ package io.doist.recyclerviewext.choice_modes;
 
 import android.widget.AbsListView;
 
+import java.util.Objects;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -14,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * {@link android.R.attr#state_activated} reflect the selected state.
  */
 public class SingleSelector extends Selector {
-    private long mSelectedId;
+    private String mSelectedId;
     private boolean mSelected;
 
     public SingleSelector(@NonNull RecyclerView recyclerView,
@@ -22,17 +24,17 @@ public class SingleSelector extends Selector {
         super(recyclerView, adapter);
     }
 
-    public void setSelected(long id, boolean selected) {
-        long[] previousSelectedIds = getSelectedIds();
+    public void setSelected(@NonNull String id, boolean selected) {
+        String[] previousSelectedIds = getSelectedIds();
         boolean oldSelected = mSelected;
-        long oldSelectedId = mSelectedId;
+        String oldSelectedId = mSelectedId;
 
         mSelected = selected;
         if (mSelected) {
             mSelectedId = id;
         }
 
-        if (mSelected != oldSelected || oldSelectedId != mSelectedId) {
+        if (mSelected != oldSelected || !Objects.equals(oldSelectedId, mSelectedId)) {
             if (oldSelected) {
                 notifyItemChanged(oldSelectedId);
             }
@@ -44,13 +46,13 @@ public class SingleSelector extends Selector {
         }
     }
 
-    public boolean isSelected(long id) {
-        return mSelected && mSelectedId == id;
+    public boolean isSelected(@NonNull String id) {
+        return mSelected && Objects.equals(mSelectedId, id);
     }
 
     @Override
-    public long[] getSelectedIds() {
-        return mSelected ? new long[]{mSelectedId} : new long[0];
+    public String[] getSelectedIds() {
+        return mSelected ? new String[]{mSelectedId} : new String[0];
     }
 
     @Override
@@ -60,7 +62,7 @@ public class SingleSelector extends Selector {
 
     @Override
     public void clearSelected() {
-        long[] previousSelectedIds = getSelectedIds();
+        String[] previousSelectedIds = getSelectedIds();
         boolean hadSelection = mSelected;
 
         mSelected = false;

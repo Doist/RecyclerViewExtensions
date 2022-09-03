@@ -18,15 +18,15 @@ import androidx.recyclerview.widget.RecyclerView;
  * {@link android.R.attr#state_activated} reflect the selected state.
  */
 public class MultiSelector extends Selector {
-    private final Set<Long> mSelectedIds = new LinkedHashSet<>();
+    private final Set<String> mSelectedIds = new LinkedHashSet<>();
 
     public MultiSelector(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.Adapter adapter) {
         super(recyclerView, adapter);
     }
 
-    public void setSelected(long id, boolean selected) {
+    public void setSelected(@NonNull String id, boolean selected) {
         boolean changed;
-        long[] previousSelectedIds = getSelectedIds();
+        String[] previousSelectedIds = getSelectedIds();
         if (selected) {
             changed = mSelectedIds.add(id);
         } else {
@@ -40,15 +40,15 @@ public class MultiSelector extends Selector {
         }
     }
 
-    public boolean isSelected(long id) {
+    public boolean isSelected(@NonNull String id) {
         return mSelectedIds.contains(id);
     }
 
     @Override
-    public long[] getSelectedIds() {
-        long[] selectedIds = new long[mSelectedIds.size()];
+    public String[] getSelectedIds() {
+        String[] selectedIds = new String[mSelectedIds.size()];
         int i = 0;
-        for (Long selectedId : mSelectedIds) {
+        for (String selectedId : mSelectedIds) {
             selectedIds[i++] = selectedId;
         }
         return selectedIds;
@@ -61,12 +61,12 @@ public class MultiSelector extends Selector {
 
     @Override
     public void clearSelected() {
-        long[] previousSelectedIds = getSelectedIds();
+        String[] previousSelectedIds = getSelectedIds();
         boolean hadSelections = getSelectedCount() > 0;
 
-        Iterator<Long> it = mSelectedIds.iterator();
+        Iterator<String> it = mSelectedIds.iterator();
         while (it.hasNext()) {
-            long selectedId = it.next();
+            String selectedId = it.next();
             it.remove();
 
             notifyItemChanged(selectedId);

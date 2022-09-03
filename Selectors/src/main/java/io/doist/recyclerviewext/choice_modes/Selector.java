@@ -6,8 +6,11 @@ import android.view.View;
 import android.widget.AbsListView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,15 +39,15 @@ public abstract class Selector {
         mAdapter.registerAdapterDataObserver(new SelectorAdapterDataObserver());
     }
 
-    public abstract void setSelected(long id, boolean selected);
+    public abstract void setSelected(@NonNull String id, boolean selected);
 
-    public void toggleSelected(long id) {
+    public void toggleSelected(@NonNull String id) {
         setSelected(id, !isSelected(id));
     }
 
-    public abstract boolean isSelected(long id);
+    public abstract boolean isSelected(@NonNull String id);
 
-    public abstract long[] getSelectedIds();
+    public abstract String[] getSelectedIds();
 
     public abstract int getSelectedCount();
 
@@ -62,7 +65,7 @@ public abstract class Selector {
         mObservers.clear();
     }
 
-    protected void onSelectionChanged(long[] selectedIds, long[] previousSelectedIds) {
+    protected void onSelectionChanged(String[] selectedIds, String[] previousSelectedIds) {
         for (int i = 0; i < mObservers.size(); i++) {
             mObservers.get(i).onSelectionChanged(selectedIds, previousSelectedIds);
         }
@@ -78,7 +81,8 @@ public abstract class Selector {
      *                           {@link #PAYLOAD_SELECT}.
      */
     public boolean bind(@NonNull RecyclerView.ViewHolder holder, boolean jumpToCurrentState) {
-        boolean isSelected = isSelected(holder.getItemId());
+        // TODO(Sergey): RecycleView IDs
+        boolean isSelected = isSelected(Long.toString(holder.getItemId()));
         holder.itemView.setActivated(isSelected);
 
         if (jumpToCurrentState) {
@@ -93,15 +97,15 @@ public abstract class Selector {
     }
 
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putLongArray(KEY_SELECTOR_SELECTED_IDS, getSelectedIds());
+        outState.putStringArray(KEY_SELECTOR_SELECTED_IDS, getSelectedIds());
     }
 
     public void onRestoreInstanceState(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            long[] selectedIds = savedInstanceState.getLongArray(KEY_SELECTOR_SELECTED_IDS);
+            String[] selectedIds = savedInstanceState.getStringArray(KEY_SELECTOR_SELECTED_IDS);
             if (selectedIds != null) {
                 mNotifyItemChanges = false;
-                for (long selectedId : selectedIds) {
+                for (String selectedId : selectedIds) {
                     setSelected(selectedId, true);
                 }
                 mNotifyItemChanges = true;
@@ -109,13 +113,15 @@ public abstract class Selector {
         }
     }
 
-    protected void notifyItemChanged(long id) {
+    protected void notifyItemChanged(@NonNull String id) {
         if (mNotifyItemChanges) {
             int position = RecyclerView.NO_POSITION;
 
+            // TODO(Sergey): RecyclerView IDs
             // Look up the item position using findViewHolderForItemId().
             // This is fast and will work in most scenarios.
-            RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForItemId(id);
+            RecyclerView.ViewHolder holder =
+                    mRecyclerView.findViewHolderForItemId(Long.parseLong(id));
             if (holder != null) {
                 position = holder.getAdapterPosition();
             }
@@ -125,7 +131,8 @@ public abstract class Selector {
             // This is slower but prevents inconsistencies at the edges of the RecyclerView.
             if (position == RecyclerView.NO_POSITION) {
                 for (int i = 0; i < mAdapter.getItemCount(); i++) {
-                    if (mAdapter.getItemId(i) == id) {
+                    // TODO(Sergey): RecyclerView IDs
+                    if (Objects.equals(Long.toString(mAdapter.getItemId(i)), id)) {
                         position = i;
                         break;
                     }
@@ -139,7 +146,7 @@ public abstract class Selector {
     }
 
     public interface OnSelectionChangedListener {
-        void onSelectionChanged(long[] selectedIds, long[] previousSelectedIds);
+        void onSelectionChanged(String[] selectedIds, String[] previousSelectedIds);
     }
 
     private class SelectorAdapterDataObserver extends RecyclerView.AdapterDataObserver {
@@ -164,24 +171,23 @@ public abstract class Selector {
                 int selectedCount = getSelectedCount();
                 if (selectedCount > 0) {
                     // Build list of all selected ids that are still present.
-                    List<Long> selectedIds = new ArrayList<>(selectedCount);
+                    List<String> selectedIds = new ArrayList<>(selectedCount);
                     for (int i = 0; i < mAdapter.getItemCount(); i++) {
-                        long id = mAdapter.getItemId(i);
+                        // TODO(Sergey): RecyclerView IDs
+                        String id = Long.toString(mAdapter.getItemId(i));
                         if (isSelected(id)) {
                             selectedIds.add(id);
                         }
                     }
 
                     // Build set of missing ids.
-                    HashSet<Long> missingIds = new HashSet<>(selectedCount);
-                    for (long previouslySelectedId : getSelectedIds()) {
-                        missingIds.add(previouslySelectedId);
-                    }
+                    HashSet<String> missingIds = new HashSet<>(selectedCount);
+                    missingIds.addAll(Arrays.asList(getSelectedIds()));
                     missingIds.removeAll(selectedIds);
 
                     // Unselect all missing ids.
                     mNotifyItemChanges = false;
-                    for (Long missingId : missingIds) {
+                    for (String missingId : missingIds) {
                         setSelected(missingId, false);
                     }
                     mNotifyItemChanges = true;
