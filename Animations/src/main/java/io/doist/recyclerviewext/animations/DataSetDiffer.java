@@ -1,5 +1,7 @@
 package io.doist.recyclerviewext.animations;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -11,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 public class DataSetDiffer {
     private final RecyclerView.Adapter adapter;
     private final Callback callback;
+    @Nullable
+    private final AnomalyLogger logger;
 
     private final Items items = new Items();
     private final ItemsObserver itemsObserver;
@@ -21,19 +25,21 @@ public class DataSetDiffer {
      * @param adapter  Adapter with which this data set differ is associated.
      * @param callback Callback that provides information about the items set in the adapter.
      */
-    public DataSetDiffer(RecyclerView.Adapter adapter, Callback callback) {
+    public DataSetDiffer(RecyclerView.Adapter adapter, Callback callback, @Nullable AnomalyLogger logger) {
         if (!adapter.hasStableIds()) {
             adapter.setHasStableIds(true);
         }
         this.adapter = adapter;
         this.callback = callback;
+        this.logger = logger;
         this.itemsObserver = new ItemsObserver(items, callback);
         this.adapterNotifyDiffHandler = new AdapterNotifyDiffHandler(adapter);
         startObservingItems();
     }
 
     /**
-     * Analyzes the data set using the supplied {@link Callback} and triggers all necessary {@code notify*} calls.
+     * Analyzes the data set using the supplied {@link Callback} and triggers all necessary
+     * {@code notify*} calls.
      */
     @UiThread
     public void diffDataSet() {
@@ -56,6 +62,9 @@ public class DataSetDiffer {
         }
 
         items.ensureCapacity(itemCount);
+        if (logger != null) {
+            logger.rememberData(items, adapterItems);
+        }
 
         // Remove all missing items up front to make positions more predictable in the second loop.
         int removePosition = -1;
@@ -111,7 +120,14 @@ public class DataSetDiffer {
                     long movedId = items.getId(oldPosition);
                     long movedChangeHash = items.getContentHash(oldPosition);
                     items.remove(oldPosition);
-                    items.add(i, movedId, movedChangeHash);
+                    if (i >= items.size()) {
+                        if (logger != null) {
+                            logger.logAnomaly();
+                        }
+                        items.add(movedId, movedChangeHash);
+                    } else {
+                        items.add(i, movedId, movedChangeHash);
+                    }
 
                     diffHandler.onItemMoved(oldPosition, i);
                 }
@@ -158,6 +174,9 @@ public class DataSetDiffer {
         if (insertPosition != -1) {
             diffHandler.onItemRangeInserted(insertPosition, insertCount);
         }
+        if (logger != null) {
+            logger.forgetData();
+        }
     }
 
     void startObservingItems() {
@@ -183,5 +202,37 @@ public class DataSetDiffer {
          * Return a content hash of this item, which is used to detect changes in it.
          */
         long getItemContentHash(int position);
+    }
+
+    // TODO(Sergey): Remove all anomaly detection logic added in this commit from here and Todoist.
+    @UiThread
+    public static abstract class AnomalyLogger {
+        @Nullable
+        private Items original = null;
+        @Nullable
+        private Items update = null;
+
+        public void rememberData(@NonNull Items original, @NonNull Items update) {
+            this.original = new Items(original);
+            this.update = new Items(update);
+        }
+
+        public void forgetData() {
+            original = null;
+            update = null;
+        }
+
+        private boolean hasDataToReport() {
+            return original != null && update != null;
+        }
+
+        public void logAnomaly() {
+            if (hasDataToReport()) {
+                log(original, update);
+                forgetData();
+            }
+        }
+
+        protected abstract void log(@NonNull Items original, @NonNull Items update);
     }
 }

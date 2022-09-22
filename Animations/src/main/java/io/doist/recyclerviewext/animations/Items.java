@@ -1,10 +1,14 @@
 package io.doist.recyclerviewext.animations;
 
+import java.util.Arrays;
+
+import androidx.annotation.NonNull;
+
 /**
  * Helper class to store and manage arrays of ids and content hashes as efficiently as possible, by storing them
  * contiguously in a single array in the format [id1, contenthash1, id2, contenthash2, ...].
  */
-class Items {
+public class Items {
     private long[] items;
     private int size;
 
@@ -14,6 +18,11 @@ class Items {
 
     public Items(int capacity) {
         items = new long[capacity*2];
+    }
+
+    public Items(@NonNull Items original) {
+        items = Arrays.copyOf(original.items, original.items.length);
+        size = original.size;
     }
 
     public long getId(int index) {
@@ -26,6 +35,11 @@ class Items {
 
     public int size() {
         return size;
+    }
+
+    @NonNull
+    public long[] items() {
+        return items;
     }
 
     public void setId(int index, long id) {

@@ -1,5 +1,6 @@
 package io.doist.recyclerviewext.animations;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -37,7 +38,7 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder>
      */
     public final void setAnimationsEnabled(boolean enabled) {
         if (enabled && dataSetDiffer == null) {
-            dataSetDiffer = new DataSetDiffer(this, this);
+            dataSetDiffer = new DataSetDiffer(this, this, createAnomalyLogger());
         } else if (!enabled && dataSetDiffer != null) {
             dataSetDiffer.stopObservingItems();
             dataSetDiffer = null;
@@ -56,5 +57,10 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder>
         } else {
             notifyDataSetChanged();
         }
+    }
+
+    @Nullable
+    protected DataSetDiffer.AnomalyLogger createAnomalyLogger() {
+        return null;
     }
 }

@@ -5,6 +5,7 @@ import android.os.Looper;
 
 import java.util.concurrent.Executor;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,12 +30,12 @@ public class AsyncDataSetDiffer {
      * @param adapter  Adapter with which this data set differ is associated.
      * @param callback Callback that provides information about the items set in the adapter.
      */
-    public AsyncDataSetDiffer(RecyclerView.Adapter adapter, DataSetDiffer.Callback callback) {
+    public AsyncDataSetDiffer(RecyclerView.Adapter adapter, DataSetDiffer.Callback callback, @Nullable DataSetDiffer.AnomalyLogger logger) {
         if (!adapter.hasStableIds()) {
             adapter.setHasStableIds(true);
         }
         this.adapter = adapter;
-        dataSetDiffer = new DataSetDiffer(adapter, callback);
+        dataSetDiffer = new DataSetDiffer(adapter, callback, logger);
     }
 
     /**
