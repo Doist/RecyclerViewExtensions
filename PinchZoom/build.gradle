@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace "io.doist.recyclerviewext.pinch_zoom"
     compileSdkVersion 31
 
     defaultConfig {
