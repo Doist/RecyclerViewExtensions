@@ -36,18 +36,18 @@ public class DataSetDiffer {
      * Analyzes the data set using the supplied {@link Callback} and triggers all necessary {@code notify*} calls.
      */
     @UiThread
-    public void diffDataSet() {
+    public void diffDataSet(Object oldListObj, Object newListObj) {
         // Pause adapter monitoring to avoid double counting changes.
         stopObservingItems();
 
         // Diff data set using the default diff handler and callback.
-        diffDataSet(adapterNotifyDiffHandler, callback);
+        diffDataSet(oldListObj, newListObj, adapterNotifyDiffHandler, callback);
 
         // Resume adapter monitoring.
         startObservingItems();
     }
 
-    void diffDataSet(DiffHandler diffHandler, Callback callback) {
+    void diffDataSet(Object oldListObj, Object newListObj, DiffHandler diffHandler, Callback callback) {
         // Prepare adapter items.
         int itemCount = callback.getItemCount();
         Items adapterItems = new Items(itemCount);
@@ -157,6 +157,13 @@ public class DataSetDiffer {
         }
         if (insertPosition != -1) {
             diffHandler.onItemRangeInserted(insertPosition, insertCount);
+        }
+
+        // When there are no data changes but the backing list instance has changed.
+        if (removeCount == 0 && changeCount == 0 && insertCount == 0) {
+            if (oldListObj != newListObj) {
+                diffHandler.onItemRangeChanged(0, itemCount);
+            }
         }
     }
 

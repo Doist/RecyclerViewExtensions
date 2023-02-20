@@ -45,14 +45,20 @@ public abstract class AnimatedAdapter<VH extends RecyclerView.ViewHolder>
     }
 
     /**
-     * Analyzes the data set using {@link #getItemId(int)} and {@link #getItemContentHash(int)} and calls the
-     * necessary {@code notify*} methods to go from the previous data set to the new one.
-     *
+     * @deprecated Use {@link #animateDataSetChanged(Object, Object)}.
+     * It fixes cases when the list instance is changed but the contents are the same.
+     */
+    @Deprecated
+    public void animateDataSetChanged() {
+        animateDataSetChanged(null, null);
+    }
+
+    /**
      * This method should be called right after the data set is updated.
      */
-    public void animateDataSetChanged() {
+    public void animateDataSetChanged(Object oldListObj, Object newListObj) {
         if (areAnimationsEnabled()) {
-            dataSetDiffer.diffDataSet();
+            dataSetDiffer.diffDataSet(oldListObj, newListObj);
         } else {
             notifyDataSetChanged();
         }
