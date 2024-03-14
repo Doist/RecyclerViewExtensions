@@ -6,19 +6,20 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.OpenLinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
+public class StickyHeadersStaggeredGridLayoutManager extends StaggeredGridLayoutManager {
 
     private RecyclerView.Adapter<?> mAdapter;
 
@@ -29,6 +30,7 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
     private RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
+    private static final int INVALID_OFFSET = Integer.MIN_VALUE;
     // Sticky header's ViewHolder and dirty state.
     private View mStickyHeader;
     private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
@@ -36,12 +38,12 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
 
-    public StickyHeadersLinearLayoutManager(Context context) {
-        super(context);
+    public StickyHeadersStaggeredGridLayoutManager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public StickyHeadersLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
-        super(context, orientation, reverseLayout);
+    public StickyHeadersStaggeredGridLayoutManager(int spanCount, int orientation) {
+        super(spanCount, orientation);
     }
 
     private boolean scrollEnabled = true;
@@ -59,11 +61,12 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
         return super.canScrollVertically() && scrollEnabled;
     }
 
-    private StickyHeaderProvider stickyHeaderProvider;
+    private StickyHeaderProvider stickyHeaderProvider = null;
 
     public void setStickyHeaderProvider(StickyHeaderProvider stickyHeaderProvider) {
         this.stickyHeaderProvider = stickyHeaderProvider;
     }
+
 
     /**
      * Offsets the vertical location of the sticky header relative to the its default position.
@@ -101,7 +104,7 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
     }
 
     @SuppressWarnings("unchecked")
-    private void setAdapter(RecyclerView.Adapter<?> adapter) {
+    private void setAdapter(RecyclerView.Adapter adapter) {
         if (mAdapter != null) {
             mAdapter.unregisterAdapterDataObserver(mHeaderPositionsObserver);
         }
@@ -268,50 +271,6 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
         PointF vector = super.computeScrollVectorForPosition(targetPosition);
         attachStickyHeader();
         return vector;
-    }
-
-    @Override
-    public int findFirstVisibleItemPosition() {
-        for (int curPosition = 0; curPosition < getChildCount(); curPosition++){
-            final View child = findOneVisibleChild(curPosition, getChildCount(), false, true);
-            if (child != null && !isStickyHeader(child)){
-                return getPosition(child);
-            }
-        }
-        return RecyclerView.NO_POSITION;
-    }
-
-    @Override
-    public int findFirstCompletelyVisibleItemPosition() {
-        for (int curPosition = 0; curPosition < getChildCount(); curPosition++){
-            final View child = findOneVisibleChild(curPosition, getChildCount(), true, false);
-            if (child != null && !isStickyHeader(child)){
-                return getPosition(child);
-            }
-        }
-        return RecyclerView.NO_POSITION;
-    }
-
-    @Override
-    public int findLastVisibleItemPosition() {
-        for (int curPosition = getChildCount()-1; curPosition >= 0; curPosition--){
-            final View child = findOneVisibleChild(curPosition, -1, false, true);
-            if (child != null && !isStickyHeader(child)){
-                return getPosition(child);
-            }
-        }
-        return RecyclerView.NO_POSITION;
-    }
-
-    @Override
-    public int findLastCompletelyVisibleItemPosition() {
-        for (int curPosition = getChildCount()-1; curPosition >= 0; curPosition--){
-            final View child = findOneVisibleChild(curPosition, -1, true, false);
-            if (child != null && !isStickyHeader(child)){
-                return getPosition(child);
-            }
-        }
-        return RecyclerView.NO_POSITION;
     }
 
     @Override
@@ -808,5 +767,4 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
             }
         };
     }
-
 }
