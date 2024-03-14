@@ -6,19 +6,20 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.OpenLinearLayoutManager;
+import androidx.recyclerview.widget.OpenGridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
+public class StickyHeadersGridLayoutManager extends OpenGridLayoutManager {
 
     private RecyclerView.Adapter<?> mAdapter;
 
@@ -36,12 +37,16 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
 
-    public StickyHeadersLinearLayoutManager(Context context) {
-        super(context);
+    public StickyHeadersGridLayoutManager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public StickyHeadersLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
-        super(context, orientation, reverseLayout);
+    public StickyHeadersGridLayoutManager(Context context, int spanCount) {
+        super(context, spanCount);
+    }
+
+    public StickyHeadersGridLayoutManager(Context context, int spanCount, int orientation, boolean reverseLayout) {
+        super(context, spanCount, orientation, reverseLayout);
     }
 
     private boolean scrollEnabled = true;
@@ -101,7 +106,7 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
     }
 
     @SuppressWarnings("unchecked")
-    private void setAdapter(RecyclerView.Adapter<?> adapter) {
+    private void setAdapter(RecyclerView.Adapter adapter) {
         if (mAdapter != null) {
             mAdapter.unregisterAdapterDataObserver(mHeaderPositionsObserver);
         }
@@ -808,5 +813,4 @@ public class StickyHeadersLinearLayoutManager extends OpenLinearLayoutManager {
             }
         };
     }
-
 }
