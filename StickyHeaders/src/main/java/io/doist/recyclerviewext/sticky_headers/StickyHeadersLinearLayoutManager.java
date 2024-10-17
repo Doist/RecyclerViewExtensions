@@ -8,13 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Adds sticky headers capabilities to your {@link RecyclerView.Adapter}. It must implement {@link StickyHeaders} to
@@ -423,11 +423,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
         // If we have a pending scroll wait until the end of layout and scroll again.
         if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
-            final ViewTreeObserver vto = mStickyHeader.getViewTreeObserver();
-            vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            mStickyHeader.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
-                    vto.removeOnGlobalLayoutListener(this);
+                    mStickyHeader.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
                     if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
                         scrollToPositionWithOffset(mPendingScrollPosition, mPendingScrollOffset);
