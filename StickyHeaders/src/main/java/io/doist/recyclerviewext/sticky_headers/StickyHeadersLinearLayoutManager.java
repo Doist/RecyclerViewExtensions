@@ -426,7 +426,9 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             mStickyHeader.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
-                    mStickyHeader.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    if (mStickyHeader != null) {
+                        mStickyHeader.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
 
                     if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
                         scrollToPositionWithOffset(mPendingScrollPosition, mPendingScrollOffset);
