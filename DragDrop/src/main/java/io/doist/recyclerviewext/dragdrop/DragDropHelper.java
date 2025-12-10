@@ -115,7 +115,66 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
 
     private float mScrollSpeed;
     private float mScrollSpeedMax;
-    private float mScrollMargin;
+    private float mScrollMarginTop;
+    private float mScrollMarginBottom;
+    private float mScrollMarginLeft;
+    private float mScrollMarginRight;
+
+    /**
+     * Gets the scroll margin for the top edge.
+     */
+    public float getScrollMarginTop() {
+        return mScrollMarginTop;
+    }
+
+    /**
+     * Sets the scroll margin for the top edge.
+     */
+    public void setScrollMarginTop(float scrollMarginTop) {
+        mScrollMarginTop = scrollMarginTop;
+    }
+
+    /**
+     * Gets the scroll margin for the bottom edge.
+     */
+    public float getScrollMarginBottom() {
+        return mScrollMarginBottom;
+    }
+
+    /**
+     * Sets the scroll margin for the bottom edge.
+     */
+    public void setScrollMarginBottom(float scrollMarginBottom) {
+        mScrollMarginBottom = scrollMarginBottom;
+    }
+
+    /**
+     * Gets the scroll margin for the left edge.
+     */
+    public float getScrollMarginLeft() {
+        return mScrollMarginLeft;
+    }
+
+    /**
+     * Sets the scroll margin for the left edge.
+     */
+    public void setScrollMarginLeft(float scrollMarginLeft) {
+        mScrollMarginLeft = scrollMarginLeft;
+    }
+
+    /**
+     * Gets the scroll margin for the right edge.
+     */
+    public float getScrollMarginRight() {
+        return mScrollMarginRight;
+    }
+
+    /**
+     * Sets the scroll margin for the right edge.
+     */
+    public void setScrollMarginRight(float scrollMarginRight) {
+        mScrollMarginRight = scrollMarginRight;
+    }
 
     /**
      * Gets whether the dragged view follows the ongoing touch event. Defaults to true.
@@ -205,7 +264,11 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
                 mTouchSlop = ViewConfiguration.get(recyclerView.getContext()).getScaledTouchSlop();
                 DisplayMetrics dm = mRecyclerView.getResources().getDisplayMetrics();
                 mScrollSpeedMax = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_SPEED_MAX_DP, dm);
-                mScrollMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_MARGIN_DP, dm);
+                float scrollMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, SCROLL_MARGIN_DP, dm);
+                mScrollMarginTop = scrollMargin;
+                mScrollMarginBottom = scrollMargin;
+                mScrollMarginLeft = scrollMargin;
+                mScrollMarginRight = scrollMargin;
                 mRecyclerView.addItemDecoration(this, 0);
                 mRecyclerView.addOnItemTouchListener(this);
             }
@@ -527,18 +590,18 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             direction = mTouchCurrentX < mRecyclerView.getWidth() / 2f ? -1 : 1;
             if (!forceDecelerate && canScrollHorizontally(direction)) {
                 if (direction == -1) {
-                    float boundaryLeft = mScrollMargin;
+                    float boundaryLeft = mScrollMarginLeft;
                     if (mTouchCurrentX <= boundaryLeft
                             && getViewCenterX(view) < mRecyclerView.getWidth() / 2
                             && mTouchDirectionX <= 0f) {
-                        accelerateFraction = -((mTouchCurrentX - boundaryLeft) / mScrollMargin);
+                        accelerateFraction = -((mTouchCurrentX - boundaryLeft) / mScrollMarginLeft);
                     }
                 } else {
-                    float boundaryRight = mRecyclerView.getWidth() - mScrollMargin;
+                    float boundaryRight = mRecyclerView.getWidth() - mScrollMarginRight;
                     if (mTouchCurrentX >= boundaryRight
                             && getViewCenterX(view) > mRecyclerView.getWidth() / 2
                             && mTouchDirectionX >= 0f) {
-                        accelerateFraction = (mTouchCurrentX - boundaryRight) / mScrollMargin;
+                        accelerateFraction = (mTouchCurrentX - boundaryRight) / mScrollMarginRight;
                     }
                 }
             }
@@ -546,18 +609,18 @@ public class DragDropHelper extends RecyclerView.ItemDecoration
             direction = mTouchCurrentY < mRecyclerView.getHeight() / 2f ? -1 : 1;
             if (!forceDecelerate && canScrollVertically(direction)) {
                 if (direction == -1) {
-                    float boundaryTop = mScrollMargin;
+                    float boundaryTop = mScrollMarginTop;
                     if (mTouchCurrentY <= boundaryTop
                             && getViewCenterY(view) < mRecyclerView.getHeight() / 2
                             && mTouchDirectionY <= 0f) {
-                        accelerateFraction = -((mTouchCurrentY - boundaryTop) / mScrollMargin);
+                        accelerateFraction = -((mTouchCurrentY - boundaryTop) / mScrollMarginTop);
                     }
                 } else {
-                    float boundaryBottom = mRecyclerView.getHeight() - mScrollMargin;
+                    float boundaryBottom = mRecyclerView.getHeight() - mScrollMarginBottom;
                     if (mTouchCurrentY >= boundaryBottom
                             && getViewCenterY(view) > mRecyclerView.getHeight() / 2
                             && mTouchDirectionY >= 0f) {
-                        accelerateFraction = (mTouchCurrentY - boundaryBottom) / mScrollMargin;
+                        accelerateFraction = (mTouchCurrentY - boundaryBottom) / mScrollMarginBottom;
                     }
                 }
             }
