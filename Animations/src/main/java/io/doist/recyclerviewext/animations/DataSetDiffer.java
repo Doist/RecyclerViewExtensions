@@ -1,6 +1,8 @@
 package io.doist.recyclerviewext.animations;
 
 import androidx.annotation.UiThread;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -40,123 +42,71 @@ public class DataSetDiffer {
         // Pause adapter monitoring to avoid double counting changes.
         stopObservingItems();
 
-        // Diff data set using the default diff handler and callback.
-        diffDataSet(adapterNotifyDiffHandler, callback);
-
-        // Resume adapter monitoring.
-        startObservingItems();
+        try {
+            diffDataSet(adapterNotifyDiffHandler, callback);
+        } finally {
+            startObservingItems();
+        }
     }
 
-    void diffDataSet(DiffHandler diffHandler, Callback callback) {
-        // Prepare adapter items.
-        int itemCount = callback.getItemCount();
-        Items adapterItems = new Items(itemCount);
+    void diffDataSet(final DiffHandler diffHandler, Callback callback) {
+        // Snapshot IDs and content hashes before dispatching any adapter notifications.
+        final int itemCount = callback.getItemCount();
+        final Items adapterItems = new Items(itemCount);
         for (int i = 0; i < itemCount; i++) {
             adapterItems.add(callback.getItemId(i), callback.getItemContentHash(i));
         }
 
+        // Detect the actual moved items instead of moving every row they pass.
+        DiffUtil.DiffResult result = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return items.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return adapterItems.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return items.getId(oldItemPosition) == adapterItems.getId(newItemPosition);
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                return items.getContentHash(oldItemPosition) == adapterItems.getContentHash(newItemPosition);
+            }
+        }, true);
+
+        result.dispatchUpdatesTo(new ListUpdateCallback() {
+            @Override
+            public void onInserted(int position, int count) {
+                diffHandler.onItemRangeInserted(position, count);
+            }
+
+            @Override
+            public void onRemoved(int position, int count) {
+                diffHandler.onItemRangeRemoved(position, count);
+            }
+
+            @Override
+            public void onMoved(int fromPosition, int toPosition) {
+                diffHandler.onItemMoved(fromPosition, toPosition);
+            }
+
+            @Override
+            public void onChanged(int position, int count, Object payload) {
+                diffHandler.onItemRangeChanged(position, count);
+            }
+        });
+
+        // Keep the existing Items instance: ItemsObserver tracks direct drag/collapse notifications in it.
+        items.clear();
         items.ensureCapacity(itemCount);
-
-        // Remove all missing items up front to make positions more predictable in the second loop.
-        int removePosition = -1;
-        int removeCount = 0;
-        for (int i = 0; i < items.size(); i++) {
-            // Check if the item was removed.
-            if (adapterItems.indexOfId(items.getId(i), i) == -1) {
-                items.remove(i);
-
-                if (removePosition == -1) {
-                    removePosition = i;
-                    removeCount = 1;
-                } else {
-                    removeCount++;
-                }
-
-                i--;
-            } else if (removePosition != -1) {
-                // Commit pending remove since the current is still there.
-                diffHandler.onItemRangeRemoved(removePosition, removeCount);
-                removePosition = -1;
-            }
-        }
-        if (removePosition != -1) {
-            diffHandler.onItemRangeRemoved(removePosition, removeCount);
-        }
-
-        // Add, change or move items based on their animation / change id.
-        int insertPosition = -1;
-        int insertCount = 0;
-        int changePosition = -1;
-        int changeCount = 0;
         for (int i = 0; i < itemCount; i++) {
-            // Check if the item was inserted.
-            int oldPosition = items.indexOfId(adapterItems.getId(i), i);
-            if (oldPosition != -1) {
-                // Item was in the previous data set, it can have moved and / or changed.
-
-                // Commit pending insert since the current wasn't inserted and it'd conflict with the move / change.
-                if (insertPosition != -1) {
-                    diffHandler.onItemRangeInserted(insertPosition, insertCount);
-                    insertPosition = -1;
-                }
-
-                // Check if the item was moved.
-                if (oldPosition != i) {
-                    // Commit pending change to avoid conflicts with the move added below.
-                    if (changePosition != -1) {
-                        diffHandler.onItemRangeChanged(changePosition, changeCount);
-                        changePosition = -1;
-                    }
-
-                    long movedId = items.getId(oldPosition);
-                    long movedChangeHash = items.getContentHash(oldPosition);
-                    items.remove(oldPosition);
-                    items.add(i, movedId, movedChangeHash);
-
-                    diffHandler.onItemMoved(oldPosition, i);
-                }
-
-                // Check if the item was changed.
-                if (items.getContentHash(i) != adapterItems.getContentHash(i)) {
-                    items.setContentHash(i, adapterItems.getContentHash(i));
-
-                    if (changePosition == -1) {
-                        changePosition = i;
-                        changeCount = 1;
-                    } else {
-                        changeCount++;
-                    }
-                } else {
-                    // Commit pending change since the current didn't change.
-                    if (changePosition != -1) {
-                        diffHandler.onItemRangeChanged(changePosition, changeCount);
-                        changePosition = -1;
-                    }
-                }
-            } else {
-                // Item was not in the previous data set, it was added.
-
-                // Commit pending change now to avoid conflicts with the move added below.
-                if (changePosition != -1) {
-                    diffHandler.onItemRangeChanged(changePosition, changeCount);
-                    changePosition = -1;
-                }
-
-                items.add(i, adapterItems.getId(i), adapterItems.getContentHash(i));
-
-                if (insertPosition == -1) {
-                    insertPosition = i;
-                    insertCount = 1;
-                } else {
-                    insertCount++;
-                }
-            }
-        }
-        if (changePosition != -1) {
-            diffHandler.onItemRangeChanged(changePosition, changeCount);
-        }
-        if (insertPosition != -1) {
-            diffHandler.onItemRangeInserted(insertPosition, insertCount);
+            items.add(adapterItems.getId(i), adapterItems.getContentHash(i));
         }
     }
 

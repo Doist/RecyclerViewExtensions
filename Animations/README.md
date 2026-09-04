@@ -114,11 +114,12 @@ public class MyAdapter<T extends RecyclerView.ViewHolder>
 
 Similar to androidx's [`DefaultItemAnimator`](https://developer.android.com/reference/androidx/recyclerview/widget/DefaultItemAnimator), but all animations run in a hardware layer (see  [`ViewPropertyAnimator#withLayer()`](https://developer.android.com/reference/android/view/ViewPropertyAnimator.html#withLayer())).
 
-## A note on `DiffUtil`
+## Diff calculation
 
-Most of the work on `AnimatedAdapter`, `DataSetDiffer` and `AsyncDataSetDiffer` was done before [`DiffUtil`](https://developer.android.com/reference/androidx/recyclerview/widget/DiffUtil) was released and rendered them mostly obsolete.
+`DataSetDiffer` uses [`DiffUtil`](https://developer.android.com/reference/androidx/recyclerview/widget/DiffUtil)
+with move detection enabled. It compares snapshots of stable IDs and content hashes, so moving one
+item across a long list does not generate a move for every intervening row.
 
-If you need to handle item moves, you might still want to use this module.
-
-`DiffUtil` uses Eugene W. Myers's difference algorithm. This is efficient for calculating the minimum number of updates to convert one list into another, but it does not handle items that are moved. To support moves, it does a second pass, which results in a significant performance penalty. In those cases, this module should outperform it.
-
+The existing adapter observer still tracks direct `notify*` calls, such as drag-and-drop and
+expand/collapse updates. It is paused while a diff is dispatched, then resumes with the new
+snapshot. Keep the same data-set and notification contract when using `AsyncDataSetDiffer`.
