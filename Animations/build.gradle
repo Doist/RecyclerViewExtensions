@@ -8,9 +8,16 @@ android {
         minSdkVersion 16
         targetSdkVersion 31
     }
+
+    testOptions {
+        unitTests {
+            returnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
     // Check WithLayerItemAnimator when updating.
     implementation "androidx.recyclerview:recyclerview:1.2.1"
+    testImplementation "junit:junit:4.13.2"
 }

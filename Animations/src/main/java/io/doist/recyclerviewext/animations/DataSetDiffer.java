@@ -9,6 +9,13 @@ import androidx.recyclerview.widget.RecyclerView;
  * @see AsyncDataSetDiffer
  */
 public class DataSetDiffer {
+    /**
+     * The minimum distance a one-position shift must span to be notified as a single move of
+     * the displaced item instead of one move per shifted item.
+     * Shifts shorter than this keep the per-item move notifications.
+     */
+    private static final int MIN_ROTATION_LENGTH = 15;
+
     private final RecyclerView.Adapter adapter;
     private final Callback callback;
 
@@ -88,6 +95,8 @@ public class DataSetDiffer {
         int insertCount = 0;
         int changePosition = -1;
         int changeCount = 0;
+        long blockedRotationId = RecyclerView.NO_ID;
+        int rotationBlockedPosition = -1;
         for (int i = 0; i < itemCount; i++) {
             // Check if the item was inserted.
             int oldPosition = items.indexOfId(adapterItems.getId(i), i);
@@ -108,12 +117,43 @@ public class DataSetDiffer {
                         changePosition = -1;
                     }
 
-                    long movedId = items.getId(oldPosition);
-                    long movedChangeHash = items.getContentHash(oldPosition);
-                    items.remove(oldPosition);
-                    items.add(i, movedId, movedChangeHash);
+                    // When a long run of items is shifted one position forward, and the displaced
+                    // item lands right after the run - notify the displaced item's move once
+                    // instead of notifying one move for each shifted item. Notifying each shifted
+                    // item floods `RecyclerView` with operations when an item travels far.
+                    // A failed probe remains valid until its first blocking position, so don't
+                    // probe the same displaced item again while the fallback advances to it.
+                    int rotationEnd = -1;
+                    if (oldPosition == i + 1) {
+                        long displacedId = items.getId(i);
+                        if (displacedId != blockedRotationId ||
+                                (rotationBlockedPosition != -1 && i >= rotationBlockedPosition)) {
+                            RotationResult rotation = findRotation(adapterItems, i);
+                            rotationEnd = rotation.end;
+                            if (rotationEnd == -1) {
+                                blockedRotationId = displacedId;
+                                rotationBlockedPosition = rotation.blockedPosition;
+                            } else {
+                                blockedRotationId = RecyclerView.NO_ID;
+                                rotationBlockedPosition = -1;
+                            }
+                        }
+                    }
+                    if (rotationEnd != -1) {
+                        long displacedId = items.getId(i);
+                        long displacedChangeHash = items.getContentHash(i);
+                        items.remove(i);
+                        items.add(rotationEnd, displacedId, displacedChangeHash);
 
-                    diffHandler.onItemMoved(oldPosition, i);
+                        diffHandler.onItemMoved(i, rotationEnd);
+                    } else {
+                        long movedId = items.getId(oldPosition);
+                        long movedChangeHash = items.getContentHash(oldPosition);
+                        items.remove(oldPosition);
+                        items.add(i, movedId, movedChangeHash);
+
+                        diffHandler.onItemMoved(oldPosition, i);
+                    }
                 }
 
                 // Check if the item was changed.
@@ -157,6 +197,47 @@ public class DataSetDiffer {
         }
         if (insertPosition != -1) {
             diffHandler.onItemRangeInserted(insertPosition, insertCount);
+        }
+    }
+
+    /**
+     * Returns where the item currently at {@code start} lands if it displaced the following run,
+     * or the first position that may unblock the rotation if it didn't.
+     */
+    RotationResult findRotation(Items newItems, int start) {
+        long displacedId = items.getId(start);
+        for (int i = start; i < newItems.size(); i++) {
+            long newId = newItems.getId(i);
+            if (newId == displacedId) {
+                if (i - start < MIN_ROTATION_LENGTH || i >= items.size()) {
+                    return RotationResult.blocked(i);
+                }
+                return new RotationResult(i, -1);
+            }
+            if (i + 1 >= items.size() || newId != items.getId(i + 1)) {
+                return RotationResult.blocked(i);
+            }
+        }
+        return RotationResult.none();
+    }
+
+    static class RotationResult {
+        private static final RotationResult NONE = new RotationResult(-1, -1);
+
+        private final int end;
+        private final int blockedPosition;
+
+        private RotationResult(int end, int blockedPosition) {
+            this.end = end;
+            this.blockedPosition = blockedPosition;
+        }
+
+        private static RotationResult none() {
+            return NONE;
+        }
+
+        private static RotationResult blocked(int blockedPosition) {
+            return new RotationResult(-1, blockedPosition);
         }
     }
 
